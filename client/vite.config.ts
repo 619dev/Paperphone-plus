@@ -3,20 +3,29 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Fix libsodium-wrappers-sumo broken ESM import
+    {
+      name: 'fix-libsodium-esm',
+      resolveId(source, importer) {
+        if (
+          source === './libsodium-sumo.mjs' &&
+          importer &&
+          importer.includes('libsodium-wrappers-sumo')
+        ) {
+          // Redirect to the actual file in the libsodium-sumo package
+          return path.resolve(
+            __dirname,
+            'node_modules/libsodium-sumo/dist/modules-sumo/libsodium-sumo.js'
+          )
+        }
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // Force CJS version of libsodium to avoid broken ESM import
-      'libsodium-wrappers-sumo': 'libsodium-wrappers-sumo/dist/modules-sumo/libsodium-wrappers.js',
-    },
-  },
-  optimizeDeps: {
-    include: ['libsodium-wrappers-sumo'],
-  },
-  build: {
-    commonjsOptions: {
-      include: [/libsodium/],
     },
   },
   server: {
