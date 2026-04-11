@@ -7,7 +7,7 @@ use crate::auth::middleware::AuthUser;
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_sessions))
-        .route("/:id", delete(revoke_session))
+        .route("/{id}", delete(revoke_session))
 }
 
 async fn list_sessions(

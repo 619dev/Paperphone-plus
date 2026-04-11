@@ -10,14 +10,14 @@ pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_groups).post(create_group))
         .route("/search", get(search_groups))
-        .route("/:id", get(get_group).put(update_group).delete(disband_group))
-        .route("/:id/members", post(add_members))
-        .route("/:id/members/:user_id", delete(remove_member))
-        .route("/:id/leave", post(leave_group))
-        .route("/:id/mute", post(toggle_mute))
-        .route("/:id/invite", post(create_invite))
-        .route("/join/:invite_id", post(join_by_invite))
-        .route("/:id/auto-delete", put(update_auto_delete))
+        .route("/{id}", get(get_group).put(update_group).delete(disband_group))
+        .route("/{id}/members", post(add_members))
+        .route("/{id}/members/{user_id}", delete(remove_member))
+        .route("/{id}/leave", post(leave_group))
+        .route("/{id}/mute", post(toggle_mute))
+        .route("/{id}/invite", post(create_invite))
+        .route("/join/{invite_id}", post(join_by_invite))
+        .route("/{id}/auto-delete", put(update_auto_delete))
 }
 
 #[derive(Deserialize)]

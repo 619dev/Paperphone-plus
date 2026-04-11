@@ -8,12 +8,12 @@ use crate::auth::middleware::AuthUser;
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_moments).post(create_moment))
-        .route("/:id", delete(delete_moment))
-        .route("/:id/like", post(like_moment).delete(unlike_moment))
-        .route("/:id/comments", post(add_comment))
-        .route("/user/:user_id", get(get_user_moments))
+        .route("/{id}", delete(delete_moment))
+        .route("/{id}/like", post(like_moment).delete(unlike_moment))
+        .route("/{id}/comments", post(add_comment))
+        .route("/user/{user_id}", get(get_user_moments))
         .route("/privacy", post(update_privacy))
-        .route("/privacy/:target_id", get(get_privacy))
+        .route("/privacy/{target_id}", get(get_privacy))
 }
 
 #[derive(Deserialize)]

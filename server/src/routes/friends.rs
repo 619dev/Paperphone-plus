@@ -11,7 +11,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/requests", get(list_requests))
         .route("/request", post(send_request))
         .route("/accept", post(accept_request))
-        .route("/:id", delete(remove_friend))
+        .route("/{id}", delete(remove_friend))
         .route("/auto-delete", post(update_auto_delete))
 }
 

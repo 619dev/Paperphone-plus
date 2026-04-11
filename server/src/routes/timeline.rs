@@ -8,9 +8,9 @@ use crate::auth::middleware::AuthUser;
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_posts).post(create_post))
-        .route("/:id", get(get_post).delete(delete_post))
-        .route("/:id/like", post(like_post).delete(unlike_post))
-        .route("/:id/comments", get(get_comments).post(add_comment))
+        .route("/{id}", get(get_post).delete(delete_post))
+        .route("/{id}/like", post(like_post).delete(unlike_post))
+        .route("/{id}/comments", get(get_comments).post(add_comment))
 }
 
 #[derive(Deserialize)]

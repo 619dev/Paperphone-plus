@@ -8,10 +8,10 @@ use crate::auth::middleware::AuthUser;
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_tags).post(create_tag))
-        .route("/:id", put(update_tag).delete(delete_tag))
-        .route("/:id/assign", post(assign_tag))
-        .route("/:id/unassign", post(unassign_tag))
-        .route("/friend/:friend_id", get(get_friend_tags))
+        .route("/{id}", put(update_tag).delete(delete_tag))
+        .route("/{id}/assign", post(assign_tag))
+        .route("/{id}/unassign", post(unassign_tag))
+        .route("/friend/{friend_id}", get(get_friend_tags))
 }
 
 async fn list_tags(
