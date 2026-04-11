@@ -1,0 +1,68 @@
+[package]
+name = "paperphone-server"
+version = "1.0.0"
+edition = "2021"
+description = "PaperPhone IM Backend — Secure messaging server in Rust"
+
+[dependencies]
+# Web framework
+axum = { version = "0.8", features = ["ws", "multipart", "macros"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.26"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "mysql", "chrono", "uuid"] }
+deadpool-redis = "0.18"
+redis = { version = "0.27", features = ["tokio-comp"] }
+
+# Auth
+jsonwebtoken = "9"
+argon2 = "0.5"
+password-hash = "0.5"
+
+# UUID
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment
+dotenvy = "0.15"
+
+# AWS S3 (R2)
+aws-sdk-s3 = "1"
+aws-config = "1"
+aws-credential-types = "1"
+
+# Push notifications
+web-push = "0.10"
+
+# TOTP
+totp-rs = { version = "5", features = ["qr", "gen_secret"] }
+
+# QR Code
+qrcode = "0.14"
+image = "0.25"
+base64 = "0.22"
+
+# HTTP client (for Telegram sticker proxy, OneSignal, CF TURN)
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Misc
+rand = "0.8"
+futures = "0.3"
+dashmap = "6"
+sha2 = "0.10"
+hex = "0.4"
+mime_guess = "2"

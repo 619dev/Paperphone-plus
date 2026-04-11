@@ -1,0 +1,101 @@
+version: "3.8"
+
+services:
+  # ── Frontend (Nginx + React SPA) ────────────────────────────
+  client:
+    image: facilisvelox/paperphone-plus-client:latest
+    ports:
+      - "80:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Backend (Rust) ──────────────────────────────────────────
+  server:
+    image: facilisvelox/paperphone-plus-server:latest
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_random_string}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-paperphone}
+      DB_PASS: ${DB_PASS:-paperphone}
+      DB_NAME: ${DB_NAME:-paperphone}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASS: ${REDIS_PASS:-}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
+      CF_CALLS_APP_ID: ${CF_CALLS_APP_ID:-}
+      CF_CALLS_APP_SECRET: ${CF_CALLS_APP_SECRET:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
+      ONESIGNAL_REST_KEY: ${ONESIGNAL_REST_KEY:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      STICKER_PACKS: ${STICKER_PACKS:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── MySQL 8.0 ───────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-paperphone}
+      MYSQL_USER: ${DB_USER:-paperphone}
+      MYSQL_PASSWORD: ${DB_PASS:-paperphone}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── Redis 7 ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: >
+      sh -c "if [ -n '${REDIS_PASS:-}' ]; then
+        redis-server --requirepass '${REDIS_PASS}'
+      else
+        redis-server
+      fi"
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:

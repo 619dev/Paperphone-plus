@@ -1,0 +1,145 @@
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: PaperPhone-Plus
+  description:
+    zh-CN: PaperPhone — 端到端加密即时通讯应用（React + Rust）
+    en-US: PaperPhone — End-to-end encrypted IM (React + Rust)
+    ja-JP: PaperPhone — E2E暗号化メッセンジャー（React + Rust）
+    ko-KR: PaperPhone — 종단간 암호화 메신저 (React + Rust)
+    fr-FR: PaperPhone — Messagerie chiffrée E2E (React + Rust)
+    de-DE: PaperPhone — E2E-verschlüsselter Messenger (React + Rust)
+    ru-RU: PaperPhone — Мессенджер с E2E-шифрованием (React + Rust)
+    es-ES: PaperPhone — Mensajería cifrada E2E (React + Rust)
+  tags:
+    - Chat
+    - Messaging
+    - E2E Encryption
+    - WebRTC
+    - Rust
+
+spec:
+  # ── MySQL ─────────────────────────────────────────────────────
+  - source:
+      type: PREBUILT
+      image: mysql:8.0
+    id: mysql
+    name: MySQL
+    icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/mysql.svg
+    template: MYSQL
+    env:
+      MYSQL_ROOT_PASSWORD:
+        default: ${MYSQL_ROOT_PASSWORD}
+        generate:
+          length: 32
+      MYSQL_DATABASE:
+        default: paperphone
+      MYSQL_USER:
+        default: paperphone
+      MYSQL_PASSWORD:
+        default: ${MYSQL_PASSWORD}
+        generate:
+          length: 24
+    volumes:
+      - id: mysql-data
+        dir: /var/lib/mysql
+
+  # ── Redis ─────────────────────────────────────────────────────
+  - source:
+      type: PREBUILT
+      image: redis:7-alpine
+    id: redis
+    name: Redis
+    icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/redis.svg
+    template: REDIS
+    volumes:
+      - id: redis-data
+        dir: /data
+
+  # ── Server (Rust) ─────────────────────────────────────────────
+  - source:
+      type: GIT
+      repoURL: https://github.com/619dev/paperphone-plus
+      subDir: server
+    id: server
+    name: PaperPhone Server
+    icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
+    env:
+      PORT:
+        default: "3000"
+        expose:
+          http:
+            port: 3000
+      JWT_SECRET:
+        default: ${JWT_SECRET}
+        generate:
+          length: 64
+      DB_HOST:
+        default: ${MYSQL_HOST}
+        linkTo: mysql
+      DB_PORT:
+        default: "3306"
+      DB_USER:
+        default: paperphone
+      DB_PASS:
+        default: ${MYSQL_PASSWORD}
+        linkTo: mysql
+      DB_NAME:
+        default: paperphone
+      REDIS_HOST:
+        default: ${REDIS_HOST}
+        linkTo: redis
+      REDIS_PORT:
+        default: "6379"
+      R2_ACCOUNT_ID:
+        default: ""
+        description:
+          zh-CN: Cloudflare R2 账户 ID（可选）
+          en-US: Cloudflare R2 Account ID (optional)
+      R2_ACCESS_KEY_ID:
+        default: ""
+      R2_SECRET_ACCESS_KEY:
+        default: ""
+      R2_BUCKET:
+        default: ""
+      R2_PUBLIC_URL:
+        default: ""
+      CF_CALLS_APP_ID:
+        default: ""
+      CF_CALLS_APP_SECRET:
+        default: ""
+      VAPID_PUBLIC_KEY:
+        default: ""
+      VAPID_PRIVATE_KEY:
+        default: ""
+      VAPID_SUBJECT:
+        default: ""
+      ONESIGNAL_APP_ID:
+        default: ""
+      ONESIGNAL_REST_KEY:
+        default: ""
+      TELEGRAM_BOT_TOKEN:
+        default: ""
+      STICKER_PACKS:
+        default: ""
+
+  # ── Client (React) ────────────────────────────────────────────
+  - source:
+      type: GIT
+      repoURL: https://github.com/619dev/paperphone-plus
+      subDir: client
+    id: client
+    name: PaperPhone Client
+    icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
+    domainKey: client
+    env:
+      VITE_API_URL:
+        default: ${SERVER_URL}
+        linkTo: server
+        description:
+          zh-CN: 后端 API 地址
+          en-US: Backend API URL
+    ports:
+      - id: web
+        port: 80
+        type: HTTP
