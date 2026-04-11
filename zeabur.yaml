@@ -1,145 +1,373 @@
+# yaml-language-server: $schema=https://schema.zeabur.app/template.json
 apiVersion: zeabur.com/v1
 kind: Template
 metadata:
   name: PaperPhone-Plus
-  description:
-    zh-CN: PaperPhone — 端到端加密即时通讯应用（React + Rust）
-    en-US: PaperPhone — End-to-end encrypted IM (React + Rust)
-    ja-JP: PaperPhone — E2E暗号化メッセンジャー（React + Rust）
-    ko-KR: PaperPhone — 종단간 암호화 메신저 (React + Rust)
-    fr-FR: PaperPhone — Messagerie chiffrée E2E (React + Rust)
-    de-DE: PaperPhone — E2E-verschlüsselter Messenger (React + Rust)
-    ru-RU: PaperPhone — Мессенджер с E2E-шифрованием (React + Rust)
-    es-ES: PaperPhone — Mensajería cifrada E2E (React + Rust)
-  tags:
-    - Chat
-    - Messaging
-    - E2E Encryption
-    - WebRTC
-    - Rust
 
 spec:
-  # ── MySQL ─────────────────────────────────────────────────────
-  - source:
-      type: PREBUILT
-      image: mysql:8.0
-    id: mysql
-    name: MySQL
-    icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/mysql.svg
-    template: MYSQL
-    env:
-      MYSQL_ROOT_PASSWORD:
-        default: ${MYSQL_ROOT_PASSWORD}
-        generate:
-          length: 32
-      MYSQL_DATABASE:
-        default: paperphone
-      MYSQL_USER:
-        default: paperphone
-      MYSQL_PASSWORD:
-        default: ${MYSQL_PASSWORD}
-        generate:
-          length: 24
-    volumes:
-      - id: mysql-data
-        dir: /var/lib/mysql
+  description: >-
+    A WeChat-style, end-to-end encrypted IM app built with React + Rust (Axum),
+    featuring stateless ECDH E2EE, WebRTC video/voice calls, Cloudflare R2
+    file storage, 8-language i18n, and iOS PWA support — fully self-hostable.
+  icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
+  tags:
+    - Chat
+    - Security
+    - Communication
+  readme: |-
+    # PaperPhone Plus
 
-  # ── Redis ─────────────────────────────────────────────────────
-  - source:
-      type: PREBUILT
-      image: redis:7-alpine
-    id: redis
-    name: Redis
-    icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/redis.svg
-    template: REDIS
-    volumes:
-      - id: redis-data
-        dir: /data
+    A **WeChat-style**, end-to-end encrypted instant messaging application.
+    Rewritten with **React 19 + TypeScript + Vite** frontend and **Rust (Axum)** backend
+    for maximum performance and type safety.
 
-  # ── Server (Rust) ─────────────────────────────────────────────
-  - source:
-      type: GIT
-      repoURL: https://github.com/619dev/paperphone-plus
-      subDir: server
-    id: server
-    name: PaperPhone Server
-    icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
-    env:
-      PORT:
-        default: "3000"
-        expose:
-          http:
+    ## Security
+    - **Stateless ECDH + XSalsa20-Poly1305** — per-message ephemeral keys, forward secrecy without session state
+    - **Zero-knowledge server** — only ciphertext is stored; private keys never leave the device
+    - **Four-tier key persistence** — memory → localStorage → sessionStorage → IndexedDB, survives WebView restarts
+
+    ## Features
+    - 📹 **Video & Voice Calls** — WebRTC P2P (1:1) + Mesh (group up to 6)
+    - 👥 **Group Chat** — up to 2000 members, plain-text messaging, Do Not Disturb mode, member management
+    - 🌐 **Moments** — social feed with text + up to 9 photos or 1 video (≤ 10 min), likes, comments, tag-based visibility
+    - 👤 **User Profile** — contact profile page with Moments feed, bidirectional privacy controls (hide their / hide mine)
+    - 📰 **Timeline** — Xiaohongshu-style public feed with masonry layout, up to 50 images/videos + 2000-char text, anonymous posting, likes & comments
+    - ⏱️ **Auto-Delete Messages** — 5 tiers: never / 1 day / 3 days / 1 week / 1 month
+    - 🔔 **Push Notifications** — Web Push (VAPID) + OneSignal dual-channel
+    - 🌐 **Multi-language** — Chinese, English, Japanese, Korean, French, German, Russian, Spanish
+    - 📱 **iOS PWA** — "Add to Home Screen" via Safari, no enterprise cert needed
+    - 💬 Rich messaging: text, images, video, document files (PDF/DOCX/XLSX etc. with type icons), voice, 200+ emoji (8 categories), Telegram sticker packs, delivery receipts, typing indicators
+    - 🗂️ **Cloudflare R2** file storage (images, voice & video)
+    - 🏷️ **Friend Tags** — tag-based contact filtering & Moments visibility control
+    - 🎭 **Telegram Sticker Packs** — dynamic sticker packs with configurable pack list, unlimited quantity
+    - 🔑 **Two-Factor Auth (2FA)** — Google Authenticator TOTP, 8 recovery codes
+    - 📷 **QR Code Scan & Share** — scan QR to add friends or join groups; group QR codes with configurable expiry (1 week / 1 month / 3 months)
+
+    ## After Deployment
+    1. Open the domain assigned to the **client** service.
+    2. Register an account — cryptographic keys are generated locally on your device.
+    3. (Optional) Configure Cloudflare R2 for image/voice/video uploads — set `R2_*` variables on the **server** service.
+    4. (Optional) Configure Cloudflare TURN for cross-network video calls — set `CF_CALLS_APP_ID` and `CF_CALLS_APP_SECRET`.
+    5. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push.
+    6. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
+
+    ## Docker Hub Images
+    - `facilisvelox/paperphone-plus-client:latest`
+    - `facilisvelox/paperphone-plus-server:latest`
+
+  variables:
+    - key: PUBLIC_DOMAIN
+      type: DOMAIN
+      name: Client Domain
+      description: The public domain for the PaperPhone web client (e.g. paperphone.example.com).
+
+    - key: JWT_SECRET
+      type: STRING
+      name: JWT Secret
+      description: A long random string used to sign authentication tokens. Change this before going to production.
+
+    - key: R2_ACCOUNT_ID
+      type: STRING
+      name: Cloudflare R2 Account ID
+      description: Your Cloudflare account ID (found in Cloudflare Dashboard → right sidebar).
+
+    - key: R2_ACCESS_KEY_ID
+      type: STRING
+      name: R2 Access Key ID
+      description: R2 API token access key (R2 → Manage API tokens → Create token).
+
+    - key: R2_SECRET_ACCESS_KEY
+      type: STRING
+      name: R2 Secret Access Key
+      description: R2 API token secret key paired with the access key above.
+
+    - key: R2_BUCKET
+      type: STRING
+      name: R2 Bucket Name
+      description: Name of the R2 bucket to store uploaded files (e.g. paperphone).
+
+    - key: R2_PUBLIC_URL
+      type: STRING
+      name: R2 Public URL (optional)
+      description: >-
+        Public base URL for the bucket, e.g. https://pub-xxx.r2.dev or your
+        custom domain. If set, files are served directly from R2/CDN.
+        Leave blank to proxy files through the server.
+
+    - key: MYSQL_ROOT_PASSWORD
+      type: STRING
+      name: MySQL Root Password
+      description: Password for the MySQL root user. Set this yourself — it will NOT be auto-generated.
+
+    - key: CF_CALLS_APP_ID
+      type: STRING
+      name: Cloudflare Calls App ID (optional)
+      description: >-
+        Required only for cross-network WebRTC video/voice calls. Obtain from
+        Cloudflare Dashboard → Calls → your App. Leave blank to use STUN only
+        (LAN calls work without this).
+
+    - key: CF_CALLS_APP_SECRET
+      type: STRING
+      name: Cloudflare Calls App Secret (optional)
+      description: >-
+        The Bearer token / App Secret paired with CF_CALLS_APP_ID above.
+        Leave blank if you are not using Cloudflare TURN.
+
+    - key: VAPID_PUBLIC_KEY
+      type: STRING
+      name: VAPID Public Key (optional)
+      description: >-
+        Web Push VAPID public key for push notifications. Generate with:
+        npx web-push generate-vapid-keys. Leave blank to disable push.
+
+    - key: VAPID_PRIVATE_KEY
+      type: STRING
+      name: VAPID Private Key (optional)
+      description: >-
+        Web Push VAPID private key paired with the public key above.
+
+    - key: VAPID_SUBJECT
+      type: STRING
+      name: VAPID Subject (optional)
+      description: >-
+        Contact email for VAPID, e.g. mailto:admin@yoursite.com.
+
+    - key: ONESIGNAL_APP_ID
+      type: STRING
+      name: OneSignal App ID (optional)
+      description: >-
+        For native Android/iOS push via Median.co. Get from OneSignal
+        Dashboard → Settings → Keys & IDs.
+
+    - key: ONESIGNAL_REST_KEY
+      type: STRING
+      name: OneSignal REST API Key (optional)
+      description: >-
+        OneSignal REST API key paired with the App ID above.
+
+    - key: TELEGRAM_BOT_TOKEN
+      type: STRING
+      name: Telegram Bot Token (optional)
+      description: >-
+        Token from @BotFather for proxying Telegram sticker packs.
+        Leave blank to disable sticker packs.
+
+    - key: STICKER_PACKS
+      type: STRING
+      name: Sticker Packs (optional)
+      description: >-
+        Comma-separated list of Telegram sticker pack names with labels,
+        in the format name:label (e.g. pack_name:My Pack,other_pack:Other Pack).
+        No limit on quantity. Leave blank to use the 8 built-in defaults.
+
+  services:
+    # ── MySQL 8 ───────────────────────────────────────────────────────
+    - name: MySQL
+      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/mysql.svg
+      template: PREBUILT
+      spec:
+        source:
+          image: mysql:8.0
+        ports:
+          - id: database
+            port: 3306
+            type: TCP
+        volumes:
+          - id: data
+            dir: /var/lib/mysql
+        env:
+          MYSQL_ROOT_PASSWORD:
+            default: ${MYSQL_ROOT_PASSWORD}
+            expose: true
+          MYSQL_ROOT_HOST:
+            default: "%"
+          MYSQL_DATABASE:
+            default: paperphone
+            expose: true
+          MYSQL_USER:
+            default: paperphone
+            expose: true
+          MYSQL_PASSWORD:
+            default: ${MYSQL_ROOT_PASSWORD}
+            expose: true
+          MYSQL_HOST:
+            default: ${CONTAINER_HOSTNAME}
+            expose: true
+          MYSQL_PORT:
+            default: "3306"
+            expose: true
+        instructions:
+          - title: MySQL Host
+            content: ${PORT_FORWARDED_HOSTNAME}
+          - title: MySQL Port
+            content: ${DATABASE_PORT_FORWARDED_PORT}
+          - title: MySQL User
+            content: ${MYSQL_USER}
+          - title: MySQL Password
+            content: ${MYSQL_PASSWORD}
+          - title: MySQL Database
+            content: ${MYSQL_DATABASE}
+
+    # ── Redis 7 ───────────────────────────────────────────────────────
+    - name: Redis
+      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/redis.svg
+      template: PREBUILT
+      spec:
+        source:
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - --save
+            - "60"
+            - "1"
+        ports:
+          - id: database
+            port: 6379
+            type: TCP
+        volumes:
+          - id: data
+            dir: /data
+        env:
+          REDIS_HOST:
+            default: ${CONTAINER_HOSTNAME}
+            expose: true
+          REDIS_PORT:
+            default: "6379"
+            expose: true
+          REDIS_URI:
+            default: redis://${REDIS_HOST}:${REDIS_PORT}
+            expose: true
+        instructions:
+          - title: Redis Connection String
+            content: redis://${PORT_FORWARDED_HOSTNAME}:${DATABASE_PORT_FORWARDED_PORT}
+
+    # ── PaperPhone Server (Rust/Axum) ────────────────────────────────
+    - name: server
+      icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
+      template: PREBUILT
+      dependencies:
+        - MySQL
+        - Redis
+      spec:
+        source:
+          image: facilisvelox/paperphone-plus-server:latest
+        ports:
+          - id: web
             port: 3000
-      JWT_SECRET:
-        default: ${JWT_SECRET}
-        generate:
-          length: 64
-      DB_HOST:
-        default: ${MYSQL_HOST}
-        linkTo: mysql
-      DB_PORT:
-        default: "3306"
-      DB_USER:
-        default: paperphone
-      DB_PASS:
-        default: ${MYSQL_PASSWORD}
-        linkTo: mysql
-      DB_NAME:
-        default: paperphone
-      REDIS_HOST:
-        default: ${REDIS_HOST}
-        linkTo: redis
-      REDIS_PORT:
-        default: "6379"
-      R2_ACCOUNT_ID:
-        default: ""
-        description:
-          zh-CN: Cloudflare R2 账户 ID（可选）
-          en-US: Cloudflare R2 Account ID (optional)
-      R2_ACCESS_KEY_ID:
-        default: ""
-      R2_SECRET_ACCESS_KEY:
-        default: ""
-      R2_BUCKET:
-        default: ""
-      R2_PUBLIC_URL:
-        default: ""
-      CF_CALLS_APP_ID:
-        default: ""
-      CF_CALLS_APP_SECRET:
-        default: ""
-      VAPID_PUBLIC_KEY:
-        default: ""
-      VAPID_PRIVATE_KEY:
-        default: ""
-      VAPID_SUBJECT:
-        default: ""
-      ONESIGNAL_APP_ID:
-        default: ""
-      ONESIGNAL_REST_KEY:
-        default: ""
-      TELEGRAM_BOT_TOKEN:
-        default: ""
-      STICKER_PACKS:
-        default: ""
+            type: HTTP
+        volumes:
+          - id: uploads
+            dir: /app/uploads
+        env:
+          PORT:
+            default: "3000"
+          UPLOAD_DIR:
+            default: /app/uploads
+          JWT_SECRET:
+            default: ${JWT_SECRET}
+          DB_HOST:
+            default: ${MYSQL_HOST}
+          DB_PORT:
+            default: ${MYSQL_PORT}
+          DB_USER:
+            default: paperphone
+          DB_PASS:
+            default: ${MYSQL_PASSWORD}
+          DB_NAME:
+            default: ${MYSQL_DATABASE}
+          REDIS_HOST:
+            default: ${REDIS_HOST}
+          REDIS_PORT:
+            default: ${REDIS_PORT}
+          R2_ACCOUNT_ID:
+            default: ${R2_ACCOUNT_ID}
+          R2_ACCESS_KEY_ID:
+            default: ${R2_ACCESS_KEY_ID}
+          R2_SECRET_ACCESS_KEY:
+            default: ${R2_SECRET_ACCESS_KEY}
+          R2_BUCKET:
+            default: ${R2_BUCKET}
+          R2_PUBLIC_URL:
+            default: ${R2_PUBLIC_URL}
+          CF_CALLS_APP_ID:
+            default: ${CF_CALLS_APP_ID}
+          CF_CALLS_APP_SECRET:
+            default: ${CF_CALLS_APP_SECRET}
+          VAPID_PUBLIC_KEY:
+            default: ${VAPID_PUBLIC_KEY}
+          VAPID_PRIVATE_KEY:
+            default: ${VAPID_PRIVATE_KEY}
+          VAPID_SUBJECT:
+            default: ${VAPID_SUBJECT}
+          ONESIGNAL_APP_ID:
+            default: ${ONESIGNAL_APP_ID}
+          ONESIGNAL_REST_KEY:
+            default: ${ONESIGNAL_REST_KEY}
+          TELEGRAM_BOT_TOKEN:
+            default: ${TELEGRAM_BOT_TOKEN}
+          STICKER_PACKS:
+            default: ${STICKER_PACKS}
+          SERVER_URL:
+            default: ${ZEABUR_WEB_URL}
+            expose: true
 
-  # ── Client (React) ────────────────────────────────────────────
-  - source:
-      type: GIT
-      repoURL: https://github.com/619dev/paperphone-plus
-      subDir: client
-    id: client
-    name: PaperPhone Client
-    icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
-    domainKey: client
-    env:
-      VITE_API_URL:
-        default: ${SERVER_URL}
-        linkTo: server
-        description:
-          zh-CN: 后端 API 地址
-          en-US: Backend API URL
-    ports:
-      - id: web
-        port: 80
-        type: HTTP
+    # ── PaperPhone Client (Nginx / React PWA) ────────────────────────
+    - name: client
+      icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
+      template: PREBUILT
+      domainKey: PUBLIC_DOMAIN
+      dependencies:
+        - server
+      spec:
+        source:
+          image: facilisvelox/paperphone-plus-client:latest
+        ports:
+          - id: web
+            port: 80
+            type: HTTP
+        env:
+          SERVER_URL:
+            default: ${SERVER_URL}
+
+localization:
+  zh-CN:
+    description: >-
+      微信风格的端对端加密即时通讯 App（React + Rust），支持无状态 ECDH 加密、WebRTC 视频/语音通话、
+      Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
+    readme: |-
+      # PaperPhone Plus
+
+      **微信风格**的端对端加密即时通讯应用。
+      使用 **React 19 + TypeScript + Vite** 前端和 **Rust (Axum)** 后端重写，
+      获得极致性能和类型安全。
+
+      ## 安全模型
+      - **无状态 ECDH + XSalsa20-Poly1305** — 逐消息临时密钥，前向保密无需会话状态同步
+      - **零知识服务器** — 仅存储密文，私钥仅在设备本地，永不上传
+      - **四层密钥持久化** — 内存 → localStorage → sessionStorage → IndexedDB，Android WebView 重启后仍可恢复
+
+      ## 功能亮点
+      - 📹 **视频/语音通话** — WebRTC P2P（1:1）+ Mesh 多人（≤6 人）
+      - 👥 **群聊** — 最多 2000 人群组，纯文本消息，免打扰模式，成员管理
+      - 🌐 **朋友圈** — 文字 + 最多 9 张图或 1 个视频（≤10 分钟），点赞、评论、标签可见性控制
+      - 👤 **个人资料** — 联系人资料页（朋友圈动态 +「不看此人朋友圈」与「不让他看我的朋友圈」双向隐私控制）
+      - 📰 **时间线** — 小红书风格公开发帖区，双列瀑布流布局，最多50个图片/视频+2000字文字，支持匿名发帖、点赞、评论
+      - ⏱️ **消息自动删除** — 5 档可选（永不/1天/3天/1周/1月）
+      - 🔔 **消息推送** — Web Push (VAPID) + OneSignal 双通道
+      - 🌐 **多语言** — 中文、英文、日语、韩语、法语、德语、俄语、西班牙语
+      - 📱 **iOS 永久免签** — Safari「添加到主屏幕」，无需企业证书
+      - 💬 富文本消息、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音、Emoji（200+，8 分类）、Telegram 贴纸包、送达回执、打字状态
+      - 🗂️ **Cloudflare R2** 对象存储（图片、语音与视频）
+      - 🏷️ **好友标签** — 标签分类筛选通讯录 + 朋友圈可见性控制
+      - 🎭 **Telegram 贴纸包** — 动态贴纸包管理，可自定义包列表，数量无上限
+      - 🔑 **两步验证 (2FA)** — Google Authenticator TOTP，8 个恢复码
+      - 📷 **扫码加好友/入群** — 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1周/1月/3月）
+
+      ## 部署后操作
+      1. 打开分配给 **client** 服务的域名。
+      2. 注册账号 — 密钥在本地设备生成。
+      3. （可选）在 **server** 服务设置 `R2_*` 变量，启用图片/语音/视频上传功能。
+      4. （可选）配置 Cloudflare TURN 以支持跨公网视频通话。
+      5. （可选）设置 `VAPID_*` 变量启用浏览器推送通知。
+      6. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
