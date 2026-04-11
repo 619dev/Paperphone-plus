@@ -5,6 +5,9 @@ FROM --platform=$BUILDPLATFORM rust:slim-bookworm AS builder
 
 ARG TARGETARCH
 
+# Limit parallel jobs to avoid OOM on low-memory VPS (4GB)
+ENV CARGO_BUILD_JOBS=2
+
 # Install native build deps + cross-compile toolchain for arm64
 RUN apt-get update \
     && apt-get install -y pkg-config libssl-dev \
