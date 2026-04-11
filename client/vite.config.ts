@@ -7,6 +7,16 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Force CJS version of libsodium to avoid broken ESM import
+      'libsodium-wrappers-sumo': 'libsodium-wrappers-sumo/dist/modules-sumo/libsodium-wrappers.js',
+    },
+  },
+  optimizeDeps: {
+    include: ['libsodium-wrappers-sumo'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/libsodium/],
     },
   },
   server: {
