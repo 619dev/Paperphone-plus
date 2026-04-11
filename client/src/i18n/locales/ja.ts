@@ -6,6 +6,7 @@ export const ja: Record<string, string> = {
   'auth.registering': '登録中...', 'auth.totp_required': '二段階認証コードを入力',
   'auth.totp_code': '認証コード', 'auth.verify': '確認', 'auth.use_recovery': 'リカバリーコードを使用',
   'auth.recovery_code': 'リカバリーコード', 'auth.subtitle': 'エンドツーエンド暗号化メッセンジャー',
+  'security.local_keys': '鍵はローカルに保存', 'security.e2e': 'エンドツーエンド暗号化', 'security.forward': '前方秘匿性', 'security.quantum': '耐量子暗号化',
 
   'tab.chats': 'チャット', 'tab.contacts': '連絡先', 'tab.discover': '発見', 'tab.profile': 'プロフィール',
 

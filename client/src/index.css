@@ -4,38 +4,38 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Color System (Dark) ──────────────────────────────────── */
-  --bg-primary: #0f0f1a;
-  --bg-secondary: #1a1a2e;
-  --bg-tertiary: #16213e;
-  --bg-card: rgba(26, 26, 46, 0.85);
-  --bg-input: rgba(22, 33, 62, 0.6);
-  --bg-hover: rgba(75, 123, 236, 0.12);
-  --bg-active: rgba(75, 123, 236, 0.2);
+  /* ── Color System (Light — Primary) ─────────────────────────── */
+  --bg-primary: #f8f6f1;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0ede6;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-input: rgba(0, 0, 0, 0.04);
+  --bg-hover: rgba(212, 160, 23, 0.08);
+  --bg-active: rgba(212, 160, 23, 0.14);
 
-  --text-primary: #e8e8f0;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-inverse: #0f0f1a;
+  --text-primary: #1e1e1e;
+  --text-secondary: #5a5a5a;
+  --text-muted: #9a9a9a;
+  --text-inverse: #ffffff;
 
-  --accent: #4b7bec;
-  --accent-light: #6c9cff;
-  --accent-dark: #3a63c4;
-  --accent-bg: rgba(75, 123, 236, 0.15);
+  --accent: #d4a017;
+  --accent-light: #e8b84a;
+  --accent-dark: #b8860b;
+  --accent-bg: rgba(212, 160, 23, 0.12);
 
-  --success: #2ed573;
-  --warning: #ffa502;
-  --danger: #ff4757;
-  --info: #3742fa;
+  --success: #34c759;
+  --warning: #ff9500;
+  --danger: #ff3b30;
+  --info: #007aff;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(75, 123, 236, 0.4);
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(212, 160, 23, 0.35);
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.1);
 
   /* ── Glass ─────────────────────────────────────────────────── */
-  --glass-bg: rgba(26, 26, 46, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.06);
   --glass-blur: 20px;
 
   /* ── Sizing ────────────────────────────────────────────────── */
@@ -54,33 +54,33 @@
   --duration: 200ms;
   --duration-slow: 350ms;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-/* ── Light Theme ─────────────────────────────────────────────── */
-[data-theme="light"] {
-  --bg-primary: #f5f6fa;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f0f2f5;
-  --bg-card: rgba(255, 255, 255, 0.9);
-  --bg-input: rgba(0, 0, 0, 0.04);
-  --bg-hover: rgba(75, 123, 236, 0.08);
-  --bg-active: rgba(75, 123, 236, 0.12);
+/* ── Dark Theme ─────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --bg-card: rgba(26, 26, 46, 0.85);
+  --bg-input: rgba(22, 33, 62, 0.6);
+  --bg-hover: rgba(212, 160, 23, 0.12);
+  --bg-active: rgba(212, 160, 23, 0.2);
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --text-inverse: #ffffff;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-inverse: #0f0f1a;
 
-  --border: rgba(0, 0, 0, 0.08);
-  --border-active: rgba(75, 123, 236, 0.3);
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(212, 160, 23, 0.4);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
 
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(26, 26, 46, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.06);
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -508,13 +508,17 @@ textarea.input {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(160deg, #fdf8ef 0%, #f5efe0 40%, #ede4d0 100%);
+}
+
+[data-theme="dark"] .login-page {
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 100%);
 }
 
 .login-card {
   width: 100%;
-  max-width: 360px;
-  padding: 32px 24px;
+  max-width: 380px;
+  padding: 36px 28px;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -524,17 +528,23 @@ textarea.input {
 }
 
 .login-logo {
-  font-size: 40px;
   text-align: center;
   margin-bottom: 8px;
 }
 
+.login-logo-img {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg);
+  filter: drop-shadow(0 4px 12px rgba(212, 160, 23, 0.25));
+}
+
 .login-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   text-align: center;
   margin-bottom: 4px;
-  background: linear-gradient(135deg, var(--accent-light), var(--accent));
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent), var(--accent-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -544,7 +554,47 @@ textarea.input {
   font-size: 14px;
   color: var(--text-secondary);
   text-align: center;
+  margin-bottom: 16px;
+}
+
+/* ── Security Badges ─────────────────────────────────────────── */
+.security-badges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-bottom: 24px;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--accent-bg);
+  border: 1px solid rgba(212, 160, 23, 0.15);
+  border-radius: var(--radius-md);
+  transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+
+.security-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(212, 160, 23, 0.15);
+}
+
+.security-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.security-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  line-height: 1.3;
+}
+
+[data-theme="dark"] .security-text {
+  color: var(--accent-light);
 }
 
 .login-form {

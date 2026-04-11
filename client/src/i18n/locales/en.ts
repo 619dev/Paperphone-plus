@@ -17,6 +17,12 @@ export const en: Record<string, string> = {
   'auth.recovery_code': 'Recovery Code',
   'auth.subtitle': 'End-to-end encrypted messaging',
 
+  // Security badges
+  'security.local_keys': 'Keys stored locally',
+  'security.e2e': 'End-to-end encrypted',
+  'security.forward': 'Forward secrecy',
+  'security.quantum': 'Quantum-resistant',
+
   'tab.chats': 'Chats',
   'tab.contacts': 'Contacts',
   'tab.discover': 'Discover',

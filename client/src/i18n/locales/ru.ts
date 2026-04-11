@@ -7,6 +7,7 @@ export const ru: Record<string, string> = {
   'auth.totp_code': 'Код подтверждения', 'auth.verify': 'Подтвердить',
   'auth.use_recovery': 'Использовать код восстановления', 'auth.recovery_code': 'Код восстановления',
   'auth.subtitle': 'Мессенджер со сквозным шифрованием',
+  'security.local_keys': 'Ключи хранятся локально', 'security.e2e': 'Сквозное шифрование', 'security.forward': 'Прямая секретность', 'security.quantum': 'Квантовая устойчивость',
 
   'tab.chats': 'Чаты', 'tab.contacts': 'Контакты', 'tab.discover': 'Обзор', 'tab.profile': 'Профиль',
 

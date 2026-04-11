@@ -18,6 +18,12 @@ export const zh: Record<string, string> = {
   'auth.recovery_code': '恢复代码',
   'auth.subtitle': '端到端加密即时通讯',
 
+  // Security badges
+  'security.local_keys': '密钥只保存在本地',
+  'security.e2e': '端到端加密',
+  'security.forward': '前向加密',
+  'security.quantum': '抗量子加密',
+
   // Tabs
   'tab.chats': '聊天',
   'tab.contacts': '联系人',

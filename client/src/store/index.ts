@@ -113,7 +113,7 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   // Theme
-  theme: (localStorage.getItem('theme') as 'dark' | 'light') || 'dark',
+  theme: (localStorage.getItem('theme') as 'dark' | 'light') || 'light',
   toggleTheme: () => {
     const next = get().theme === 'dark' ? 'light' : 'dark'
     localStorage.setItem('theme', next)

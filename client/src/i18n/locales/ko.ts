@@ -6,6 +6,7 @@ export const ko: Record<string, string> = {
   'auth.registering': '가입 중...', 'auth.totp_required': '2단계 인증 코드를 입력하세요',
   'auth.totp_code': '인증 코드', 'auth.verify': '확인', 'auth.use_recovery': '복구 코드 사용',
   'auth.recovery_code': '복구 코드', 'auth.subtitle': '종단간 암호화 메신저',
+  'security.local_keys': '키는 로컬에만 저장', 'security.e2e': '종단간 암호화', 'security.forward': '순방향 비밀성', 'security.quantum': '양자 내성 암호화',
 
   'tab.chats': '채팅', 'tab.contacts': '연락처', 'tab.discover': '발견', 'tab.profile': '프로필',
 

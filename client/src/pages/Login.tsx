@@ -136,9 +136,31 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="login-logo">📱</div>
+        <div className="login-logo">
+          <img src="/icons/icon-512.png" alt="PaperPhone" className="login-logo-img" />
+        </div>
         <h1 className="login-title">{t('app.name')}</h1>
         <p className="login-subtitle">{t('auth.subtitle')}</p>
+
+        {/* Security Features */}
+        <div className="security-badges">
+          <div className="security-badge">
+            <span className="security-icon">🔒</span>
+            <span className="security-text">{t('security.local_keys')}</span>
+          </div>
+          <div className="security-badge">
+            <span className="security-icon">🛡️</span>
+            <span className="security-text">{t('security.e2e')}</span>
+          </div>
+          <div className="security-badge">
+            <span className="security-icon">🔗</span>
+            <span className="security-text">{t('security.forward')}</span>
+          </div>
+          <div className="security-badge">
+            <span className="security-icon">⚛️</span>
+            <span className="security-text">{t('security.quantum')}</span>
+          </div>
+        </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="input-group">

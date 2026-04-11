@@ -7,6 +7,7 @@ export const fr: Record<string, string> = {
   'auth.totp_code': 'Code de vérification', 'auth.verify': 'Vérifier',
   'auth.use_recovery': 'Utiliser un code de récupération', 'auth.recovery_code': 'Code de récupération',
   'auth.subtitle': 'Messagerie chiffrée de bout en bout',
+  'security.local_keys': 'Clés stockées localement', 'security.e2e': 'Chiffrement de bout en bout', 'security.forward': 'Confidentialité persistante', 'security.quantum': 'Résistant au quantique',
 
   'tab.chats': 'Discussions', 'tab.contacts': 'Contacts', 'tab.discover': 'Découvrir', 'tab.profile': 'Profil',
 

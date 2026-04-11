@@ -7,6 +7,7 @@ export const de: Record<string, string> = {
   'auth.totp_code': 'Verifizierungscode', 'auth.verify': 'Bestätigen',
   'auth.use_recovery': 'Wiederherstellungscode verwenden', 'auth.recovery_code': 'Wiederherstellungscode',
   'auth.subtitle': 'Ende-zu-Ende verschlüsselter Messenger',
+  'security.local_keys': 'Schlüssel lokal gespeichert', 'security.e2e': 'Ende-zu-Ende-Verschlüsselung', 'security.forward': 'Forward Secrecy', 'security.quantum': 'Quantensicher',
 
   'tab.chats': 'Chats', 'tab.contacts': 'Kontakte', 'tab.discover': 'Entdecken', 'tab.profile': 'Profil',
 
