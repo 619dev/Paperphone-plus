@@ -16,6 +16,11 @@ export const ko: Record<string, string> = {
 
   'chat.typing': '입력 중...', 'chat.placeholder': '메시지를 입력하세요...', 'chat.send': '전송',
   'chat.encrypted': '메시지는 종단간 암호화되어 있습니다',
+  'chat.no_recent_emoji': '최근 이모지 없음', 'chat.loading_stickers': '로딩 중...', 'chat.no_stickers': '이 팩에 정적 스티커가 없습니다',
+  'chat.uploading_image': '이미지 업로드 중...', 'chat.uploading_video': '동영상 업로드 중...', 'chat.uploading_file': '파일 업로드 중...', 'chat.uploading_voice': '음성 업로드 중...', 'chat.upload_failed': '업로드 실패',
+  'chat.attach_image': '이미지 전송', 'chat.attach_video': '동영상', 'chat.attach_file': '파일', 'chat.attach_voice': '음성', 'chat.attach_more': '더보기', 'chat.file': '파일',
+  'chat.recording': '녹음 중...', 'chat.stop_recording': '중지', 'chat.mic_failed': '마이크에 접근할 수 없습니다',
+  'chat.group_unencrypted_warning': '그룹 채팅은 암호화되지 않습니다. 개인정보를 공유하지 마세요.',
 
   'contacts.title': '연락처', 'contacts.friends': '친구', 'contacts.groups': '그룹',
   'contacts.requests': '친구 요청', 'contacts.add': '친구 추가', 'contacts.search_user': '사용자 검색...',
@@ -27,16 +32,23 @@ export const ko: Record<string, string> = {
   'group.notice': '공지', 'group.invite': '초대 링크', 'group.leave': '그룹 나가기',
   'group.disband': '그룹 해산', 'group.mute': '음소거', 'group.add_members': '멤버 추가',
   'group.remove_member': '삭제', 'group.auto_delete': '메시지 자동 삭제',
+  'group.info': '그룹 정보', 'group.edit_name': '그룹 이름 변경', 'group.edit_notice': '공지 수정', 'group.no_notice': '공지 없음', 'group.members_count': '명의 멤버',
+  'group.settings': '설정', 'group.mute_desc': '이 그룹의 알림을 받지 않습니다', 'group.send_message': '메시지 보내기', 'group.owner': '방장',
+  'group.uploading_avatar': '그룹 아이콘 업로드 중...', 'group.disband_confirm': '이 그룹을 해산하시겠습니까? 되돌릴 수 없습니다.', 'group.leave_confirm': '이 그룹을 나가시겠습니까?',
 
   'discover.title': '발견', 'discover.moments': '모먼트', 'discover.timeline': '타임라인',
   'discover.scan': 'QR 스캔',
 
   'moments.title': '모먼트', 'moments.post': '게시', 'moments.like': '좋아요',
   'moments.comment': '댓글', 'moments.write_comment': '댓글 작성...',
-  'moments.new_post': '무엇을 생각하고 있나요...', 'moments.visibility': '공개 범위',
-  'moments.public': '공개', 'moments.whitelist': '선택한 사람만', 'moments.blacklist': '제외',
+  'moments.new_post': '새 게시물', 'moments.write_something': '무엇을 생각하고 있나요...', 'moments.visibility': '공개 범위',
+  'moments.public': '모두에게 공개', 'moments.whitelist': '선택한 사람만', 'moments.blacklist': '일부 제외',
+  'moments.select_scope': '범위 선택', 'moments.add_images': '사진 추가', 'moments.add_video': '동영상 추가', 'moments.empty': '아직 게시물이 없습니다', 'moments.text_too_long': '텍스트는 1024자까지 가능합니다', 'moments.video_too_long': '동영상은 10분까지 가능합니다', 'moments.upload_failed': '업로드 실패', 'moments.publish_failed': '게시 실패',
 
   'timeline.title': '타임라인', 'timeline.post': '게시', 'timeline.anonymous': '익명',
+  'timeline.new_post': '새 게시물', 'timeline.write_something': '생각을 공유하세요...', 'timeline.empty': '아직 게시물이 없습니다', 'timeline.detail': '게시물 상세', 'timeline.comments': '댓글', 'timeline.write_comment': '댓글 작성...', 'timeline.add_images': '사진 추가', 'timeline.add_video': '동영상 추가', 'timeline.posting_anonymous': '익명 게시', 'timeline.posting_public': '공개 게시', 'timeline.anon_desc': '다른 사람에게 신원이 공개되지 않습니다', 'timeline.public_desc': '닉네임과 프로필 사진이 표시됩니다', 'timeline.text_too_long': '텍스트는 2048자까지 가능합니다', 'timeline.video_too_long': '동영상은 10분까지 가능합니다', 'timeline.upload_failed': '업로드 실패', 'timeline.publish_failed': '게시 실패',
+  'friend.remark': '친구 메모', 'friend.remark_placeholder': '메모 이름 설정', 'friend.no_remark': '메모 없음', 'friend.original_name': '원래 이름', 'friend.privacy': '모먼트 권한', 'friend.hide_their_moments': '상대 모먼트 숨기기', 'friend.hide_my_moments': '내 모먼트 숨기기', 'friend.latest_moments': '최근 모먼트', 'friend.no_moments': '아직 모먼트가 없습니다', 'friend.has_video': '동영상 포함',
+  'contacts.online': '온라인', 'contacts.offline': '오프라인',
 
   'profile.title': '설정', 'profile.account': '계정', 'profile.security': '보안',
   'profile.sessions': '기기', 'profile.theme': '다크 모드', 'profile.language': '언어',
@@ -50,9 +62,18 @@ export const ko: Record<string, string> = {
 
   'common.ok': '확인', 'common.cancel': '취소', 'common.save': '저장', 'common.delete': '삭제',
   'common.edit': '편집', 'common.loading': '로딩 중...', 'common.error': '오류',
-  'common.success': '성공', 'common.confirm': '확인', 'common.search': '검색', 'common.retry': '재시도',
+  'common.success': '성공', 'common.confirm': '확인', 'common.search': '검색', 'common.retry': '재시도', 'common.send': '보내기',
 
   'time.just_now': '방금', 'time.minutes_ago': '분 전', 'time.hours_ago': '시간 전', 'time.yesterday': '어제',
-  'auto_delete.off': '끄기', 'auto_delete.1h': '1시간', 'auto_delete.1d': '1일',
+  'auto_delete.off': '끄기', 'auto_delete.1h': '1시간', 'auto_delete.1d': '1일', 'auto_delete.3d': '3일',
   'auto_delete.7d': '7일', 'auto_delete.30d': '30일',
+  'auto_delete.title': '메시지 자동 삭제', 'auto_delete.private_desc': '양쪽 모두 자동 삭제 기간을 설정할 수 있습니다.', 'auto_delete.group_desc': '그룹 소유자만 설정할 수 있습니다.', 'auto_delete.owner_only': '그룹 소유자만 변경 가능', 'auto_delete.active_indicator': '메시지 자동 삭제:',
+  'chat.settings': '채팅 설정', 'chat.e2e_enabled': '종단 간 암호화 활성화', 'chat.e2e_desc': '메시지는 하이브리드 양자 안전 암호화(X25519 + Kyber KEM)로 보호됩니다.', 'chat.decrypt_failed': '이 메시지를 복호화할 수 없습니다',
+  'password.old': '현재 비밀번호', 'password.new': '새 비밀번호', 'password.too_short': '비밀번호는 6자 이상이어야 합니다', 'password.mismatch': '비밀번호가 일치하지 않습니다', 'password.changed': '비밀번호가 변경되었습니다',
+  'avatar.title': '프로필 사진 변경', 'avatar.upload': '새 사진 업로드',
+  'totp.title': '2단계 인증', 'totp.description': '로그인 시 인증 코드가 필요합니다.', 'totp.setup': '설정', 'totp.scan_qr': '인증 앱에 다음 비밀 키를 입력하세요:', 'totp.enter_code': '인증 앱의 6자리 코드 입력', 'totp.enable': '2단계 인증 활성화', 'totp.disable': '2단계 인증 비활성화', 'totp.enabled': '2단계 인증 활성화됨', 'totp.enabled_desc': '계정이 2단계 인증으로 보호되고 있습니다.', 'totp.enter_to_disable': '비활성화하려면 코드 입력', 'totp.invalid_code': '잘못된 코드', 'totp.recovery_codes': '복구 코드', 'totp.save_codes': '이 복구 코드를 안전한 곳에 보관하세요.',
+  'sessions.current': '현재 기기', 'sessions.others': '다른 기기', 'sessions.this_device': '현재', 'sessions.unknown': '알 수 없는 기기', 'sessions.active': '마지막 활동', 'sessions.revoke': '로그아웃', 'sessions.revoke_all': '다른 모든 기기 로그아웃', 'sessions.no_others': '다른 활성 세션이 없습니다',
+  'contacts.tags': '태그', 'tags.create': '태그 생성', 'tags.name': '태그 이름', 'tags.empty': '태그 없음', 'tags.select_friends': '이 태그의 친구를 선택하세요', 'tags.group_by_tag': '태그별 분류', 'tags.untagged': '미분류', 'tags.friends_count': '명의 친구', 'tags.assigned_count': '선택됨', 'tags.no_friends_in_tag': '이 태그에 친구가 없습니다',
+  'profile.appearance': '외관',
+  'fingerprint.title': '키 지문', 'fingerprint.identity_key': '신원 키 지문', 'fingerprint.description': '이 지문을 연락처와 직접 비교하여 통신이 제3자에 의해 가로채지 않았는지 확인하세요.', 'fingerprint.copy': '지문 복사', 'fingerprint.copied': '복사됨', 'fingerprint.how_to_verify': '확인 방법', 'fingerprint.verify_steps': '연락처와 직접 만나 지문을 비교하세요. 설정 → 키 지문을 열고 모든 줄이 일치하는지 확인합니다.',
 }

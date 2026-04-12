@@ -298,10 +298,20 @@ struct AutoDeleteReq { auto_delete: i32 }
 
 async fn update_auto_delete(
     State(state): State<Arc<AppState>>,
-    _auth: AuthUser,
+    auth: AuthUser,
     Path(id): Path<String>,
     Json(body): Json<AutoDeleteReq>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    const ALLOWED: [i32; 5] = [0, 86400, 259200, 604800, 2592000];
+    if !ALLOWED.contains(&body.auto_delete) {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Invalid auto_delete value" }))));
+    }
+    // Only group owner can change auto_delete
+    let owner: Option<(String,)> = sqlx::query_as("SELECT owner_id FROM `groups` WHERE id = ?")
+        .bind(&id).fetch_optional(&state.db).await.ok().flatten();
+    if owner.as_ref().map(|o| o.0.as_str()) != Some(&auth.0.id) {
+        return Err((axum::http::StatusCode::FORBIDDEN, Json(serde_json::json!({ "error": "Only the group owner can change auto-delete" }))));
+    }
     sqlx::query("UPDATE `groups` SET auto_delete = ? WHERE id = ?")
         .bind(body.auto_delete).bind(&id)
         .execute(&state.db).await.ok();

@@ -23,14 +23,14 @@ async fn list_packs(
     _auth: AuthUser,
 ) -> Json<serde_json::Value> {
     let default_packs = vec![
-        ("AnimatedEmojis", "Animated Emoji"),
-        ("PepeTheFrog", "Pepe"),
-        ("CatPack", "Cats"),
-        ("DogPack", "Dogs"),
-        ("FunnyMemes", "Memes"),
-        ("CuteStickers", "Cute"),
-        ("ClassicEmoticons", "Classic"),
-        ("AnimalStickers", "Animals"),
+        ("asterism_by_favorite_stickers_bot", "Asterism"),
+        ("in_DFCEDC_by_NaiDrawBot", "DFCEDC"),
+        ("sevendays_holidays_by_favorite_stickers_bot", "7 Days"),
+        ("marching_pockets_by_favorite_stickers_bot", "Pockets"),
+        ("triedge_by_favorite_stickers_bot", "Triedge"),
+        ("ongeki", "Ongeki"),
+        ("LINE_YURU_YURI", "Yuru Yuri"),
+        ("mingfengOuO", "MingFeng"),
     ];
 
     let packs: Vec<serde_json::Value> = if let Some(ref custom) = state.config.sticker_packs {
@@ -48,7 +48,7 @@ async fn list_packs(
         }).collect()
     };
 
-    Json(serde_json::json!(packs))
+    Json(serde_json::json!({ "packs": packs }))
 }
 
 async fn get_pack(

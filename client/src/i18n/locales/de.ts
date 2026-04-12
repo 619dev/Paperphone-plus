@@ -17,6 +17,11 @@ export const de: Record<string, string> = {
 
   'chat.typing': 'tippt...', 'chat.placeholder': 'Nachricht eingeben...', 'chat.send': 'Senden',
   'chat.encrypted': 'Nachrichten sind Ende-zu-Ende verschlüsselt',
+  'chat.no_recent_emoji': 'Keine kürzlichen Emojis', 'chat.loading_stickers': 'Laden...', 'chat.no_stickers': 'Keine statischen Sticker in diesem Pack',
+  'chat.uploading_image': 'Bild wird hochgeladen...', 'chat.uploading_video': 'Video wird hochgeladen...', 'chat.uploading_file': 'Datei wird hochgeladen...', 'chat.uploading_voice': 'Sprachnachricht wird hochgeladen...', 'chat.upload_failed': 'Hochladen fehlgeschlagen',
+  'chat.attach_image': 'Bild senden', 'chat.attach_video': 'Video', 'chat.attach_file': 'Datei', 'chat.attach_voice': 'Sprache', 'chat.attach_more': 'Mehr', 'chat.file': 'Datei',
+  'chat.recording': 'Aufnahme...', 'chat.stop_recording': 'Stopp', 'chat.mic_failed': 'Kein Zugriff auf Mikrofon',
+  'chat.group_unencrypted_warning': 'Gruppenchats sind nicht verschlüsselt. Teilen Sie keine privaten Informationen.',
 
   'contacts.title': 'Kontakte', 'contacts.friends': 'Freunde', 'contacts.groups': 'Gruppen',
   'contacts.requests': 'Freundschaftsanfragen', 'contacts.add': 'Freund hinzufügen',
@@ -29,16 +34,23 @@ export const de: Record<string, string> = {
   'group.notice': 'Ankündigung', 'group.invite': 'Einladungslink', 'group.leave': 'Gruppe verlassen',
   'group.disband': 'Gruppe auflösen', 'group.mute': 'Stumm', 'group.add_members': 'Mitglieder hinzufügen',
   'group.remove_member': 'Entfernen', 'group.auto_delete': 'Nachrichten automatisch löschen',
+  'group.info': 'Gruppeninfo', 'group.edit_name': 'Gruppenname ändern', 'group.edit_notice': 'Ankündigung bearbeiten', 'group.no_notice': 'Keine Ankündigung', 'group.members_count': 'Mitglieder',
+  'group.settings': 'Einstellungen', 'group.mute_desc': 'Sie erhalten keine Benachrichtigungen von dieser Gruppe', 'group.send_message': 'Nachricht senden', 'group.owner': 'Admin',
+  'group.uploading_avatar': 'Gruppenbild wird hochgeladen...', 'group.disband_confirm': 'Sind Sie sicher, dass Sie diese Gruppe auflösen möchten? Dies kann nicht rückgängig gemacht werden.', 'group.leave_confirm': 'Möchten Sie diese Gruppe wirklich verlassen?',
 
   'discover.title': 'Entdecken', 'discover.moments': 'Momente', 'discover.timeline': 'Timeline',
   'discover.scan': 'QR scannen',
 
   'moments.title': 'Momente', 'moments.post': 'Posten', 'moments.like': 'Gefällt mir',
   'moments.comment': 'Kommentar', 'moments.write_comment': 'Kommentar schreiben...',
-  'moments.new_post': 'Teile deine Gedanken...', 'moments.visibility': 'Sichtbarkeit',
-  'moments.public': 'Öffentlich', 'moments.whitelist': 'Nur ausgewählte', 'moments.blacklist': 'Ausgeschlossen',
+  'moments.new_post': 'Neuer Beitrag', 'moments.write_something': 'Teile deine Gedanken...', 'moments.visibility': 'Sichtbarkeit',
+  'moments.public': 'Alle', 'moments.whitelist': 'Nur ausgewählte', 'moments.blacklist': 'Alle außer',
+  'moments.select_scope': 'Bereich wählen', 'moments.add_images': 'Bilder hinzufügen', 'moments.add_video': 'Video hinzufügen', 'moments.empty': 'Noch keine Momente', 'moments.text_too_long': 'Text auf 1024 Zeichen begrenzt', 'moments.video_too_long': 'Video auf 10 Minuten begrenzt', 'moments.upload_failed': 'Upload fehlgeschlagen', 'moments.publish_failed': 'Veröffentlichung fehlgeschlagen',
 
   'timeline.title': 'Timeline', 'timeline.post': 'Posten', 'timeline.anonymous': 'Anonym',
+  'timeline.new_post': 'Neuer Beitrag', 'timeline.write_something': 'Teile deine Gedanken...', 'timeline.empty': 'Noch keine Beiträge', 'timeline.detail': 'Beitragsdetails', 'timeline.comments': 'Kommentare', 'timeline.write_comment': 'Kommentar schreiben...', 'timeline.add_images': 'Bilder hinzufügen', 'timeline.add_video': 'Video hinzufügen', 'timeline.posting_anonymous': 'Anonym posten', 'timeline.posting_public': 'Öffentlich posten', 'timeline.anon_desc': 'Andere sehen Ihre Identität nicht', 'timeline.public_desc': 'Nickname und Avatar werden angezeigt', 'timeline.text_too_long': 'Text auf 2048 Zeichen begrenzt', 'timeline.video_too_long': 'Video auf 10 Minuten begrenzt', 'timeline.upload_failed': 'Upload fehlgeschlagen', 'timeline.publish_failed': 'Veröffentlichung fehlgeschlagen',
+  'friend.remark': 'Freund-Notiz', 'friend.remark_placeholder': 'Spitzname setzen', 'friend.no_remark': 'Keine Notiz', 'friend.original_name': 'Originalname', 'friend.privacy': 'Momente-Privatsphäre', 'friend.hide_their_moments': 'Momente ausblenden', 'friend.hide_my_moments': 'Meine Momente verbergen', 'friend.latest_moments': 'Neueste Momente', 'friend.no_moments': 'Noch keine Momente', 'friend.has_video': 'Enthält Video',
+  'contacts.online': 'Online', 'contacts.offline': 'Offline',
 
   'profile.title': 'Einstellungen', 'profile.account': 'Konto', 'profile.security': 'Sicherheit',
   'profile.sessions': 'Geräte', 'profile.theme': 'Dunkelmodus', 'profile.language': 'Sprache',
@@ -52,9 +64,18 @@ export const de: Record<string, string> = {
 
   'common.ok': 'OK', 'common.cancel': 'Abbrechen', 'common.save': 'Speichern', 'common.delete': 'Löschen',
   'common.edit': 'Bearbeiten', 'common.loading': 'Laden...', 'common.error': 'Fehler',
-  'common.success': 'Erfolg', 'common.confirm': 'Bestätigen', 'common.search': 'Suchen', 'common.retry': 'Erneut versuchen',
+  'common.success': 'Erfolg', 'common.confirm': 'Bestätigen', 'common.search': 'Suchen', 'common.retry': 'Erneut versuchen', 'common.send': 'Senden',
 
   'time.just_now': 'Gerade eben', 'time.minutes_ago': 'min', 'time.hours_ago': 'Std.', 'time.yesterday': 'Gestern',
-  'auto_delete.off': 'Aus', 'auto_delete.1h': '1 Stunde', 'auto_delete.1d': '1 Tag',
+  'auto_delete.off': 'Aus', 'auto_delete.1h': '1 Stunde', 'auto_delete.1d': '1 Tag', 'auto_delete.3d': '3 Tage',
   'auto_delete.7d': '7 Tage', 'auto_delete.30d': '30 Tage',
+  'auto_delete.title': 'Nachrichten automatisch löschen', 'auto_delete.private_desc': 'Beide Parteien können den Löschzeitraum festlegen.', 'auto_delete.group_desc': 'Nur der Gruppenbesitzer kann den Zeitraum festlegen.', 'auto_delete.owner_only': 'Nur der Besitzer kann ändern', 'auto_delete.active_indicator': 'Auto-Löschung nach:',
+  'chat.settings': 'Chat-Einstellungen', 'chat.e2e_enabled': 'Ende-zu-Ende-Verschlüsselung aktiviert', 'chat.e2e_desc': 'Nachrichten werden mit hybrider quantensicherer Verschlüsselung (X25519 + Kyber KEM) geschützt.', 'chat.decrypt_failed': 'Diese Nachricht kann nicht entschlüsselt werden',
+  'password.old': 'Aktuelles Passwort', 'password.new': 'Neues Passwort', 'password.too_short': 'Passwort muss mindestens 6 Zeichen lang sein', 'password.mismatch': 'Passwörter stimmen nicht überein', 'password.changed': 'Passwort geändert',
+  'avatar.title': 'Avatar ändern', 'avatar.upload': 'Neues Foto hochladen',
+  'totp.title': 'Zwei-Faktor-Authentifizierung', 'totp.description': 'Bei der Anmeldung wird ein Verifizierungscode benötigt.', 'totp.setup': 'Einrichten', 'totp.scan_qr': 'Geben Sie diesen Schlüssel in Ihrer Authenticator-App ein:', 'totp.enter_code': '6-stelligen Code eingeben', 'totp.enable': '2FA aktivieren', 'totp.disable': '2FA deaktivieren', 'totp.enabled': '2FA ist aktiviert', 'totp.enabled_desc': 'Ihr Konto ist durch Zwei-Faktor-Authentifizierung geschützt.', 'totp.enter_to_disable': 'Code eingeben zum Deaktivieren', 'totp.invalid_code': 'Ungültiger Code', 'totp.recovery_codes': 'Wiederherstellungscodes', 'totp.save_codes': 'Bewahren Sie diese Codes an einem sicheren Ort auf.',
+  'sessions.current': 'Aktuelles Gerät', 'sessions.others': 'Andere Geräte', 'sessions.this_device': 'Aktuell', 'sessions.unknown': 'Unbekanntes Gerät', 'sessions.active': 'Zuletzt aktiv', 'sessions.revoke': 'Abmelden', 'sessions.revoke_all': 'Alle anderen abmelden', 'sessions.no_others': 'Keine anderen aktiven Sitzungen',
+  'contacts.tags': 'Tags', 'tags.create': 'Tag erstellen', 'tags.name': 'Tag-Name', 'tags.empty': 'Keine Tags', 'tags.select_friends': 'Freunde für dieses Tag auswählen', 'tags.group_by_tag': 'Nach Tag gruppieren', 'tags.untagged': 'Ohne Tag', 'tags.friends_count': 'Freunde', 'tags.assigned_count': 'ausgewählt', 'tags.no_friends_in_tag': 'Keine Freunde in diesem Tag',
+  'profile.appearance': 'Aussehen',
+  'fingerprint.title': 'Schlüssel-Fingerabdruck', 'fingerprint.identity_key': 'Identitätsschlüssel-Fingerabdruck', 'fingerprint.description': 'Vergleichen Sie diesen Fingerabdruck persönlich mit Ihrem Kontakt, um sicherzustellen, dass Ihre Kommunikation nicht abgefangen wird.', 'fingerprint.copy': 'Fingerabdruck kopieren', 'fingerprint.copied': 'Kopiert', 'fingerprint.how_to_verify': 'Wie verifizieren?', 'fingerprint.verify_steps': 'Treffen Sie Ihren Kontakt persönlich und vergleichen Sie die Fingerabdrücke. Öffnen Sie Einstellungen → Schlüssel-Fingerabdruck und prüfen Sie, ob jede Zeile übereinstimmt.',
 }

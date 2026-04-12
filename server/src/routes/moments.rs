@@ -43,6 +43,23 @@ async fn create_moment(
     auth: AuthUser,
     Json(body): Json<CreateMomentReq>,
 ) -> Result<(axum::http::StatusCode, Json<serde_json::Value>), (axum::http::StatusCode, Json<serde_json::Value>)> {
+    // ── Validation ──────────────────────────────────────────
+    if body.text_content.len() > 4096 { // ~1024 CJK chars in UTF-8
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Text too long (max 1024 characters)" }))));
+    }
+    let img_count = body.images.as_ref().map(|v| v.len()).unwrap_or(0);
+    if img_count > 9 {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Too many images (max 9)" }))));
+    }
+    if let Some(video) = &body.video {
+        if video.duration.unwrap_or(0) > 600 {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Video too long (max 10 minutes)" }))));
+        }
+        if img_count > 0 {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Cannot have both images and video" }))));
+        }
+    }
+
     let visibility = body.visibility.as_deref().unwrap_or("public");
 
     let result = sqlx::query("INSERT INTO moments (user_id, text_content, visibility) VALUES (?, ?, ?)")
@@ -89,10 +106,11 @@ struct MomentsQuery {
 
 async fn list_moments(
     State(state): State<Arc<AppState>>,
-    _auth: AuthUser,
+    auth: AuthUser,
     Query(params): Query<MomentsQuery>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
     let limit = params.limit.unwrap_or(20).min(50);
+    let viewer_id = &auth.0.id;
 
     let moments: Vec<(u64, String, String, String, chrono::NaiveDateTime, String, String, Option<String>)> = if let Some(before) = params.before {
         sqlx::query_as(
@@ -113,8 +131,44 @@ async fn list_moments(
         .fetch_all(&state.db).await.unwrap_or_default()
     };
 
+    // Get viewer's tag memberships for visibility checks
+    let viewer_tags: Vec<(u64,)> = sqlx::query_as(
+        "SELECT tag_id FROM friend_tag_assignments WHERE friend_id = ?"
+    ).bind(viewer_id).fetch_all(&state.db).await.unwrap_or_default();
+    let viewer_tag_ids: Vec<String> = viewer_tags.iter().map(|(id,)| id.to_string()).collect();
+
     let mut result = Vec::new();
     for (id, user_id, text, visibility, created_at, nickname, username, avatar) in &moments {
+        // Own moments always visible
+        if user_id != viewer_id {
+            // Check visibility rules
+            if visibility == "whitelist" {
+                let rules: Vec<(String, String)> = sqlx::query_as(
+                    "SELECT target_type, target_id FROM moment_visibility WHERE moment_id = ? AND type = 'whitelist'"
+                ).bind(id).fetch_all(&state.db).await.unwrap_or_default();
+
+                if !rules.is_empty() {
+                    let allowed = rules.iter().any(|(tt, tid)| {
+                        if tt == "user" { tid == viewer_id }
+                        else if tt == "tag" { viewer_tag_ids.contains(tid) }
+                        else { false }
+                    });
+                    if !allowed { continue; }
+                }
+            } else if visibility == "blacklist" {
+                let rules: Vec<(String, String)> = sqlx::query_as(
+                    "SELECT target_type, target_id FROM moment_visibility WHERE moment_id = ? AND type = 'blacklist'"
+                ).bind(id).fetch_all(&state.db).await.unwrap_or_default();
+
+                let blocked = rules.iter().any(|(tt, tid)| {
+                    if tt == "user" { tid == viewer_id }
+                    else if tt == "tag" { viewer_tag_ids.contains(tid) }
+                    else { false }
+                });
+                if blocked { continue; }
+            }
+        }
+
         // Get images
         let images: Vec<(String,)> = sqlx::query_as(
             "SELECT url FROM moment_images WHERE moment_id = ? ORDER BY sort_order"

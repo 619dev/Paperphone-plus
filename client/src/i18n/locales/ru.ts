@@ -17,6 +17,11 @@ export const ru: Record<string, string> = {
 
   'chat.typing': 'печатает...', 'chat.placeholder': 'Введите сообщение...', 'chat.send': 'Отправить',
   'chat.encrypted': 'Сообщения защищены сквозным шифрованием',
+  'chat.no_recent_emoji': 'Нет недавних эмодзи', 'chat.loading_stickers': 'Загрузка...', 'chat.no_stickers': 'Нет статических стикеров в этом наборе',
+  'chat.uploading_image': 'Загрузка изображения...', 'chat.uploading_video': 'Загрузка видео...', 'chat.uploading_file': 'Загрузка файла...', 'chat.uploading_voice': 'Загрузка голосового сообщения...', 'chat.upload_failed': 'Ошибка загрузки',
+  'chat.attach_image': 'Отправить изображение', 'chat.attach_video': 'Видео', 'chat.attach_file': 'Файл', 'chat.attach_voice': 'Голос', 'chat.attach_more': 'Ещё', 'chat.file': 'Файл',
+  'chat.recording': 'Запись...', 'chat.stop_recording': 'Остановить', 'chat.mic_failed': 'Нет доступа к микрофону',
+  'chat.group_unencrypted_warning': 'Групповые чаты не зашифрованы. Не делитесь конфиденциальной информацией.',
 
   'contacts.title': 'Контакты', 'contacts.friends': 'Друзья', 'contacts.groups': 'Группы',
   'contacts.requests': 'Заявки в друзья', 'contacts.add': 'Добавить друга',
@@ -29,16 +34,23 @@ export const ru: Record<string, string> = {
   'group.notice': 'Объявление', 'group.invite': 'Ссылка-приглашение', 'group.leave': 'Покинуть группу',
   'group.disband': 'Распустить группу', 'group.mute': 'Без звука', 'group.add_members': 'Добавить участников',
   'group.remove_member': 'Удалить', 'group.auto_delete': 'Авто-удаление сообщений',
+  'group.info': 'Информация о группе', 'group.edit_name': 'Изменить название', 'group.edit_notice': 'Изменить объявление', 'group.no_notice': 'Нет объявления', 'group.members_count': 'участников',
+  'group.settings': 'Настройки', 'group.mute_desc': 'Вы не будете получать уведомления от этой группы', 'group.send_message': 'Написать сообщение', 'group.owner': 'Админ',
+  'group.uploading_avatar': 'Загрузка аватара группы...', 'group.disband_confirm': 'Вы уверены, что хотите распустить эту группу? Это нельзя отменить.', 'group.leave_confirm': 'Вы уверены, что хотите покинуть эту группу?',
 
   'discover.title': 'Обзор', 'discover.moments': 'Моменты', 'discover.timeline': 'Лента',
   'discover.scan': 'Сканировать QR',
 
   'moments.title': 'Моменты', 'moments.post': 'Опубликовать', 'moments.like': 'Нравится',
   'moments.comment': 'Комментарий', 'moments.write_comment': 'Написать комментарий...',
-  'moments.new_post': 'Поделитесь мыслями...', 'moments.visibility': 'Видимость',
-  'moments.public': 'Для всех', 'moments.whitelist': 'Только выбранные', 'moments.blacklist': 'Исключённые',
+  'moments.new_post': 'Новая запись', 'moments.write_something': 'Поделитесь мыслями...', 'moments.visibility': 'Видимость',
+  'moments.public': 'Все', 'moments.whitelist': 'Только выбранные', 'moments.blacklist': 'Все кроме',
+  'moments.select_scope': 'Выбрать круг', 'moments.add_images': 'Добавить фото', 'moments.add_video': 'Добавить видео', 'moments.empty': 'Пока нет записей', 'moments.text_too_long': 'Текст до 1024 символов', 'moments.video_too_long': 'Видео до 10 минут', 'moments.upload_failed': 'Ошибка загрузки', 'moments.publish_failed': 'Ошибка публикации',
 
   'timeline.title': 'Лента', 'timeline.post': 'Опубликовать', 'timeline.anonymous': 'Анонимно',
+  'timeline.new_post': 'Новая запись', 'timeline.write_something': 'Поделитесь мыслями...', 'timeline.empty': 'Пока нет записей', 'timeline.detail': 'Подробности', 'timeline.comments': 'Комментарии', 'timeline.write_comment': 'Написать комментарий...', 'timeline.add_images': 'Добавить фото', 'timeline.add_video': 'Добавить видео', 'timeline.posting_anonymous': 'Анонимная публикация', 'timeline.posting_public': 'Публичная публикация', 'timeline.anon_desc': 'Другие не узнают вашу личность', 'timeline.public_desc': 'Ваш ник и аватар будут видны', 'timeline.text_too_long': 'Текст до 2048 символов', 'timeline.video_too_long': 'Видео до 10 минут', 'timeline.upload_failed': 'Ошибка загрузки', 'timeline.publish_failed': 'Ошибка публикации',
+  'friend.remark': 'Заметка о друге', 'friend.remark_placeholder': 'Установить имя', 'friend.no_remark': 'Нет заметки', 'friend.original_name': 'Оригинальное имя', 'friend.privacy': 'Приватность моментов', 'friend.hide_their_moments': 'Скрыть их моменты', 'friend.hide_my_moments': 'Скрыть мои от них', 'friend.latest_moments': 'Последние моменты', 'friend.no_moments': 'Пока нет моментов', 'friend.has_video': 'Содержит видео',
+  'contacts.online': 'В сети', 'contacts.offline': 'Не в сети',
 
   'profile.title': 'Настройки', 'profile.account': 'Аккаунт', 'profile.security': 'Безопасность',
   'profile.sessions': 'Устройства', 'profile.theme': 'Тёмная тема', 'profile.language': 'Язык',
@@ -52,9 +64,18 @@ export const ru: Record<string, string> = {
 
   'common.ok': 'ОК', 'common.cancel': 'Отмена', 'common.save': 'Сохранить', 'common.delete': 'Удалить',
   'common.edit': 'Редактировать', 'common.loading': 'Загрузка...', 'common.error': 'Ошибка',
-  'common.success': 'Успешно', 'common.confirm': 'Подтвердить', 'common.search': 'Поиск', 'common.retry': 'Повторить',
+  'common.success': 'Успешно', 'common.confirm': 'Подтвердить', 'common.search': 'Поиск', 'common.retry': 'Повторить', 'common.send': 'Отправить',
 
   'time.just_now': 'Только что', 'time.minutes_ago': 'мин', 'time.hours_ago': 'ч', 'time.yesterday': 'Вчера',
-  'auto_delete.off': 'Выкл.', 'auto_delete.1h': '1 час', 'auto_delete.1d': '1 день',
+  'auto_delete.off': 'Выкл.', 'auto_delete.1h': '1 час', 'auto_delete.1d': '1 день', 'auto_delete.3d': '3 дня',
   'auto_delete.7d': '7 дней', 'auto_delete.30d': '30 дней',
+  'auto_delete.title': 'Автоудаление сообщений', 'auto_delete.private_desc': 'Оба собеседника могут установить период автоудаления.', 'auto_delete.group_desc': 'Только владелец группы может установить период.', 'auto_delete.owner_only': 'Только владелец может изменить', 'auto_delete.active_indicator': 'Автоудаление через:',
+  'chat.settings': 'Настройки чата', 'chat.e2e_enabled': 'Сквозное шифрование включено', 'chat.e2e_desc': 'Сообщения защищены гибридным квантово-безопасным шифрованием (X25519 + Kyber KEM).', 'chat.decrypt_failed': 'Невозможно расшифровать сообщение',
+  'password.old': 'Текущий пароль', 'password.new': 'Новый пароль', 'password.too_short': 'Пароль должен быть не менее 6 символов', 'password.mismatch': 'Пароли не совпадают', 'password.changed': 'Пароль изменён',
+  'avatar.title': 'Изменить аватар', 'avatar.upload': 'Загрузить новое фото',
+  'totp.title': 'Двухфакторная аутентификация', 'totp.description': 'При входе потребуется код подтверждения.', 'totp.setup': 'Настроить', 'totp.scan_qr': 'Введите этот секретный ключ в приложении-аутентификаторе:', 'totp.enter_code': 'Введите 6-значный код', 'totp.enable': 'Включить 2FA', 'totp.disable': 'Отключить 2FA', 'totp.enabled': '2FA включена', 'totp.enabled_desc': 'Ваш аккаунт защищён двухфакторной аутентификацией.', 'totp.enter_to_disable': 'Введите код для отключения', 'totp.invalid_code': 'Неверный код', 'totp.recovery_codes': 'Коды восстановления', 'totp.save_codes': 'Сохраните эти коды в безопасном месте.',
+  'sessions.current': 'Текущее устройство', 'sessions.others': 'Другие устройства', 'sessions.this_device': 'Текущее', 'sessions.unknown': 'Неизвестное устройство', 'sessions.active': 'Последняя активность', 'sessions.revoke': 'Завершить', 'sessions.revoke_all': 'Завершить все остальные', 'sessions.no_others': 'Нет других активных сессий',
+  'contacts.tags': 'Теги', 'tags.create': 'Создать тег', 'tags.name': 'Название тега', 'tags.empty': 'Нет тегов', 'tags.select_friends': 'Выберите друзей для этого тега', 'tags.group_by_tag': 'Группировать по тегу', 'tags.untagged': 'Без тега', 'tags.friends_count': 'друзей', 'tags.assigned_count': 'выбрано', 'tags.no_friends_in_tag': 'Нет друзей в этом теге',
+  'profile.appearance': 'Оформление',
+  'fingerprint.title': 'Отпечаток ключа', 'fingerprint.identity_key': 'Отпечаток ключа идентификации', 'fingerprint.description': 'Сравните этот отпечаток с контактом лично, чтобы убедиться, что ваша связь не перехватывается третьей стороной.', 'fingerprint.copy': 'Скопировать отпечаток', 'fingerprint.copied': 'Скопировано', 'fingerprint.how_to_verify': 'Как проверить?', 'fingerprint.verify_steps': 'Встретьтесь с контактом лично и сравните отпечатки. Откройте Настройки → Отпечаток ключа и убедитесь, что каждая строка совпадает.',
 }

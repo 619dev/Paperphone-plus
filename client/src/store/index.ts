@@ -18,6 +18,9 @@ export interface Friend {
   avatar?: string
   is_online: boolean
   auto_delete: number
+  ik_pub?: string
+  kem_pub?: string
+  remark?: string
 }
 
 export interface ChatMessage {

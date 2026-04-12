@@ -12,6 +12,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/{id}/assign", post(assign_tag))
         .route("/{id}/unassign", post(unassign_tag))
         .route("/friend/{friend_id}", get(get_friend_tags))
+        .route("/assignments", get(get_all_assignments))
 }
 
 async fn list_tags(
@@ -127,4 +128,26 @@ async fn get_friend_tags(
     }).collect();
 
     Ok(Json(serde_json::json!(tags)))
+}
+
+/// Returns all tag assignments for the current user: { "tag_id": [friend_id, ...], ... }
+async fn get_all_assignments(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let rows: Vec<(u64, String)> = sqlx::query_as(
+        "SELECT fta.tag_id, fta.friend_id FROM friend_tag_assignments fta
+         JOIN friend_tags ft ON ft.id = fta.tag_id
+         WHERE ft.user_id = ?"
+    )
+    .bind(&auth.0.id)
+    .fetch_all(&state.db).await.unwrap_or_default();
+
+    // Build tag_id → [friend_ids] map
+    let mut map: std::collections::HashMap<u64, Vec<String>> = std::collections::HashMap::new();
+    for (tag_id, friend_id) in rows {
+        map.entry(tag_id).or_default().push(friend_id);
+    }
+
+    Ok(Json(serde_json::json!(map)))
 }

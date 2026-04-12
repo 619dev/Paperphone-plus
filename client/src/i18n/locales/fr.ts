@@ -17,6 +17,11 @@ export const fr: Record<string, string> = {
 
   'chat.typing': 'en train d\'écrire...', 'chat.placeholder': 'Tapez un message...', 'chat.send': 'Envoyer',
   'chat.encrypted': 'Messages chiffrés de bout en bout',
+  'chat.no_recent_emoji': 'Aucun emoji récent', 'chat.loading_stickers': 'Chargement...', 'chat.no_stickers': 'Aucun sticker statique dans ce pack',
+  'chat.uploading_image': 'Envoi de l\'image...', 'chat.uploading_video': 'Envoi de la vidéo...', 'chat.uploading_file': 'Envoi du fichier...', 'chat.uploading_voice': 'Envoi du message vocal...', 'chat.upload_failed': 'Échec de l\'envoi',
+  'chat.attach_image': 'Envoyer une image', 'chat.attach_video': 'Vidéo', 'chat.attach_file': 'Fichier', 'chat.attach_voice': 'Vocal', 'chat.attach_more': 'Plus', 'chat.file': 'Fichier',
+  'chat.recording': 'Enregistrement...', 'chat.stop_recording': 'Arrêter', 'chat.mic_failed': 'Impossible d\'accéder au micro',
+  'chat.group_unencrypted_warning': 'Les discussions de groupe ne sont pas chiffrées. Évitez de partager des informations privées.',
 
   'contacts.title': 'Contacts', 'contacts.friends': 'Amis', 'contacts.groups': 'Groupes',
   'contacts.requests': 'Demandes d\'amis', 'contacts.add': 'Ajouter un ami',
@@ -29,16 +34,23 @@ export const fr: Record<string, string> = {
   'group.notice': 'Annonce', 'group.invite': 'Lien d\'invitation', 'group.leave': 'Quitter le groupe',
   'group.disband': 'Dissoudre le groupe', 'group.mute': 'Muet', 'group.add_members': 'Ajouter des membres',
   'group.remove_member': 'Supprimer', 'group.auto_delete': 'Suppression auto des messages',
+  'group.info': 'Infos du groupe', 'group.edit_name': 'Modifier le nom', 'group.edit_notice': 'Modifier l\'annonce', 'group.no_notice': 'Aucune annonce', 'group.members_count': 'membres',
+  'group.settings': 'Paramètres', 'group.mute_desc': 'Vous ne recevrez pas de notifications de ce groupe', 'group.send_message': 'Envoyer un message', 'group.owner': 'Admin',
+  'group.uploading_avatar': 'Envoi de l\'avatar...', 'group.disband_confirm': 'Voulez-vous vraiment dissoudre ce groupe ? Irréversible.', 'group.leave_confirm': 'Voulez-vous vraiment quitter ce groupe ?',
 
   'discover.title': 'Découvrir', 'discover.moments': 'Moments', 'discover.timeline': 'Timeline',
   'discover.scan': 'Scanner QR',
 
   'moments.title': 'Moments', 'moments.post': 'Publier', 'moments.like': 'Aimer',
   'moments.comment': 'Commenter', 'moments.write_comment': 'Écrire un commentaire...',
-  'moments.new_post': 'Partagez vos pensées...', 'moments.visibility': 'Visibilité',
-  'moments.public': 'Public', 'moments.whitelist': 'Sélection uniquement', 'moments.blacklist': 'Exclus',
+  'moments.new_post': 'Nouvelle publication', 'moments.write_something': 'Partagez vos pensées...', 'moments.visibility': 'Visibilité',
+  'moments.public': 'Tout le monde', 'moments.whitelist': 'Sélection uniquement', 'moments.blacklist': 'Tout sauf',
+  'moments.select_scope': 'Sélectionner la portée', 'moments.add_images': 'Ajouter des images', 'moments.add_video': 'Ajouter une vidéo', 'moments.empty': 'Aucun moment', 'moments.text_too_long': 'Texte limité à 1024 caractères', 'moments.video_too_long': 'Vidéo limitée à 10 minutes', 'moments.upload_failed': 'Échec du téléchargement', 'moments.publish_failed': 'Échec de la publication',
 
   'timeline.title': 'Timeline', 'timeline.post': 'Publier', 'timeline.anonymous': 'Anonyme',
+  'timeline.new_post': 'Nouvelle publication', 'timeline.write_something': 'Partagez vos pensées...', 'timeline.empty': 'Aucune publication', 'timeline.detail': 'Détail', 'timeline.comments': 'Commentaires', 'timeline.write_comment': 'Écrire un commentaire...', 'timeline.add_images': 'Ajouter des images', 'timeline.add_video': 'Ajouter une vidéo', 'timeline.posting_anonymous': 'Publication anonyme', 'timeline.posting_public': 'Publication publique', 'timeline.anon_desc': 'Votre identité restera cachée', 'timeline.public_desc': 'Votre nom et avatar seront visibles', 'timeline.text_too_long': 'Texte limité à 2048 caractères', 'timeline.video_too_long': 'Vidéo limitée à 10 minutes', 'timeline.upload_failed': 'Échec du téléchargement', 'timeline.publish_failed': 'Échec de la publication',
+  'friend.remark': 'Note d\'ami', 'friend.remark_placeholder': 'Définir un surnom', 'friend.no_remark': 'Aucune note', 'friend.original_name': 'Nom original', 'friend.privacy': 'Confidentialité des moments', 'friend.hide_their_moments': 'Masquer ses moments', 'friend.hide_my_moments': 'Ne pas montrer mes moments', 'friend.latest_moments': 'Moments récents', 'friend.no_moments': 'Aucun moment', 'friend.has_video': 'Contient une vidéo',
+  'contacts.online': 'En ligne', 'contacts.offline': 'Hors ligne',
 
   'profile.title': 'Paramètres', 'profile.account': 'Compte', 'profile.security': 'Sécurité',
   'profile.sessions': 'Appareils', 'profile.theme': 'Mode sombre', 'profile.language': 'Langue',
@@ -52,9 +64,18 @@ export const fr: Record<string, string> = {
 
   'common.ok': 'OK', 'common.cancel': 'Annuler', 'common.save': 'Enregistrer', 'common.delete': 'Supprimer',
   'common.edit': 'Modifier', 'common.loading': 'Chargement...', 'common.error': 'Erreur',
-  'common.success': 'Succès', 'common.confirm': 'Confirmer', 'common.search': 'Rechercher', 'common.retry': 'Réessayer',
+  'common.success': 'Succès', 'common.confirm': 'Confirmer', 'common.search': 'Rechercher', 'common.retry': 'Réessayer', 'common.send': 'Envoyer',
 
   'time.just_now': 'À l\'instant', 'time.minutes_ago': 'min', 'time.hours_ago': 'h', 'time.yesterday': 'Hier',
-  'auto_delete.off': 'Désactivé', 'auto_delete.1h': '1 heure', 'auto_delete.1d': '1 jour',
+  'auto_delete.off': 'Désactivé', 'auto_delete.1h': '1 heure', 'auto_delete.1d': '1 jour', 'auto_delete.3d': '3 jours',
   'auto_delete.7d': '7 jours', 'auto_delete.30d': '30 jours',
+  'auto_delete.title': 'Suppression auto des messages', 'auto_delete.private_desc': 'Les deux parties peuvent définir la période de suppression automatique.', 'auto_delete.group_desc': 'Seul le propriétaire du groupe peut définir la période.', 'auto_delete.owner_only': 'Seul le propriétaire peut modifier', 'auto_delete.active_indicator': 'Suppression auto après:',
+  'chat.settings': 'Paramètres du chat', 'chat.e2e_enabled': 'Chiffrement de bout en bout activé', 'chat.e2e_desc': 'Les messages sont chiffrés avec un chiffrement hybride quantique sûr (X25519 + Kyber KEM).', 'chat.decrypt_failed': 'Impossible de déchiffrer ce message',
+  'password.old': 'Mot de passe actuel', 'password.new': 'Nouveau mot de passe', 'password.too_short': 'Le mot de passe doit comporter au moins 6 caractères', 'password.mismatch': 'Les mots de passe ne correspondent pas', 'password.changed': 'Mot de passe modifié',
+  'avatar.title': 'Changer l\'avatar', 'avatar.upload': 'Télécharger une nouvelle photo',
+  'totp.title': 'Authentification à deux facteurs', 'totp.description': 'Un code de vérification sera requis lors de la connexion.', 'totp.setup': 'Configurer', 'totp.scan_qr': 'Entrez cette clé secrète dans votre application d\'authentification :', 'totp.enter_code': 'Entrez le code à 6 chiffres', 'totp.enable': 'Activer 2FA', 'totp.disable': 'Désactiver 2FA', 'totp.enabled': '2FA activé', 'totp.enabled_desc': 'Votre compte est protégé par l\'authentification à deux facteurs.', 'totp.enter_to_disable': 'Entrez le code pour désactiver', 'totp.invalid_code': 'Code invalide', 'totp.recovery_codes': 'Codes de récupération', 'totp.save_codes': 'Conservez ces codes en lieu sûr.',
+  'sessions.current': 'Appareil actuel', 'sessions.others': 'Autres appareils', 'sessions.this_device': 'Actuel', 'sessions.unknown': 'Appareil inconnu', 'sessions.active': 'Dernière activité', 'sessions.revoke': 'Révoquer', 'sessions.revoke_all': 'Révoquer tous les autres', 'sessions.no_others': 'Aucune autre session active',
+  'contacts.tags': 'Tags', 'tags.create': 'Créer un tag', 'tags.name': 'Nom du tag', 'tags.empty': 'Aucun tag', 'tags.select_friends': 'Sélectionner les amis pour ce tag', 'tags.group_by_tag': 'Grouper par tag', 'tags.untagged': 'Sans tag', 'tags.friends_count': 'amis', 'tags.assigned_count': 'sélectionnés', 'tags.no_friends_in_tag': 'Aucun ami dans ce tag',
+  'profile.appearance': 'Apparence',
+  'fingerprint.title': 'Empreinte de clé', 'fingerprint.identity_key': 'Empreinte de clé d\'identité', 'fingerprint.description': 'Comparez cette empreinte avec votre contact en personne pour vérifier que vos communications ne sont pas interceptées.', 'fingerprint.copy': 'Copier l\'empreinte', 'fingerprint.copied': 'Copié', 'fingerprint.how_to_verify': 'Comment vérifier ?', 'fingerprint.verify_steps': 'Rencontrez votre contact en personne et comparez les empreintes. Ouvrez Paramètres → Empreinte de clé et vérifiez que chaque ligne correspond.',
 }

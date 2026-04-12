@@ -16,6 +16,11 @@ export const ja: Record<string, string> = {
 
   'chat.typing': '入力中...', 'chat.placeholder': 'メッセージを入力...', 'chat.send': '送信',
   'chat.encrypted': 'メッセージはエンドツーエンド暗号化されています',
+  'chat.no_recent_emoji': '最近の絵文字なし', 'chat.loading_stickers': '読み込み中...', 'chat.no_stickers': 'このパックに静的スタンプはありません',
+  'chat.uploading_image': '画像をアップロード中...', 'chat.uploading_video': '動画をアップロード中...', 'chat.uploading_file': 'ファイルをアップロード中...', 'chat.uploading_voice': '音声をアップロード中...', 'chat.upload_failed': 'アップロードに失敗しました',
+  'chat.attach_image': '画像を送信', 'chat.attach_video': '動画', 'chat.attach_file': 'ファイル', 'chat.attach_voice': '音声', 'chat.attach_more': 'その他', 'chat.file': 'ファイル',
+  'chat.recording': '録音中...', 'chat.stop_recording': '停止', 'chat.mic_failed': 'マイクにアクセスできません',
+  'chat.group_unencrypted_warning': 'グループチャットは暗号化されていません。プライバシー情報の共有は避けてください。',
 
   'contacts.title': '連絡先', 'contacts.friends': '友達', 'contacts.groups': 'グループ',
   'contacts.requests': '友達リクエスト', 'contacts.add': '友達を追加', 'contacts.search_user': 'ユーザーを検索...',
@@ -27,16 +32,23 @@ export const ja: Record<string, string> = {
   'group.notice': 'お知らせ', 'group.invite': '招待リンク', 'group.leave': 'グループを退出',
   'group.disband': 'グループを解散', 'group.mute': 'ミュート', 'group.add_members': 'メンバー追加',
   'group.remove_member': '削除', 'group.auto_delete': 'メッセージ自動削除',
+  'group.info': 'グループ情報', 'group.edit_name': 'グループ名を変更', 'group.edit_notice': 'お知らせを変更', 'group.no_notice': 'お知らせなし', 'group.members_count': '人のメンバー',
+  'group.settings': '設定', 'group.mute_desc': 'このグループからの通知を受け取りません', 'group.send_message': 'メッセージを送る', 'group.owner': 'オーナー',
+  'group.uploading_avatar': 'グループアイコンをアップロード中...', 'group.disband_confirm': 'このグループを解散しますか？元に戻せません。', 'group.leave_confirm': 'このグループを退出しますか？',
 
   'discover.title': '発見', 'discover.moments': 'モーメンツ', 'discover.timeline': 'タイムライン',
   'discover.scan': 'QRスキャン',
 
   'moments.title': 'モーメンツ', 'moments.post': '投稿', 'moments.like': 'いいね',
   'moments.comment': 'コメント', 'moments.write_comment': 'コメントを書く...',
-  'moments.new_post': '今何を考えていますか...', 'moments.visibility': '公開範囲',
-  'moments.public': '公開', 'moments.whitelist': '選択した人のみ', 'moments.blacklist': '除外',
+  'moments.new_post': '新しい投稿', 'moments.write_something': '今何を考えていますか...', 'moments.visibility': '公開範囲',
+  'moments.public': '全員に公開', 'moments.whitelist': '選択した人のみ', 'moments.blacklist': '一部を除く全員',
+  'moments.select_scope': '範囲を選択', 'moments.add_images': '画像を追加', 'moments.add_video': '動画を追加', 'moments.empty': 'まだ投稿がありません', 'moments.text_too_long': 'テキストは1024文字までです', 'moments.video_too_long': '動画は10分までです', 'moments.upload_failed': 'アップロード失敗', 'moments.publish_failed': '投稿失敗',
 
   'timeline.title': 'タイムライン', 'timeline.post': '投稿', 'timeline.anonymous': '匿名',
+  'timeline.new_post': '新しい投稿', 'timeline.write_something': '考えを共有...', 'timeline.empty': 'まだ投稿がありません', 'timeline.detail': '投稿詳細', 'timeline.comments': 'コメント', 'timeline.write_comment': 'コメントを書く...', 'timeline.add_images': '画像を追加', 'timeline.add_video': '動画を追加', 'timeline.posting_anonymous': '匿名で投稿', 'timeline.posting_public': '公開投稿', 'timeline.anon_desc': '他の人にはあなたの身元が見えません', 'timeline.public_desc': 'ニックネームとアバターが表示されます', 'timeline.text_too_long': 'テキストは2048文字までです', 'timeline.video_too_long': '動画は10分までです', 'timeline.upload_failed': 'アップロード失敗', 'timeline.publish_failed': '投稿失敗',
+  'friend.remark': '友達のメモ名', 'friend.remark_placeholder': 'メモ名を設定', 'friend.no_remark': 'メモなし', 'friend.original_name': '元の名前', 'friend.privacy': 'モーメンツ権限', 'friend.hide_their_moments': '相手のモーメンツを非表示', 'friend.hide_my_moments': '自分のモーメンツを非表示', 'friend.latest_moments': '最新モーメンツ', 'friend.no_moments': 'まだモーメンツがありません', 'friend.has_video': '動画あり',
+  'contacts.online': 'オンライン', 'contacts.offline': 'オフライン',
 
   'profile.title': '設定', 'profile.account': 'アカウント', 'profile.security': 'セキュリティ',
   'profile.sessions': 'デバイス', 'profile.theme': 'ダークモード', 'profile.language': '言語',
@@ -50,9 +62,18 @@ export const ja: Record<string, string> = {
 
   'common.ok': 'OK', 'common.cancel': 'キャンセル', 'common.save': '保存', 'common.delete': '削除',
   'common.edit': '編集', 'common.loading': '読み込み中...', 'common.error': 'エラー',
-  'common.success': '成功', 'common.confirm': '確認', 'common.search': '検索', 'common.retry': '再試行',
+  'common.success': '成功', 'common.confirm': '確認', 'common.search': '検索', 'common.retry': '再試行', 'common.send': '送信',
 
   'time.just_now': 'たった今', 'time.minutes_ago': '分前', 'time.hours_ago': '時間前', 'time.yesterday': '昨日',
-  'auto_delete.off': 'オフ', 'auto_delete.1h': '1時間', 'auto_delete.1d': '1日',
+  'auto_delete.off': 'オフ', 'auto_delete.1h': '1時間', 'auto_delete.1d': '1日', 'auto_delete.3d': '3日',
   'auto_delete.7d': '7日', 'auto_delete.30d': '30日',
+  'auto_delete.title': 'メッセージ自動削除', 'auto_delete.private_desc': '双方が自動削除期間を設定できます。', 'auto_delete.group_desc': 'グループオーナーのみが設定できます。', 'auto_delete.owner_only': 'グループオーナーのみ変更可能', 'auto_delete.active_indicator': 'メッセージの自動削除：',
+  'chat.settings': 'チャット設定', 'chat.e2e_enabled': 'エンドツーエンド暗号化が有効', 'chat.e2e_desc': 'メッセージはハイブリッド量子安全暗号化（X25519 + Kyber KEM）で保護されています。', 'chat.decrypt_failed': 'このメッセージを復号できません',
+  'password.old': '現在のパスワード', 'password.new': '新しいパスワード', 'password.too_short': 'パスワードは6文字以上必要です', 'password.mismatch': 'パスワードが一致しません', 'password.changed': 'パスワードを変更しました',
+  'avatar.title': 'アバター変更', 'avatar.upload': '新しい写真をアップロード',
+  'totp.title': '二段階認証', 'totp.description': 'ログイン時に認証コードが必要になります。', 'totp.setup': '設定する', 'totp.scan_qr': '認証アプリに以下の秘密鍵を入力してください：', 'totp.enter_code': '認証アプリの6桁のコードを入力', 'totp.enable': '二段階認証を有効にする', 'totp.disable': '二段階認証を無効にする', 'totp.enabled': '二段階認証が有効です', 'totp.enabled_desc': 'アカウントは二段階認証で保護されています。', 'totp.enter_to_disable': 'コードを入力して無効にする', 'totp.invalid_code': '無効なコード', 'totp.recovery_codes': 'リカバリーコード', 'totp.save_codes': 'これらのリカバリーコードを安全な場所に保存してください。',
+  'sessions.current': '現在のデバイス', 'sessions.others': '他のデバイス', 'sessions.this_device': '現在', 'sessions.unknown': '不明なデバイス', 'sessions.active': '最終アクティブ', 'sessions.revoke': 'ログアウト', 'sessions.revoke_all': '他のすべてをログアウト', 'sessions.no_others': '他のアクティブセッションはありません',
+  'contacts.tags': 'タグ', 'tags.create': 'タグ作成', 'tags.name': 'タグ名', 'tags.empty': 'タグがありません', 'tags.select_friends': 'このタグの友達を選択', 'tags.group_by_tag': 'タグで分類', 'tags.untagged': '未分類', 'tags.friends_count': '人の友達', 'tags.assigned_count': '選択済み', 'tags.no_friends_in_tag': 'このタグに友達がいません',
+  'profile.appearance': '外観',
+  'fingerprint.title': '鍵の指紋', 'fingerprint.identity_key': '身元鍵の指紋', 'fingerprint.description': 'この指紋を連絡先と直接比較して、通信が第三者に傍受されていないことを確認してください。', 'fingerprint.copy': '指紋をコピー', 'fingerprint.copied': 'コピーしました', 'fingerprint.how_to_verify': '確認方法', 'fingerprint.verify_steps': '連絡先と直接会って指紋を比較してください。お互いに「設定 → 鍵の指紋」を開き、すべての行が一致することを確認します。',
 }

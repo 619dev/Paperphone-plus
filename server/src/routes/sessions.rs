@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, routing::{get, delete}, extract::{State, Path}, Json};
+use axum::{Router, routing::{get, post, delete}, extract::{State, Path}, Json};
 
 use crate::AppState;
 use crate::auth::middleware::AuthUser;
@@ -8,6 +8,7 @@ pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_sessions))
         .route("/{id}", delete(revoke_session))
+        .route("/others/revoke", post(revoke_others))
 }
 
 async fn list_sessions(
@@ -47,4 +48,30 @@ async fn revoke_session(
     state.ws_clients.revoke_session(&auth.0.id, &session_id);
 
     Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+async fn revoke_others(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let current_session = auth.0.session_id.clone().unwrap_or_default();
+
+    // Get all other session IDs
+    let others: Vec<(String,)> = sqlx::query_as(
+        "SELECT id FROM sessions WHERE user_id = ? AND revoked = 0 AND id != ?"
+    )
+    .bind(&auth.0.id).bind(&current_session)
+    .fetch_all(&state.db).await.unwrap_or_default();
+
+    // Revoke them all
+    sqlx::query("UPDATE sessions SET revoked = 1 WHERE user_id = ? AND revoked = 0 AND id != ?")
+        .bind(&auth.0.id).bind(&current_session)
+        .execute(&state.db).await.ok();
+
+    // Notify WS to disconnect each
+    for (sid,) in &others {
+        state.ws_clients.revoke_session(&auth.0.id, sid);
+    }
+
+    Ok(Json(serde_json::json!({ "ok": true, "revoked": others.len() })))
 }

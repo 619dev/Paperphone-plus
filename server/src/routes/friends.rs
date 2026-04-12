@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, routing::{get, post, delete}, extract::{State, Path}, Json};
+use axum::{Router, routing::{get, post, put, delete}, extract::{State, Path}, Json};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -13,14 +13,15 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/accept", post(accept_request))
         .route("/{id}", delete(remove_friend))
         .route("/auto-delete", post(update_auto_delete))
+        .route("/remark", put(update_remark))
 }
 
 async fn list_friends(
     State(state): State<Arc<AppState>>,
     auth: AuthUser,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    let rows: Vec<(String, String, String, Option<String>, i8, i32)> = sqlx::query_as(
-        "SELECT u.id, u.username, u.nickname, u.avatar, u.is_online, f.auto_delete
+    let rows: Vec<(String, String, String, Option<String>, i8, i32, String, String, Option<String>)> = sqlx::query_as(
+        "SELECT u.id, u.username, u.nickname, u.avatar, u.is_online, f.auto_delete, u.ik_pub, u.kem_pub, f.remark
          FROM friends f JOIN users u ON u.id = f.friend_id
          WHERE f.user_id = ? AND f.status = 'accepted'
          ORDER BY u.nickname"
@@ -29,10 +30,11 @@ async fn list_friends(
     .fetch_all(&state.db).await
     .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
-    let friends: Vec<serde_json::Value> = rows.iter().map(|(id, username, nickname, avatar, online, auto_del)| {
+    let friends: Vec<serde_json::Value> = rows.iter().map(|(id, username, nickname, avatar, online, auto_del, ik_pub, kem_pub, remark)| {
         serde_json::json!({
             "id": id, "username": username, "nickname": nickname,
-            "avatar": avatar, "is_online": *online == 1, "auto_delete": auto_del
+            "avatar": avatar, "is_online": *online == 1, "auto_delete": auto_del,
+            "ik_pub": ik_pub, "kem_pub": kem_pub, "remark": remark
         })
     }).collect();
 
@@ -165,6 +167,10 @@ async fn update_auto_delete(
     auth: AuthUser,
     Json(body): Json<AutoDeleteReq>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    const ALLOWED: [i32; 5] = [0, 86400, 259200, 604800, 2592000];
+    if !ALLOWED.contains(&body.auto_delete) {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Invalid auto_delete value" }))));
+    }
     sqlx::query("UPDATE friends SET auto_delete = ? WHERE user_id = ? AND friend_id = ?")
         .bind(body.auto_delete).bind(&auth.0.id).bind(&body.friend_id)
         .execute(&state.db).await
@@ -173,5 +179,24 @@ async fn update_auto_delete(
     sqlx::query("UPDATE friends SET auto_delete = ? WHERE user_id = ? AND friend_id = ?")
         .bind(body.auto_delete).bind(&body.friend_id).bind(&auth.0.id)
         .execute(&state.db).await.ok();
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+#[derive(Deserialize)]
+struct RemarkReq {
+    friend_id: String,
+    remark: Option<String>,
+}
+
+async fn update_remark(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+    Json(body): Json<RemarkReq>,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let remark = body.remark.as_deref().map(|s| s.trim()).filter(|s| !s.is_empty());
+    sqlx::query("UPDATE friends SET remark = ? WHERE user_id = ? AND friend_id = ?")
+        .bind(remark).bind(&auth.0.id).bind(&body.friend_id)
+        .execute(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
     Ok(Json(serde_json::json!({ "ok": true })))
 }

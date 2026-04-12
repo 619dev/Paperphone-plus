@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS friends (
   friend_id   VARCHAR(36)     NOT NULL,
   status      ENUM('pending','accepted','blocked') NOT NULL DEFAULT 'pending',
   auto_delete INT             NOT NULL DEFAULT 604800,
+  remark      VARCHAR(128)    DEFAULT NULL,
   message     VARCHAR(512)    DEFAULT NULL,
   created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uk_pair (user_id, friend_id),
@@ -294,3 +295,9 @@ CREATE TABLE IF NOT EXISTS group_invites (
   INDEX idx_gi_group (group_id),
   INDEX idx_gi_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── Migrations (idempotent) ─────────────────────────────────────────────
+-- Add remark column to friends table
+SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'friends' AND COLUMN_NAME = 'remark');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE friends ADD COLUMN remark VARCHAR(128) DEFAULT NULL AFTER auto_delete', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

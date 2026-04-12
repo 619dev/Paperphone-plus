@@ -9,19 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "crystals-kyber-js": "^2.7.0",
+    "jsqr": "^1.4.0",
+    "libsodium-wrappers-sumo": "^0.7.15",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.0",
-    "zustand": "^5.0.0",
-    "libsodium-wrappers-sumo": "^0.7.15",
-    "jsqr": "^1.4.0",
-    "qrcode": "^1.5.4"
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "@types/libsodium-wrappers-sumo": "^0.7.8",
     "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",
     "typescript": "~5.7.0",
     "vite": "^6.0.0"

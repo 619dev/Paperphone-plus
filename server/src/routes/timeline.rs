@@ -33,6 +33,29 @@ async fn create_post(
     auth: AuthUser,
     Json(body): Json<CreatePostReq>,
 ) -> Result<(axum::http::StatusCode, Json<serde_json::Value>), (axum::http::StatusCode, Json<serde_json::Value>)> {
+    // ── Validation ──────────────────────────────────────────
+    if body.text_content.len() > 8192 { // ~2048 CJK chars in UTF-8
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Text too long (max 2048 characters)" }))));
+    }
+    if let Some(media) = &body.media {
+        let images: Vec<_> = media.iter().filter(|m| m.media_type.as_deref().unwrap_or("image") == "image").collect();
+        let videos: Vec<_> = media.iter().filter(|m| m.media_type.as_deref() == Some("video")).collect();
+        if images.len() > 50 {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Too many images (max 50)" }))));
+        }
+        if videos.len() > 1 {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Only one video allowed" }))));
+        }
+        if !images.is_empty() && !videos.is_empty() {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Cannot have both images and video" }))));
+        }
+        if let Some(v) = videos.first() {
+            if v.duration.unwrap_or(0) > 600 {
+                return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Video too long (max 10 minutes)" }))));
+            }
+        }
+    }
+
     let anon = body.is_anonymous.unwrap_or(false) as i8;
     let result = sqlx::query("INSERT INTO timeline_posts (user_id, text_content, is_anonymous) VALUES (?, ?, ?)")
         .bind(&auth.0.id).bind(&body.text_content).bind(anon)
