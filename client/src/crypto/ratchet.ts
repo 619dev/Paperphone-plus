@@ -13,9 +13,11 @@ let _sodium: typeof import('libsodium-wrappers-sumo') | null = null
 
 export async function initSodium() {
   if (_sodium) return _sodium
-  const _SodiumPlus = await import('libsodium-wrappers-sumo')
-  await _SodiumPlus.ready
-  _sodium = _SodiumPlus
+  const mod = await import('libsodium-wrappers-sumo')
+  // Handle both ESM default export and CJS module shape
+  const sodium = (mod as any).default || mod
+  await sodium.ready
+  _sodium = sodium
   return _sodium
 }
 
