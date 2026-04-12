@@ -15,7 +15,7 @@ const CACHE_TTL: std::time::Duration = std::time::Duration::from_secs(3600); // 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/packs", get(list_packs))
-        .route("/pack/:name", get(get_pack))
+        .route("/pack/{name}", get(get_pack))
 }
 
 async fn list_packs(
