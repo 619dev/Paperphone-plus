@@ -21,8 +21,14 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
     let schema = include_str!("schema.sql");
     // Split by semicolons and execute each statement
     for statement in schema.split(';') {
-        let stmt = statement.trim();
-        if stmt.is_empty() || stmt.starts_with("--") {
+        // Strip leading comment lines (--) so they don't cause CREATE TABLE to be skipped
+        let stmt: String = statement
+            .lines()
+            .filter(|line| !line.trim().starts_with("--"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let stmt = stmt.trim();
+        if stmt.is_empty() {
             continue;
         }
         // Skip PREPARE/EXECUTE/DEALLOCATE/SET statements (MySQL-specific procedural)
