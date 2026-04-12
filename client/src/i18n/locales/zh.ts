@@ -205,6 +205,7 @@ export const zh: Record<string, string> = {
   'call.incoming': '来电',
   'call.outgoing': '呼叫中...',
   'call.connected': '通话中',
+  'call.connecting': '连接中...',
   'call.ended': '通话结束',
   'call.video': '视频通话',
   'call.voice': '语音通话',

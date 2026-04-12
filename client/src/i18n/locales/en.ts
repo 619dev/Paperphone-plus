@@ -194,6 +194,7 @@ export const en: Record<string, string> = {
   'call.incoming': 'Incoming Call',
   'call.outgoing': 'Calling...',
   'call.connected': 'Connected',
+  'call.connecting': 'Connecting...',
   'call.ended': 'Call Ended',
   'call.video': 'Video Call',
   'call.voice': 'Voice Call',

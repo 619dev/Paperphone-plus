@@ -21,16 +21,27 @@ function ProtectedLayout() {
   useSocket()
 
   // Auto-subscribe to push notifications when authenticated
+  // Only auto-subscribe if permission already granted (to avoid browser blocking).
+  // First-time permission prompt is triggered via Profile settings (user interaction).
   useEffect(() => {
     (async () => {
+      // Web Push (VAPID)
       try {
-        // Web Push (VAPID)
-        const alreadySub = await isPushSubscribed()
-        if (!alreadySub) {
-          await subscribePush()
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const alreadySub = await isPushSubscribed()
+          if (!alreadySub) {
+            const ok = await subscribePush()
+            if (ok) console.log('[Push] Web Push subscribed successfully')
+          }
         }
-        // OneSignal: check if running inside Median.co native wrapper
+      } catch (e) {
+        console.warn('[Push] Web Push subscription failed:', e)
+      }
+
+      // OneSignal registration
+      try {
         const w = window as any
+        // Median.co native app wrapper
         if (w.median?.onesignal?.onesignalInfo) {
           w.median.onesignal.onesignalInfo((info: any) => {
             if (info?.oneSignalUserId) {
@@ -40,6 +51,16 @@ function ProtectedLayout() {
               }).catch(() => {})
             }
           })
+        }
+        // OneSignal Web SDK
+        if (w.OneSignal) {
+          const playerId = await w.OneSignal.getUserId?.()
+          if (playerId) {
+            post('/api/push/onesignal', {
+              player_id: playerId,
+              platform: 'web',
+            }).catch(() => {})
+          }
         }
       } catch {}
     })()
