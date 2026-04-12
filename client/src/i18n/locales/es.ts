@@ -25,7 +25,7 @@ export const es: Record<string, string> = {
 
   'contacts.title': 'Contactos', 'contacts.friends': 'Amigos', 'contacts.groups': 'Grupos',
   'contacts.requests': 'Solicitudes de amistad', 'contacts.add': 'Agregar amigo',
-  'contacts.search_user': 'Buscar usuarios...', 'contacts.add_friend': 'Agregar',
+  'contacts.search_user': 'Buscar usuarios...', 'contacts.add_friend': 'Agregar', 'contacts.request_message_hint': 'Escribe un mensaje (máx. 512 caracteres)',
   'contacts.pending': 'Pendiente', 'contacts.accept': 'Aceptar', 'contacts.reject': 'Rechazar',
   'contacts.send_request': 'Enviar solicitud', 'contacts.request_message': 'Mensaje',
   'contacts.empty': 'Sin contactos', 'contacts.scan_qr': 'Escanear QR',
@@ -37,9 +37,10 @@ export const es: Record<string, string> = {
   'group.info': 'Información del grupo', 'group.edit_name': 'Cambiar nombre', 'group.edit_notice': 'Editar anuncio', 'group.no_notice': 'Sin anuncio', 'group.members_count': 'miembros',
   'group.settings': 'Configuración', 'group.mute_desc': 'No recibirás notificaciones de este grupo', 'group.send_message': 'Enviar mensaje', 'group.owner': 'Admin',
   'group.uploading_avatar': 'Subiendo avatar del grupo...', 'group.disband_confirm': '¿Estás seguro de disolver este grupo? No se puede deshacer.', 'group.leave_confirm': '¿Estás seguro de abandonar este grupo?',
+  'group.qr_code': 'Código QR del grupo', 'group.qr_expire_1w': '1 semana', 'group.qr_expire_1m': '1 mes', 'group.qr_expire_3m': '3 meses', 'group.qr_hint': 'Escanea el código QR para unirte al grupo. El enlace expira después del período seleccionado.',
 
   'discover.title': 'Descubrir', 'discover.moments': 'Momentos', 'discover.timeline': 'Timeline',
-  'discover.scan': 'Escanear QR',
+  'discover.scan': 'Escanear QR', 'discover.scan_result': 'Resultado del escaneo', 'discover.invite_expired': 'El enlace de invitación ha caducado o es inválido',
 
   'moments.title': 'Momentos', 'moments.post': 'Publicar', 'moments.like': 'Me gusta',
   'moments.comment': 'Comentar', 'moments.write_comment': 'Escribir un comentario...',
@@ -56,6 +57,7 @@ export const es: Record<string, string> = {
   'profile.sessions': 'Dispositivos', 'profile.theme': 'Modo oscuro', 'profile.language': 'Idioma',
   'profile.change_password': 'Cambiar contraseña', 'profile.two_factor': 'Autenticación 2FA',
   'profile.about': 'Acerca de', 'profile.logout': 'Cerrar sesión', 'profile.tags': 'Etiquetas de amigos',
+  'profile.my_qr': 'Mi código QR', 'profile.qr_scan_hint': 'Escanea este código QR para agregarme como amigo',
 
   'call.incoming': 'Llamada entrante', 'call.outgoing': 'Llamando...', 'call.connected': 'Conectado',
   'call.ended': 'Llamada finalizada', 'call.video': 'Videollamada', 'call.voice': 'Llamada de voz',
@@ -74,6 +76,7 @@ export const es: Record<string, string> = {
   'password.old': 'Contraseña actual', 'password.new': 'Nueva contraseña', 'password.too_short': 'La contraseña debe tener al menos 6 caracteres', 'password.mismatch': 'Las contraseñas no coinciden', 'password.changed': 'Contraseña cambiada',
   'avatar.title': 'Cambiar avatar', 'avatar.upload': 'Subir nueva foto',
   'totp.title': 'Autenticación de dos factores', 'totp.description': 'Se requerirá un código de verificación al iniciar sesión.', 'totp.setup': 'Configurar', 'totp.scan_qr': 'Ingrese esta clave secreta en su aplicación autenticadora:', 'totp.enter_code': 'Ingrese el código de 6 dígitos', 'totp.enable': 'Activar 2FA', 'totp.disable': 'Desactivar 2FA', 'totp.enabled': '2FA activado', 'totp.enabled_desc': 'Su cuenta está protegida con autenticación de dos factores.', 'totp.enter_to_disable': 'Ingrese código para desactivar', 'totp.invalid_code': 'Código inválido', 'totp.recovery_codes': 'Códigos de recuperación', 'totp.save_codes': 'Guarde estos códigos en un lugar seguro.',
+  'totp.or_enter_secret': 'O ingrese la clave secreta manualmente',
   'sessions.current': 'Dispositivo actual', 'sessions.others': 'Otros dispositivos', 'sessions.this_device': 'Actual', 'sessions.unknown': 'Dispositivo desconocido', 'sessions.active': 'Última actividad', 'sessions.revoke': 'Revocar', 'sessions.revoke_all': 'Revocar todos los demás', 'sessions.no_others': 'No hay otras sesiones activas',
   'contacts.tags': 'Etiquetas', 'tags.create': 'Crear etiqueta', 'tags.name': 'Nombre de etiqueta', 'tags.empty': 'Sin etiquetas', 'tags.select_friends': 'Seleccionar amigos para esta etiqueta', 'tags.group_by_tag': 'Agrupar por etiqueta', 'tags.untagged': 'Sin etiqueta', 'tags.friends_count': 'amigos', 'tags.assigned_count': 'seleccionados', 'tags.no_friends_in_tag': 'No hay amigos en esta etiqueta',
   'profile.appearance': 'Apariencia',

@@ -35,11 +35,13 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🗝️ Zero-Knowledge Server | Server stores only ciphertext; private keys never leave the device |
 | 📹 Video & Voice Calls | WebRTC P2P (1:1) + Mesh (group), Cloudflare TURN for NAT traversal |
 | 👥 Group Chat | Up to 2000 members, plain-text messages (no encryption), Do Not Disturb mode, member management |
+| 👫 Friend System | Friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping |
 | ⏱️ Auto-Delete Messages | 5 tiers (never / 1 day / 3 days / 1 week / 1 month), settable by either party in DMs, owner-only in groups |
 | 🔔 Push Notifications | Web Push (VAPID) + OneSignal dual-channel — reach users even when offline |
 | 🌐 Multi-Language | Chinese, English, Japanese, Korean, French, German, Russian, Spanish — auto-detect + manual switch |
 | 📱 iOS — No Enterprise Cert | PWA via Safari "Add to Home Screen", works permanently without Apple signing |
 | 💬 Rich Messaging | Text, images, video, document files, voice messages, 200+ emoji, Telegram sticker packs, delivery receipts, typing indicators |
+| 📤 File Upload | Up to 500MB per file, Cloudflare R2 or local storage, with progress animation |
 | 🌐 Moments | WeChat-style social feed: text + up to 9 photos or 1 video (≤ 10 min), likes, comments, tag-based visibility |
 | 👤 User Profile | Contact profile page with bidirectional Moments privacy controls |
 | 📰 Timeline | Xiaohongshu-style public feed — dual-column masonry layout, anonymous posting, likes & comments |
@@ -83,6 +85,12 @@ Cryptographic Layer
 > 1. Go to Zeabur Console → **server service** → Environment Variables → copy `ZEABUR_WEB_URL`
 > 2. Go to **client service** → Environment Variables → add `VITE_API_URL` = the value copied above
 > 3. Restart the client service
+
+> [!TIP]
+> **Advanced: Zeabur + Vercel Hybrid Deployment**
+> After deploying on Zeabur, you can manually delete the **client** service and deploy the frontend on Vercel instead (see Option 2 below).
+> This way server/MySQL/Redis are hosted on Zeabur while the frontend is accelerated by Vercel's global CDN.
+> Set `VITE_API_URL` in Vercel to the public domain of your Zeabur server service.
 
 ### Option 1: Docker Compose (Recommended)
 ```bash

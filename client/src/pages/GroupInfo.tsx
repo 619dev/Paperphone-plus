@@ -4,6 +4,13 @@ import { get, post, put } from '../api/http'
 import { uploadFileWithProgress } from '../api/http'
 import { useI18n } from '../hooks/useI18n'
 import { useStore } from '../store'
+import { QRCodeCanvas } from '../components/QRCode'
+
+const INVITE_EXPIRY_OPTIONS = [
+  { days: 7, key: 'group.qr_expire_1w' },
+  { days: 30, key: 'group.qr_expire_1m' },
+  { days: 90, key: 'group.qr_expire_3m' },
+]
 
 export default function GroupInfo() {
   const { id } = useParams<{ id: string }>()
@@ -16,6 +23,10 @@ export default function GroupInfo() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(-1)
   const [myMuted, setMyMuted] = useState(false)
+  const [showQR, setShowQR] = useState(false)
+  const [inviteId, setInviteId] = useState('')
+  const [inviteExpiry, setInviteExpiry] = useState(7)
+  const [inviteLoading, setInviteLoading] = useState(false)
   const avatarRef = useRef<HTMLInputElement>(null)
 
   const isOwner = group?.owner_id === user?.id
@@ -271,6 +282,70 @@ export default function GroupInfo() {
             </div>
             <span style={{ opacity: 0.4, fontSize: 14 }}>›</span>
           </div>
+          {/* Group QR Code */}
+          <div className="list-item" onClick={async () => {
+              if (!showQR) {
+                setInviteLoading(true)
+                try {
+                  const res = await post(`/api/groups/${id}/invite`, { expires_days: inviteExpiry })
+                  setInviteId(res.invite_id)
+                  setShowQR(true)
+                } catch {}
+                setInviteLoading(false)
+              } else {
+                setShowQR(false)
+              }
+            }}
+            style={{ cursor: 'pointer', borderRadius: 12, marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>📱</span>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>{t('group.qr_code')}</div>
+            </div>
+            <span style={{ opacity: 0.4, fontSize: 14 }}>{inviteLoading ? '...' : showQR ? '▼' : '›'}</span>
+          </div>
+
+          {/* Inline invite QR panel */}
+          {showQR && inviteId && (
+            <div style={{
+              margin: '0 0 12px', padding: 20, borderRadius: 16,
+              background: 'var(--surface)', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 14,
+            }}>
+              {/* Expiry picker */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {INVITE_EXPIRY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.days}
+                    onClick={async () => {
+                      setInviteExpiry(opt.days)
+                      setInviteLoading(true)
+                      try {
+                        const res = await post(`/api/groups/${id}/invite`, { expires_days: opt.days })
+                        setInviteId(res.invite_id)
+                      } catch {}
+                      setInviteLoading(false)
+                    }}
+                    style={{
+                      padding: '6px 14px', borderRadius: 10, border: 'none', fontSize: 12,
+                      fontWeight: inviteExpiry === opt.days ? 700 : 400, cursor: 'pointer',
+                      background: inviteExpiry === opt.days ? 'var(--accent)' : 'var(--bg)',
+                      color: inviteExpiry === opt.days ? '#fff' : 'var(--text)',
+                      transition: 'all .15s ease',
+                    }}
+                  >
+                    {t(opt.key)}
+                  </button>
+                ))}
+              </div>
+
+              {/* QR code */}
+              <QRCodeCanvas data={`paperphone://invite/${inviteId}`} size={200} />
+
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                {t('group.qr_hint')}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="divider" />

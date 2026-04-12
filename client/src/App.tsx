@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useStore } from './store'
 import { useSocket } from './hooks/useSocket'
+import { loadFromIndexedDB } from './crypto/keystore'
 import Login from './pages/Login'
 import Chats from './pages/Chats'
 import Chat from './pages/Chat'
@@ -42,6 +43,11 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  // Hydrate crypto keys from IndexedDB (tier 4 of 4-tier key persistence)
+  useEffect(() => {
+    loadFromIndexedDB().catch(() => {})
+  }, [])
 
   return (
     <BrowserRouter>

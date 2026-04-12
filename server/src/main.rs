@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::get};
+use axum::{Router, routing::get, extract::DefaultBodyLimit};
 use tower_http::cors::{CorsLayer, Any};
 use tracing_subscriber::EnvFilter;
 
@@ -67,6 +67,7 @@ async fn main() {
         .route("/ws", get(ws::server::ws_handler))
         // API routes
         .nest("/api", routes::api_router())
+        .layer(DefaultBodyLimit::max(500 * 1024 * 1024)) // 500 MB upload limit
         .layer(cors)
         .with_state(state);
 

@@ -6,6 +6,16 @@ use uuid::Uuid;
 use crate::AppState;
 use crate::auth::middleware::AuthUser;
 
+const MAX_GROUP_MEMBERS: usize = 2000;
+
+async fn count_members(db: &sqlx::MySqlPool, group_id: &str) -> Result<usize, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let (count,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM group_members WHERE group_id = ?")
+        .bind(group_id)
+        .fetch_one(db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+    Ok(count as usize)
+}
+
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_groups).post(create_group))
@@ -43,22 +53,24 @@ async fn create_group(
         .bind(&id).bind(&auth.0.id)
         .execute(&state.db).await.ok();
 
-    // Add other members
+    // Add other members (enforce 2000 limit)
     if let Some(members) = &body.member_ids {
-        for member_id in members {
-            if member_id != &auth.0.id {
-                sqlx::query("INSERT INTO group_members (group_id, user_id) VALUES (?, ?)")
-                    .bind(&id).bind(member_id)
-                    .execute(&state.db).await.ok();
+        let to_add: Vec<&String> = members.iter().filter(|m| *m != &auth.0.id).collect();
+        if 1 + to_add.len() > MAX_GROUP_MEMBERS {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": format!("Group cannot exceed {} members", MAX_GROUP_MEMBERS) }))));
+        }
+        for member_id in to_add {
+            sqlx::query("INSERT INTO group_members (group_id, user_id) VALUES (?, ?)")
+                .bind(&id).bind(member_id)
+                .execute(&state.db).await.ok();
 
-                // Notify each member
-                state.ws_clients.send_to_user(member_id, serde_json::json!({
-                    "type": "group_member_added",
-                    "group_id": &id,
-                    "group_name": &body.name,
-                    "added_by": &auth.0.id,
-                }));
-            }
+            // Notify each member
+            state.ws_clients.send_to_user(member_id, serde_json::json!({
+                "type": "group_member_added",
+                "group_id": &id,
+                "group_name": &body.name,
+                "added_by": &auth.0.id,
+            }));
         }
     }
 
@@ -174,6 +186,12 @@ async fn add_members(
         .bind(&group_id).fetch_optional(&state.db).await.ok().flatten();
     let name = group_name.map(|g| g.0).unwrap_or_default();
 
+    // Enforce 2000-member limit
+    let current = count_members(&state.db, &group_id).await?;
+    if current + body.user_ids.len() > MAX_GROUP_MEMBERS {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": format!("Group cannot exceed {} members", MAX_GROUP_MEMBERS) }))));
+    }
+
     for uid in &body.user_ids {
         sqlx::query("INSERT IGNORE INTO group_members (group_id, user_id) VALUES (?, ?)")
             .bind(&group_id).bind(uid)
@@ -263,6 +281,12 @@ async fn join_by_invite(
 
     let (group_id,) = invite
         .ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "Invalid or expired invite" }))))?;
+
+    // Enforce 2000-member limit
+    let current = count_members(&state.db, &group_id).await?;
+    if current >= MAX_GROUP_MEMBERS {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": format!("Group cannot exceed {} members", MAX_GROUP_MEMBERS) }))));
+    }
 
     sqlx::query("INSERT IGNORE INTO group_members (group_id, user_id) VALUES (?, ?)")
         .bind(&group_id).bind(&auth.0.id)

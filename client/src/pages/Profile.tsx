@@ -6,8 +6,9 @@ import { clearKeys, getKeys } from '../crypto/keystore'
 import { disconnectWs } from '../api/socket'
 import { get, post, put, del } from '../api/http'
 import { allLangs, langNames, LangCode } from '../i18n'
+import { QRCodeCanvas } from '../components/QRCode'
 
-type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint'
+type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -35,6 +36,7 @@ export default function Profile() {
   if (subView === 'sessions') return <Sessions onBack={() => setSubView(null)} t={t} />
   if (subView === 'language') return <LanguagePicker onBack={() => setSubView(null)} t={t} lang={lang} setLang={setLang} />
   if (subView === 'fingerprint') return <KeyFingerprint onBack={() => setSubView(null)} t={t} user={user} />
+  if (subView === 'myqr') return <MyQRCode onBack={() => setSubView(null)} t={t} user={user} />
 
   return (
     <div className="page" id="profile-page">
@@ -51,7 +53,12 @@ export default function Profile() {
             <div className="name" style={{ fontSize: 18 }}>{user?.nickname}</div>
             <div className="preview">@{user?.username}</div>
           </div>
-          <span className="arrow">›</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={(e) => { e.stopPropagation(); setSubView('myqr') }}
+              style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, padding: 4 }}
+              title={t('profile.my_qr')}>📱</button>
+            <span className="arrow">›</span>
+          </div>
         </div>
 
         <div className="divider" />
@@ -299,9 +306,18 @@ function TwoFactorAuth({ onBack, t }: { onBack: () => void; t: (k: string) => st
         )}
 
         {step === 'setup' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontWeight: 600 }}>{t('totp.scan_qr')}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', wordBreak: 'break-all', background: 'var(--surface)', padding: 12, borderRadius: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+            <div style={{ fontWeight: 600, alignSelf: 'flex-start' }}>{t('totp.scan_qr')}</div>
+            {uri && (
+              <div style={{
+                background: '#fff', padding: 16, borderRadius: 16,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+              }}>
+                <QRCodeCanvas data={uri} size={200} />
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>{t('totp.or_enter_secret')}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', wordBreak: 'break-all', background: 'var(--surface)', padding: 12, borderRadius: 8, width: '100%', textAlign: 'center', fontFamily: 'monospace' }}>
               {secret}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('totp.enter_code')}</div>
@@ -624,6 +640,43 @@ function KeyFingerprint({ onBack, t, user }: { onBack: () => void; t: (k: string
             {t('fingerprint.how_to_verify')}
           </div>
           {t('fingerprint.verify_steps')}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUB-VIEW: My QR Code
+   ═══════════════════════════════════════════════════════════════════════════ */
+function MyQRCode({ onBack, t, user }: { onBack: () => void; t: (k: string) => string; user: any }) {
+  const qrData = `paperphone://friend/${user?.id}`
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>{t('profile.my_qr')}</h1>
+      </div>
+      <div className="page-body" style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        padding: 32, gap: 20,
+      }}>
+        <div className="avatar" style={{ width: 80, height: 80, fontSize: 36, borderRadius: 40 }}>
+          {user?.avatar ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: 40, objectFit: 'cover' }} /> : user?.nickname?.[0]?.toUpperCase()}
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{user?.nickname}</div>
+          <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>@{user?.username}</div>
+        </div>
+        <div style={{
+          background: '#fff', padding: 16, borderRadius: 16,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+        }}>
+          <QRCodeCanvas data={qrData} size={220} />
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', maxWidth: 280 }}>
+          {t('profile.qr_scan_hint')}
         </div>
       </div>
     </div>

@@ -62,13 +62,12 @@ async fn upload_file(
 
         // Fallback: save to local filesystem
         let upload_dir = &state.config.upload_dir;
-        let dir_path = format!("{}/uploads", upload_dir);
-        tokio::fs::create_dir_all(&dir_path).await.ok();
-        let file_path = format!("{}/{}.{}", dir_path, Uuid::new_v4(), ext);
+        tokio::fs::create_dir_all(format!("{}/uploads", upload_dir)).await.ok();
+        let file_path = format!("{}/{}", upload_dir, key);
         tokio::fs::write(&file_path, &data).await
             .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
-        let url = format!("/api/files/{}", file_path.trim_start_matches(&format!("{}/", upload_dir)));
+        let url = format!("/api/files/{}", key);
         return Ok(Json(serde_json::json!({ "url": url, "key": key })));
     }
 

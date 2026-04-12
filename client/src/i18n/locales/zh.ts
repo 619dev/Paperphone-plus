@@ -73,6 +73,7 @@ export const zh: Record<string, string> = {
   'contacts.add': '添加好友',
   'contacts.search_user': '搜索用户...',
   'contacts.add_friend': '添加',
+  'contacts.request_message_hint': '写一段验证消息（最多512字）',
   'contacts.pending': '等待确认',
   'contacts.accept': '接受',
   'contacts.reject': '拒绝',
@@ -105,12 +106,19 @@ export const zh: Record<string, string> = {
   'group.uploading_avatar': '正在上传群头像...',
   'group.disband_confirm': '确定要解散此群组吗？此操作不可撤销。',
   'group.leave_confirm': '确定要退出此群组吗？',
+  'group.qr_code': '群二维码',
+  'group.qr_expire_1w': '1 周',
+  'group.qr_expire_1m': '1 个月',
+  'group.qr_expire_3m': '3 个月',
+  'group.qr_hint': '扫描二维码加入群聊，该链接将在选定时间后过期',
 
   // Discover
   'discover.title': '发现',
   'discover.moments': '朋友圈',
   'discover.timeline': '时间线',
   'discover.scan': '扫一扫',
+  'discover.scan_result': '扫描结果',
+  'discover.invite_expired': '邀请链接已过期或无效',
 
   // Moments
   'moments.title': '朋友圈',
@@ -180,6 +188,8 @@ export const zh: Record<string, string> = {
   'profile.about': '关于',
   'profile.logout': '退出登录',
   'profile.tags': '好友标签',
+  'profile.my_qr': '我的二维码',
+  'profile.qr_scan_hint': '扫一扫上面的二维码，添加我为好友',
 
   // Call
   'call.incoming': '来电',
@@ -258,6 +268,7 @@ export const zh: Record<string, string> = {
   'totp.invalid_code': '验证码错误',
   'totp.recovery_codes': '恢复代码',
   'totp.save_codes': '请妥善保存这些恢复代码。如果你丢失了验证器，可以用这些代码登录。',
+  'totp.or_enter_secret': '或手动输入以下密钥',
 
   // Sessions
   'sessions.current': '当前设备',

@@ -25,7 +25,7 @@ export const ru: Record<string, string> = {
 
   'contacts.title': 'Контакты', 'contacts.friends': 'Друзья', 'contacts.groups': 'Группы',
   'contacts.requests': 'Заявки в друзья', 'contacts.add': 'Добавить друга',
-  'contacts.search_user': 'Поиск пользователей...', 'contacts.add_friend': 'Добавить',
+  'contacts.search_user': 'Поиск пользователей...', 'contacts.add_friend': 'Добавить', 'contacts.request_message_hint': 'Написать сообщение (до 512 символов)',
   'contacts.pending': 'Ожидание', 'contacts.accept': 'Принять', 'contacts.reject': 'Отклонить',
   'contacts.send_request': 'Отправить', 'contacts.request_message': 'Сообщение',
   'contacts.empty': 'Нет контактов', 'contacts.scan_qr': 'Сканировать QR',
@@ -37,9 +37,10 @@ export const ru: Record<string, string> = {
   'group.info': 'Информация о группе', 'group.edit_name': 'Изменить название', 'group.edit_notice': 'Изменить объявление', 'group.no_notice': 'Нет объявления', 'group.members_count': 'участников',
   'group.settings': 'Настройки', 'group.mute_desc': 'Вы не будете получать уведомления от этой группы', 'group.send_message': 'Написать сообщение', 'group.owner': 'Админ',
   'group.uploading_avatar': 'Загрузка аватара группы...', 'group.disband_confirm': 'Вы уверены, что хотите распустить эту группу? Это нельзя отменить.', 'group.leave_confirm': 'Вы уверены, что хотите покинуть эту группу?',
+  'group.qr_code': 'QR-код группы', 'group.qr_expire_1w': '1 неделя', 'group.qr_expire_1m': '1 месяц', 'group.qr_expire_3m': '3 месяца', 'group.qr_hint': 'Отсканируйте QR-код, чтобы присоединиться к группе. Ссылка истекает после выбранного периода.',
 
   'discover.title': 'Обзор', 'discover.moments': 'Моменты', 'discover.timeline': 'Лента',
-  'discover.scan': 'Сканировать QR',
+  'discover.scan': 'Сканировать QR', 'discover.scan_result': 'Результат сканирования', 'discover.invite_expired': 'Ссылка-приглашение истекла или недействительна',
 
   'moments.title': 'Моменты', 'moments.post': 'Опубликовать', 'moments.like': 'Нравится',
   'moments.comment': 'Комментарий', 'moments.write_comment': 'Написать комментарий...',
@@ -56,6 +57,7 @@ export const ru: Record<string, string> = {
   'profile.sessions': 'Устройства', 'profile.theme': 'Тёмная тема', 'profile.language': 'Язык',
   'profile.change_password': 'Сменить пароль', 'profile.two_factor': 'Двухфакторная авторизация',
   'profile.about': 'О приложении', 'profile.logout': 'Выйти', 'profile.tags': 'Теги друзей',
+  'profile.my_qr': 'Мой QR-код', 'profile.qr_scan_hint': 'Отсканируйте этот QR-код, чтобы добавить меня в друзья',
 
   'call.incoming': 'Входящий звонок', 'call.outgoing': 'Вызов...', 'call.connected': 'Подключён',
   'call.ended': 'Звонок завершён', 'call.video': 'Видеозвонок', 'call.voice': 'Голосовой звонок',
@@ -74,6 +76,7 @@ export const ru: Record<string, string> = {
   'password.old': 'Текущий пароль', 'password.new': 'Новый пароль', 'password.too_short': 'Пароль должен быть не менее 6 символов', 'password.mismatch': 'Пароли не совпадают', 'password.changed': 'Пароль изменён',
   'avatar.title': 'Изменить аватар', 'avatar.upload': 'Загрузить новое фото',
   'totp.title': 'Двухфакторная аутентификация', 'totp.description': 'При входе потребуется код подтверждения.', 'totp.setup': 'Настроить', 'totp.scan_qr': 'Введите этот секретный ключ в приложении-аутентификаторе:', 'totp.enter_code': 'Введите 6-значный код', 'totp.enable': 'Включить 2FA', 'totp.disable': 'Отключить 2FA', 'totp.enabled': '2FA включена', 'totp.enabled_desc': 'Ваш аккаунт защищён двухфакторной аутентификацией.', 'totp.enter_to_disable': 'Введите код для отключения', 'totp.invalid_code': 'Неверный код', 'totp.recovery_codes': 'Коды восстановления', 'totp.save_codes': 'Сохраните эти коды в безопасном месте.',
+  'totp.or_enter_secret': 'Или введите секретный ключ вручную',
   'sessions.current': 'Текущее устройство', 'sessions.others': 'Другие устройства', 'sessions.this_device': 'Текущее', 'sessions.unknown': 'Неизвестное устройство', 'sessions.active': 'Последняя активность', 'sessions.revoke': 'Завершить', 'sessions.revoke_all': 'Завершить все остальные', 'sessions.no_others': 'Нет других активных сессий',
   'contacts.tags': 'Теги', 'tags.create': 'Создать тег', 'tags.name': 'Название тега', 'tags.empty': 'Нет тегов', 'tags.select_friends': 'Выберите друзей для этого тега', 'tags.group_by_tag': 'Группировать по тегу', 'tags.untagged': 'Без тега', 'tags.friends_count': 'друзей', 'tags.assigned_count': 'выбрано', 'tags.no_friends_in_tag': 'Нет друзей в этом теге',
   'profile.appearance': 'Оформление',

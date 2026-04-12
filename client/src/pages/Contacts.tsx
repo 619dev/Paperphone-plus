@@ -29,6 +29,8 @@ export default function Contacts() {
   const [searchQ, setSearchQ] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
 
+  const [requestMsg, setRequestMsg] = useState('')
+
   // Tags state
   const [tags, setTags] = useState<Tag[]>([])
   const [assignments, setAssignments] = useState<AssignmentMap>({})
@@ -84,7 +86,8 @@ export default function Contacts() {
 
   const sendFriendRequest = async (friendId: string) => {
     try {
-      await post('/api/friends/request', { friend_id: friendId })
+      await post('/api/friends/request', { friend_id: friendId, message: requestMsg || null })
+      setRequestMsg('')
       searchUsers()
     } catch {}
   }
@@ -275,6 +278,27 @@ export default function Contacts() {
             />
             <button className="btn btn-primary btn-sm" onClick={searchUsers}>{t('common.search')}</button>
           </div>
+          {searchResults.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  className="input" id="friend-request-msg"
+                  placeholder={t('contacts.request_message_hint')}
+                  value={requestMsg}
+                  onChange={e => { if (e.target.value.length <= 512) setRequestMsg(e.target.value) }}
+                  maxLength={512}
+                  rows={2}
+                  style={{ width: '100%', resize: 'none', fontSize: 13, boxSizing: 'border-box' }}
+                />
+                <div style={{
+                  textAlign: 'right', fontSize: 11, color: requestMsg.length > 480 ? 'var(--danger, #ff3b30)' : 'var(--text-muted)',
+                  marginTop: 2,
+                }}>
+                  {requestMsg.length}/512
+                </div>
+              </div>
+            </div>
+          )}
           {searchResults.map(u => (
             <div key={u.id} className="list-item">
               <div className="avatar avatar-sm">{u.avatar ? <img src={u.avatar} alt="" /> : u.nickname?.[0]}</div>

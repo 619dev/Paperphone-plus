@@ -24,7 +24,7 @@ export const ko: Record<string, string> = {
 
   'contacts.title': '연락처', 'contacts.friends': '친구', 'contacts.groups': '그룹',
   'contacts.requests': '친구 요청', 'contacts.add': '친구 추가', 'contacts.search_user': '사용자 검색...',
-  'contacts.add_friend': '추가', 'contacts.pending': '대기 중', 'contacts.accept': '수락',
+  'contacts.add_friend': '추가', 'contacts.request_message_hint': '메시지 작성 (최대 512자)', 'contacts.pending': '대기 중', 'contacts.accept': '수락',
   'contacts.reject': '거절', 'contacts.send_request': '요청 보내기', 'contacts.request_message': '메시지',
   'contacts.empty': '연락처가 없습니다', 'contacts.scan_qr': 'QR 스캔',
 
@@ -35,9 +35,10 @@ export const ko: Record<string, string> = {
   'group.info': '그룹 정보', 'group.edit_name': '그룹 이름 변경', 'group.edit_notice': '공지 수정', 'group.no_notice': '공지 없음', 'group.members_count': '명의 멤버',
   'group.settings': '설정', 'group.mute_desc': '이 그룹의 알림을 받지 않습니다', 'group.send_message': '메시지 보내기', 'group.owner': '방장',
   'group.uploading_avatar': '그룹 아이콘 업로드 중...', 'group.disband_confirm': '이 그룹을 해산하시겠습니까? 되돌릴 수 없습니다.', 'group.leave_confirm': '이 그룹을 나가시겠습니까?',
+  'group.qr_code': '그룹 QR 코드', 'group.qr_expire_1w': '1주', 'group.qr_expire_1m': '1개월', 'group.qr_expire_3m': '3개월', 'group.qr_hint': 'QR 코드를 스캔하여 그룹에 참여하세요. 링크는 선택한 기간 후 만료됩니다.',
 
   'discover.title': '발견', 'discover.moments': '모먼트', 'discover.timeline': '타임라인',
-  'discover.scan': 'QR 스캔',
+  'discover.scan': 'QR 스캔', 'discover.scan_result': '스캔 결과', 'discover.invite_expired': '초대 링크가 만료되었거나 유효하지 않습니다',
 
   'moments.title': '모먼트', 'moments.post': '게시', 'moments.like': '좋아요',
   'moments.comment': '댓글', 'moments.write_comment': '댓글 작성...',
@@ -54,6 +55,7 @@ export const ko: Record<string, string> = {
   'profile.sessions': '기기', 'profile.theme': '다크 모드', 'profile.language': '언어',
   'profile.change_password': '비밀번호 변경', 'profile.two_factor': '2단계 인증',
   'profile.about': '정보', 'profile.logout': '로그아웃', 'profile.tags': '친구 태그',
+  'profile.my_qr': '내 QR 코드', 'profile.qr_scan_hint': '이 QR 코드를 스캔하여 친구로 추가',
 
   'call.incoming': '수신 전화', 'call.outgoing': '발신 중...', 'call.connected': '통화 중',
   'call.ended': '통화 종료', 'call.video': '영상 통화', 'call.voice': '음성 통화',
@@ -72,6 +74,7 @@ export const ko: Record<string, string> = {
   'password.old': '현재 비밀번호', 'password.new': '새 비밀번호', 'password.too_short': '비밀번호는 6자 이상이어야 합니다', 'password.mismatch': '비밀번호가 일치하지 않습니다', 'password.changed': '비밀번호가 변경되었습니다',
   'avatar.title': '프로필 사진 변경', 'avatar.upload': '새 사진 업로드',
   'totp.title': '2단계 인증', 'totp.description': '로그인 시 인증 코드가 필요합니다.', 'totp.setup': '설정', 'totp.scan_qr': '인증 앱에 다음 비밀 키를 입력하세요:', 'totp.enter_code': '인증 앱의 6자리 코드 입력', 'totp.enable': '2단계 인증 활성화', 'totp.disable': '2단계 인증 비활성화', 'totp.enabled': '2단계 인증 활성화됨', 'totp.enabled_desc': '계정이 2단계 인증으로 보호되고 있습니다.', 'totp.enter_to_disable': '비활성화하려면 코드 입력', 'totp.invalid_code': '잘못된 코드', 'totp.recovery_codes': '복구 코드', 'totp.save_codes': '이 복구 코드를 안전한 곳에 보관하세요.',
+  'totp.or_enter_secret': '또는 아래 비밀 키를 수동으로 입력',
   'sessions.current': '현재 기기', 'sessions.others': '다른 기기', 'sessions.this_device': '현재', 'sessions.unknown': '알 수 없는 기기', 'sessions.active': '마지막 활동', 'sessions.revoke': '로그아웃', 'sessions.revoke_all': '다른 모든 기기 로그아웃', 'sessions.no_others': '다른 활성 세션이 없습니다',
   'contacts.tags': '태그', 'tags.create': '태그 생성', 'tags.name': '태그 이름', 'tags.empty': '태그 없음', 'tags.select_friends': '이 태그의 친구를 선택하세요', 'tags.group_by_tag': '태그별 분류', 'tags.untagged': '미분류', 'tags.friends_count': '명의 친구', 'tags.assigned_count': '선택됨', 'tags.no_friends_in_tag': '이 태그에 친구가 없습니다',
   'profile.appearance': '외관',

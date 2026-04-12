@@ -24,7 +24,7 @@ export const ja: Record<string, string> = {
 
   'contacts.title': '連絡先', 'contacts.friends': '友達', 'contacts.groups': 'グループ',
   'contacts.requests': '友達リクエスト', 'contacts.add': '友達を追加', 'contacts.search_user': 'ユーザーを検索...',
-  'contacts.add_friend': '追加', 'contacts.pending': '保留中', 'contacts.accept': '承認',
+  'contacts.add_friend': '追加', 'contacts.request_message_hint': 'メッセージを書く（最大512文字）', 'contacts.pending': '保留中', 'contacts.accept': '承認',
   'contacts.reject': '拒否', 'contacts.send_request': 'リクエスト送信', 'contacts.request_message': 'メッセージ',
   'contacts.empty': '連絡先がありません', 'contacts.scan_qr': 'QRスキャン',
 
@@ -35,9 +35,10 @@ export const ja: Record<string, string> = {
   'group.info': 'グループ情報', 'group.edit_name': 'グループ名を変更', 'group.edit_notice': 'お知らせを変更', 'group.no_notice': 'お知らせなし', 'group.members_count': '人のメンバー',
   'group.settings': '設定', 'group.mute_desc': 'このグループからの通知を受け取りません', 'group.send_message': 'メッセージを送る', 'group.owner': 'オーナー',
   'group.uploading_avatar': 'グループアイコンをアップロード中...', 'group.disband_confirm': 'このグループを解散しますか？元に戻せません。', 'group.leave_confirm': 'このグループを退出しますか？',
+  'group.qr_code': 'グループQRコード', 'group.qr_expire_1w': '1週間', 'group.qr_expire_1m': '1ヶ月', 'group.qr_expire_3m': '3ヶ月', 'group.qr_hint': 'QRコードをスキャンしてグループに参加。リンクは選択した期間後に有効期限切れ',
 
   'discover.title': '発見', 'discover.moments': 'モーメンツ', 'discover.timeline': 'タイムライン',
-  'discover.scan': 'QRスキャン',
+  'discover.scan': 'QRスキャン', 'discover.scan_result': 'スキャン結果', 'discover.invite_expired': '招待リンクは期限切れまたは無効です',
 
   'moments.title': 'モーメンツ', 'moments.post': '投稿', 'moments.like': 'いいね',
   'moments.comment': 'コメント', 'moments.write_comment': 'コメントを書く...',
@@ -53,7 +54,7 @@ export const ja: Record<string, string> = {
   'profile.title': '設定', 'profile.account': 'アカウント', 'profile.security': 'セキュリティ',
   'profile.sessions': 'デバイス', 'profile.theme': 'ダークモード', 'profile.language': '言語',
   'profile.change_password': 'パスワード変更', 'profile.two_factor': '二段階認証',
-  'profile.about': 'について', 'profile.logout': 'ログアウト', 'profile.tags': '友達タグ',
+  'profile.about': 'について', 'profile.logout': 'ログアウト',  'profile.tags': 'タグ', 'profile.my_qr': 'マイQRコード', 'profile.qr_scan_hint': 'このQRコードをスキャンして友達に追加',
 
   'call.incoming': '着信', 'call.outgoing': '発信中...', 'call.connected': '通話中',
   'call.ended': '通話終了', 'call.video': 'ビデオ通話', 'call.voice': '音声通話',
@@ -72,6 +73,7 @@ export const ja: Record<string, string> = {
   'password.old': '現在のパスワード', 'password.new': '新しいパスワード', 'password.too_short': 'パスワードは6文字以上必要です', 'password.mismatch': 'パスワードが一致しません', 'password.changed': 'パスワードを変更しました',
   'avatar.title': 'アバター変更', 'avatar.upload': '新しい写真をアップロード',
   'totp.title': '二段階認証', 'totp.description': 'ログイン時に認証コードが必要になります。', 'totp.setup': '設定する', 'totp.scan_qr': '認証アプリに以下の秘密鍵を入力してください：', 'totp.enter_code': '認証アプリの6桁のコードを入力', 'totp.enable': '二段階認証を有効にする', 'totp.disable': '二段階認証を無効にする', 'totp.enabled': '二段階認証が有効です', 'totp.enabled_desc': 'アカウントは二段階認証で保護されています。', 'totp.enter_to_disable': 'コードを入力して無効にする', 'totp.invalid_code': '無効なコード', 'totp.recovery_codes': 'リカバリーコード', 'totp.save_codes': 'これらのリカバリーコードを安全な場所に保存してください。',
+  'totp.or_enter_secret': 'または以下のシークレットキーを手動で入力',
   'sessions.current': '現在のデバイス', 'sessions.others': '他のデバイス', 'sessions.this_device': '現在', 'sessions.unknown': '不明なデバイス', 'sessions.active': '最終アクティブ', 'sessions.revoke': 'ログアウト', 'sessions.revoke_all': '他のすべてをログアウト', 'sessions.no_others': '他のアクティブセッションはありません',
   'contacts.tags': 'タグ', 'tags.create': 'タグ作成', 'tags.name': 'タグ名', 'tags.empty': 'タグがありません', 'tags.select_friends': 'このタグの友達を選択', 'tags.group_by_tag': 'タグで分類', 'tags.untagged': '未分類', 'tags.friends_count': '人の友達', 'tags.assigned_count': '選択済み', 'tags.no_friends_in_tag': 'このタグに友達がいません',
   'profile.appearance': '外観',

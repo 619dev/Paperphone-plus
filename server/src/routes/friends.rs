@@ -78,6 +78,13 @@ async fn send_request(
         return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Cannot add yourself" }))));
     }
 
+    // Validate message length (max 512 chars)
+    if let Some(ref msg) = body.message {
+        if msg.chars().count() > 512 {
+            return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Message too long (max 512 characters)" }))));
+        }
+    }
+
     sqlx::query(
         "INSERT INTO friends (user_id, friend_id, status, message) VALUES (?, ?, 'pending', ?)
          ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message)"

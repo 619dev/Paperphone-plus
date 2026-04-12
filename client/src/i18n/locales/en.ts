@@ -68,6 +68,7 @@ export const en: Record<string, string> = {
   'contacts.add': 'Add Friend',
   'contacts.search_user': 'Search users...',
   'contacts.add_friend': 'Add',
+  'contacts.request_message_hint': 'Write a message (up to 512 chars)',
   'contacts.pending': 'Pending',
   'contacts.accept': 'Accept',
   'contacts.reject': 'Reject',
@@ -99,11 +100,18 @@ export const en: Record<string, string> = {
   'group.uploading_avatar': 'Uploading group avatar...',
   'group.disband_confirm': 'Are you sure you want to disband this group? This cannot be undone.',
   'group.leave_confirm': 'Are you sure you want to leave this group?',
+  'group.qr_code': 'Group QR Code',
+  'group.qr_expire_1w': '1 Week',
+  'group.qr_expire_1m': '1 Month',
+  'group.qr_expire_3m': '3 Months',
+  'group.qr_hint': 'Scan QR code to join this group. Link expires after the selected period.',
 
   'discover.title': 'Discover',
   'discover.moments': 'Moments',
   'discover.timeline': 'Timeline',
   'discover.scan': 'Scan QR',
+  'discover.scan_result': 'Scan result',
+  'discover.invite_expired': 'Invite link has expired or is invalid',
 
   'moments.title': 'Moments',
   'moments.post': 'Post',
@@ -170,6 +178,8 @@ export const en: Record<string, string> = {
   'profile.about': 'About',
   'profile.logout': 'Log Out',
   'profile.tags': 'Friend Tags',
+  'profile.my_qr': 'My QR Code',
+  'profile.qr_scan_hint': 'Scan this QR code to add me as a friend',
 
   'call.incoming': 'Incoming Call',
   'call.outgoing': 'Calling...',
@@ -244,6 +254,7 @@ export const en: Record<string, string> = {
   'totp.invalid_code': 'Invalid code',
   'totp.recovery_codes': 'Recovery Codes',
   'totp.save_codes': 'Save these recovery codes in a safe place. If you lose your authenticator, you can use these to sign in.',
+  'totp.or_enter_secret': 'Or enter the secret key manually',
 
   // Sessions
   'sessions.current': 'Current Device',

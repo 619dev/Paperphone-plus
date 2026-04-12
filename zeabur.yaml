@@ -42,6 +42,8 @@ spec:
     - 🎭 **Telegram Sticker Packs** — dynamic sticker packs with configurable pack list, unlimited quantity
     - 🔑 **Two-Factor Auth (2FA)** — Google Authenticator TOTP, 8 recovery codes
     - 📷 **QR Code Scan & Share** — scan QR to add friends or join groups; group QR codes with configurable expiry (1 week / 1 month / 3 months)
+    - 👫 **Friend System** — friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping
+    - 📤 **File Upload** — up to 500MB per file, Cloudflare R2 or local storage, with progress animation
 
     ## After Deployment
     1. Open the domain assigned to the **client** service.
@@ -50,6 +52,11 @@ spec:
     4. (Optional) Configure Cloudflare TURN for cross-network video calls — set `CF_CALLS_APP_ID` and `CF_CALLS_APP_SECRET`.
     5. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push.
     6. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
+
+    ## Tip: Zeabur + Vercel Hybrid
+    You can delete the deployed **client** service on Zeabur and use **Vercel** to host the frontend instead.
+    This gives you Vercel’s global CDN for the frontend while Zeabur handles server/MySQL/Redis.
+    Just set `VITE_API_URL` in Vercel to the public domain of this server service.
 
     ## Docker Hub Images
     - `facilisvelox/paperphone-plus-client:latest`
@@ -363,6 +370,8 @@ localization:
       - 🎭 **Telegram 贴纸包** — 动态贴纸包管理，可自定义包列表，数量无上限
       - 🔑 **两步验证 (2FA)** — Google Authenticator TOTP，8 个恢复码
       - 📷 **扫码加好友/入群** — 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1周/1月/3月）
+      - 👫 **好友系统** — 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组
+      - 📤 **文件上传** — 单文件最大 500MB，支持 Cloudflare R2 或本地存储，带进度条动画
 
       ## 部署后操作
       1. 打开分配给 **client** 服务的域名。
@@ -371,3 +380,8 @@ localization:
       4. （可选）配置 Cloudflare TURN 以支持跨公网视频通话。
       5. （可选）设置 `VAPID_*` 变量启用浏览器推送通知。
       6. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
+
+      ## 进阶方案：Zeabur + Vercel 混合部署
+      部署完成后，可以手动删除 Zeabur 上的 **client** 服务，改用 **Vercel** 部署前端。
+      这样 server/MySQL/Redis 由 Zeabur 托管，前端由 Vercel CDN 加速，全球访问更快。
+      Vercel 中设置环境变量 `VITE_API_URL` 指向 Zeabur 上 server 服务的公网域名即可。
