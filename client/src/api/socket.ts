@@ -11,6 +11,15 @@ function getWsUrl(): string {
   const custom = import.meta.env.VITE_WS_URL
   if (custom) return custom
 
+  // Derive from VITE_API_URL (backend address) when frontend is deployed separately
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (apiUrl) {
+    const url = apiUrl.replace(/\/$/, '') // trim trailing slash
+    const wsUrl = url.replace(/^http/, 'ws') // http→ws, https→wss
+    return `${wsUrl}/ws`
+  }
+
+  // Fallback: same host (frontend and backend co-located)
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${proto}//${location.host}/ws`
 }
@@ -82,10 +91,12 @@ function scheduleReconnect() {
   }, 3000)
 }
 
-export function sendWs(data: any) {
+export function sendWs(data: any): boolean {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(data))
+    return true
   }
+  return false
 }
 
 export function onWs(type: string, handler: MessageHandler): () => void {

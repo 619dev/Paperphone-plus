@@ -6,7 +6,7 @@ import { get, post, put, uploadFileWithProgress, normalizeFileUrl } from '../api
 import { sendWs, onWs } from '../api/socket'
 import { getKeys } from '../crypto/keystore'
 import { encryptHybrid, decryptHybrid } from '../crypto/ratchet'
-import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, Phone, VideoIcon, SendHorizonal, Smile } from 'lucide-react'
+import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, Phone, VideoIcon, SendHorizonal, Smile, WifiOff } from 'lucide-react'
 
 // Auto-delete options (seconds)
 const AUTO_DELETE_OPTIONS = [
@@ -90,6 +90,7 @@ export default function Chat() {
   const addMessage = useStore(s => s.addMessage)
   const friends = useStore(s => s.friends)
   const groups = useStore(s => s.groups)
+  const wsConnected = useStore(s => s.wsConnected)
 
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -222,24 +223,41 @@ export default function Chat() {
     setSending(true)
     try {
       if (msgType === 'text') setInput('')
+
+      let sent = false
       if (isGroup) {
-        sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: content })
+        sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: content })
       } else {
         const keys = getKeys()
         const recipientPub = friend?.ik_pub
         const recipientKem = friend?.kem_pub
         if (!recipientPub || !keys) {
-          sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: content })
+          // No encryption keys available — send unencrypted
+          sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: content })
         } else {
-          const forRecipient = await encryptHybrid(recipientPub, recipientKem, content)
-          const forSelf = await encryptHybrid(keys.ik_pub, null, content)
-          sendWs({
-            type: 'message', msg_type: msgType, to: id,
-            ciphertext: forRecipient.ciphertext, header: forRecipient.header,
-            self_ciphertext: forSelf.ciphertext, self_header: forSelf.header,
-          })
+          try {
+            const forRecipient = await encryptHybrid(recipientPub, recipientKem, content)
+            const forSelf = await encryptHybrid(keys.ik_pub, null, content)
+            sent = sendWs({
+              type: 'message', msg_type: msgType, to: id,
+              ciphertext: forRecipient.ciphertext, header: forRecipient.header,
+              self_ciphertext: forSelf.ciphertext, self_header: forSelf.header,
+            })
+          } catch (encErr) {
+            console.warn('[Chat] Encryption failed, sending unencrypted:', encErr)
+            // Fallback: send unencrypted so the message still goes through
+            sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: content })
+          }
         }
       }
+
+      if (!sent) {
+        // Restore input so user doesn't lose their message
+        if (msgType === 'text' && content) setInput(content)
+        alert(t('chat.ws_disconnected') || 'Connection lost. Please check your network and try again.')
+      }
+    } catch (err) {
+      console.error('[Chat] sendMessage error:', err)
     } finally {
       setSending(false)
     }
@@ -568,6 +586,12 @@ export default function Chat() {
           <button className="icon-btn" onClick={() => setShowSettings(true)} style={{ fontSize: 18 }} title={t('chat.settings')}><Settings size={18} /></button>
         </div>
       </div>
+
+      {!wsConnected && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px', fontSize: 12, color: '#fff', background: '#ef4444', animation: 'fade-in .3s ease' }}>
+          <WifiOff size={14} /> {t('chat.ws_disconnected') || 'Connection lost, reconnecting...'}
+        </div>
+      )}
 
       {currentAutoDelete > 0 && (
         <div style={{ textAlign: 'center', padding: '4px 12px', fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
