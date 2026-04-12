@@ -31,17 +31,15 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
         if stmt.is_empty() {
             continue;
         }
-        // Skip PREPARE/EXECUTE/DEALLOCATE/SET statements (MySQL-specific procedural)
-        let upper = stmt.to_uppercase();
-        if upper.starts_with("SET @")
-            || upper.starts_with("PREPARE")
-            || upper.starts_with("EXECUTE")
-            || upper.starts_with("DEALLOCATE")
-        {
-            continue;
-        }
         if let Err(e) = sqlx::query(stmt).execute(pool).await {
-            tracing::warn!("Schema statement skipped: {}", e);
+            // ALTER TABLE migrations may fail with "Duplicate column name" etc.
+            // — that's expected on repeated runs, so just log as debug.
+            let msg = e.to_string();
+            if msg.contains("Duplicate column") || msg.contains("Duplicate key name") {
+                tracing::debug!("Migration already applied: {}", msg);
+            } else {
+                tracing::warn!("Schema statement skipped: {}", msg);
+            }
         }
     }
 }

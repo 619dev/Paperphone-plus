@@ -297,7 +297,7 @@ CREATE TABLE IF NOT EXISTS group_invites (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── Migrations (idempotent) ─────────────────────────────────────────────
--- Add remark column to friends table
-SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'friends' AND COLUMN_NAME = 'remark');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE friends ADD COLUMN remark VARCHAR(128) DEFAULT NULL AFTER auto_delete', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+-- These ALTER statements may fail with "Duplicate column name" if already applied;
+-- the schema runner ignores such errors.
+ALTER TABLE friends ADD COLUMN remark VARCHAR(128) DEFAULT NULL AFTER auto_delete;
+ALTER TABLE friends ADD COLUMN message VARCHAR(512) DEFAULT NULL AFTER remark;

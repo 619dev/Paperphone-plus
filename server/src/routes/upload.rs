@@ -22,12 +22,13 @@ async fn upload_file(
             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
         let ext = filename.rsplit('.').next().unwrap_or("bin");
-        let key = format!("uploads/{}.{}", Uuid::new_v4(), ext);
+        let file_id = format!("{}.{}", Uuid::new_v4(), ext);
+        let key = format!("uploads/{}", file_id);
 
         // Always save to local filesystem first (ensures file is persisted)
         let upload_dir = &state.config.upload_dir;
-        tokio::fs::create_dir_all(format!("{}/uploads", upload_dir)).await.ok();
-        let file_path = format!("{}/{}", upload_dir, key);
+        tokio::fs::create_dir_all(upload_dir).await.ok();
+        let file_path = format!("{}/{}", upload_dir, file_id);
         tokio::fs::write(&file_path, &data).await
             .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Local save failed: {}", e) }))))?;
 

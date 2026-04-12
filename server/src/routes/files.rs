@@ -49,7 +49,9 @@ async fn proxy_file(
     }
 
     // Fallback: serve from local filesystem
-    let file_path = format!("{}/{}", state.config.upload_dir, key);
+    // key may be "uploads/{uuid}.ext" — strip the "uploads/" prefix since upload_dir IS the uploads folder
+    let local_name = key.strip_prefix("uploads/").unwrap_or(&key);
+    let file_path = format!("{}/{}", state.config.upload_dir, local_name);
     match tokio::fs::read(&file_path).await {
         Ok(data) => {
             let content_type = mime_guess::from_path(&file_path)

@@ -55,8 +55,8 @@ async fn main() {
     });
 
     // Ensure upload directory exists
-    let upload_path = format!("{}/uploads", state.config.upload_dir);
-    tokio::fs::create_dir_all(&upload_path).await.ok();
+    let upload_path = &state.config.upload_dir;
+    tokio::fs::create_dir_all(upload_path).await.ok();
     tracing::info!("✅ Upload directory ready: {}", upload_path);
 
     // CORS: mirror the request Origin so that credentialed/preflight requests
