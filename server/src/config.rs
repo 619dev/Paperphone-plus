@@ -27,6 +27,9 @@ pub struct Config {
     pub cf_calls_app_id: Option<String>,
     pub cf_calls_app_secret: Option<String>,
 
+    // Metered.ca TURN (free tier)
+    pub metered_turn_api_key: Option<String>,
+
     // Web Push (VAPID)
     pub vapid_public_key: Option<String>,
     pub vapid_private_key: Option<String>,
@@ -69,6 +72,8 @@ impl Config {
 
             cf_calls_app_id: env_opt("CF_CALLS_APP_ID"),
             cf_calls_app_secret: env_opt("CF_CALLS_APP_SECRET"),
+
+            metered_turn_api_key: env_opt("METERED_TURN_API_KEY"),
 
             vapid_public_key: env_opt("VAPID_PUBLIC_KEY"),
             vapid_private_key: env_opt("VAPID_PRIVATE_KEY"),

@@ -11,6 +11,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/unsubscribe", delete(unsubscribe))
         .route("/onesignal", post(register_onesignal))
         .route("/vapid-key", get(get_vapid_key))
+        .route("/status", get(push_status))
 }
 
 #[derive(Deserialize)]
@@ -80,5 +81,29 @@ async fn get_vapid_key(
 ) -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "vapid_public_key": state.config.vapid_public_key
+    }))
+}
+
+/// Diagnostic endpoint to check push notification configuration status
+async fn push_status(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Json<serde_json::Value> {
+    // Count subscriptions for this user
+    let web_push_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?"
+    ).bind(&auth.0.id).fetch_one(&state.db).await.unwrap_or((0,));
+
+    let onesignal_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM onesignal_players WHERE user_id = ?"
+    ).bind(&auth.0.id).fetch_one(&state.db).await.unwrap_or((0,));
+
+    Json(serde_json::json!({
+        "vapid_configured": state.config.vapid_public_key.is_some() && state.config.vapid_private_key.is_some(),
+        "vapid_subject_configured": state.config.vapid_subject.is_some(),
+        "onesignal_configured": state.config.onesignal_app_id.is_some() && state.config.onesignal_rest_key.is_some(),
+        "cf_turn_configured": state.config.cf_calls_app_id.is_some() && state.config.cf_calls_app_secret.is_some(),
+        "user_web_push_subscriptions": web_push_count.0,
+        "user_onesignal_players": onesignal_count.0,
     }))
 }
