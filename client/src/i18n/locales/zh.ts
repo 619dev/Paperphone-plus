@@ -316,4 +316,14 @@ export const zh: Record<string, string> = {
   'fingerprint.copied': '已复制',
   'fingerprint.how_to_verify': '如何验证？',
   'fingerprint.verify_steps': '与好友当面（或通过其他可信渠道）比对此指纹。双方分别打开「设置 → 密钥指纹」，逐行核对显示的十六进制字符。如果完全一致，说明你们的加密通道没有被第三方劫持。',
+
+  // Notifications
+  'notification.new_message': '新消息',
+  'notification.incoming_call': '语音来电',
+  'notification.incoming_video_call': '视频来电',
+  'notification.image': '[图片]',
+  'notification.voice': '[语音]',
+  'notification.file': '[文件]',
+  'notification.video': '[视频]',
+  'notification.sticker': '[表情]',
 }

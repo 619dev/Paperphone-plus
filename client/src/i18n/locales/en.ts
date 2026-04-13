@@ -302,4 +302,14 @@ export const en: Record<string, string> = {
   'fingerprint.copied': 'Copied',
   'fingerprint.how_to_verify': 'How to verify?',
   'fingerprint.verify_steps': 'Meet your contact in person (or use another trusted channel) and compare fingerprints. Both of you should open Settings → Key Fingerprint and check that every line matches. If they are identical, your end-to-end encryption is secure.',
+
+  // Notifications
+  'notification.new_message': 'New Message',
+  'notification.incoming_call': 'Incoming Voice Call',
+  'notification.incoming_video_call': 'Incoming Video Call',
+  'notification.image': '[Image]',
+  'notification.voice': '[Voice]',
+  'notification.file': '[File]',
+  'notification.video': '[Video]',
+  'notification.sticker': '[Sticker]',
 }

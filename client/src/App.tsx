@@ -14,9 +14,10 @@ import GroupInfo from './pages/GroupInfo'
 import Moments from './pages/Moments'
 import Timeline from './pages/Timeline'
 import TabBar from './components/TabBar'
-import { CallProvider } from './contexts/CallContext'
 import CallOverlay from './components/CallOverlay'
-import { subscribePush, isPushSubscribed } from './api/push'
+import NotificationToast from './components/NotificationToast'
+import { CallProvider } from './contexts/CallContext'
+import { registerServiceWorker, subscribePush, isPushSubscribed } from './api/push'
 import { post } from './api/http'
 
 function ProtectedLayout() {
@@ -24,9 +25,18 @@ function ProtectedLayout() {
 
   // Auto-subscribe to push notifications when authenticated
   useEffect(() => {
+    // ── Register Service Worker first ──
+    registerServiceWorker().then(() => {
+      console.log('[Push] Service worker ready')
+    }).catch(() => {})
+
     // ── Web Push (VAPID) ──
     ;(async () => {
       try {
+        // Request notification permission if not yet asked
+        if ('Notification' in window && Notification.permission === 'default') {
+          await Notification.requestPermission()
+        }
         if ('Notification' in window && Notification.permission === 'granted') {
           const alreadySub = await isPushSubscribed()
           if (!alreadySub) {
@@ -118,6 +128,7 @@ function ProtectedLayout() {
       </Routes>
       <TabBar />
       <CallOverlay />
+      <NotificationToast />
     </CallProvider>
   )
 }

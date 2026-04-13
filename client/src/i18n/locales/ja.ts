@@ -79,4 +79,5 @@ export const ja: Record<string, string> = {
   'contacts.tags': 'タグ', 'tags.create': 'タグ作成', 'tags.name': 'タグ名', 'tags.empty': 'タグがありません', 'tags.select_friends': 'このタグの友達を選択', 'tags.group_by_tag': 'タグで分類', 'tags.untagged': '未分類', 'tags.friends_count': '人の友達', 'tags.assigned_count': '選択済み', 'tags.no_friends_in_tag': 'このタグに友達がいません',
   'profile.appearance': '外観',
   'fingerprint.title': '鍵の指紋', 'fingerprint.identity_key': '身元鍵の指紋', 'fingerprint.description': 'この指紋を連絡先と直接比較して、通信が第三者に傍受されていないことを確認してください。', 'fingerprint.copy': '指紋をコピー', 'fingerprint.copied': 'コピーしました', 'fingerprint.how_to_verify': '確認方法', 'fingerprint.verify_steps': '連絡先と直接会って指紋を比較してください。お互いに「設定 → 鍵の指紋」を開き、すべての行が一致することを確認します。',
+  'notification.new_message': '新着メッセージ', 'notification.incoming_call': '音声着信', 'notification.incoming_video_call': 'ビデオ着信', 'notification.image': '[画像]', 'notification.voice': '[音声]', 'notification.file': '[ファイル]', 'notification.video': '[動画]', 'notification.sticker': '[スタンプ]',
 }

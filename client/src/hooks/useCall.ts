@@ -10,6 +10,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { sendWs, onWs } from '../api/socket'
 import { get } from '../api/http'
+import { playCallRingtone, stopRingtone, showBrowserNotification } from '../utils/notification'
 
 export type CallState = 'idle' | 'outgoing' | 'incoming' | 'connecting' | 'connected' | 'error'
 
@@ -145,6 +146,9 @@ export function useCall(userId: string | undefined) {
 
   // ── Internal cleanup ──
   const cleanup = useCallback(() => {
+    // Stop ringtone
+    stopRingtone()
+
     pcRef.current?.close()
     pcRef.current = null
 
@@ -208,6 +212,9 @@ export function useCall(userId: string | undefined) {
   // ── Accept incoming call ──
   const acceptCall = useCallback(async () => {
     if (callStateRef.current !== 'incoming' || !callInfo) return
+
+    // Stop ringtone when accepting
+    stopRingtone()
 
     setCallState('connecting')
 
@@ -303,6 +310,17 @@ export function useCall(userId: string | undefined) {
         sdp_type: data.sdp_type,
       })
       setCallState('incoming')
+
+      // Play ringtone for incoming call
+      playCallRingtone()
+
+      // Show browser notification if tab is hidden
+      const callType = data.is_video ? 'Video Call' : 'Voice Call'
+      showBrowserNotification(
+        'PaperPhone',
+        `Incoming ${callType}`,
+        () => window.focus()
+      )
     })
 
     const unsubAnswer = onWs('call_answer', async (data) => {

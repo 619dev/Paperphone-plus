@@ -80,4 +80,5 @@ export const ko: Record<string, string> = {
   'contacts.tags': '태그', 'tags.create': '태그 생성', 'tags.name': '태그 이름', 'tags.empty': '태그 없음', 'tags.select_friends': '이 태그의 친구를 선택하세요', 'tags.group_by_tag': '태그별 분류', 'tags.untagged': '미분류', 'tags.friends_count': '명의 친구', 'tags.assigned_count': '선택됨', 'tags.no_friends_in_tag': '이 태그에 친구가 없습니다',
   'profile.appearance': '외관',
   'fingerprint.title': '키 지문', 'fingerprint.identity_key': '신원 키 지문', 'fingerprint.description': '이 지문을 연락처와 직접 비교하여 통신이 제3자에 의해 가로채지 않았는지 확인하세요.', 'fingerprint.copy': '지문 복사', 'fingerprint.copied': '복사됨', 'fingerprint.how_to_verify': '확인 방법', 'fingerprint.verify_steps': '연락처와 직접 만나 지문을 비교하세요. 설정 → 키 지문을 열고 모든 줄이 일치하는지 확인합니다.',
+  'notification.new_message': '새 메시지', 'notification.incoming_call': '음성 수신', 'notification.incoming_video_call': '영상 수신', 'notification.image': '[이미지]', 'notification.voice': '[음성]', 'notification.file': '[파일]', 'notification.video': '[동영상]', 'notification.sticker': '[스티커]',
 }
