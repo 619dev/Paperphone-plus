@@ -59,6 +59,7 @@
 
   --header-h: 56px;
   --tabbar-h: 52px;
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* ── Motion (iOS spring curves) ─────────────────────────── */
@@ -204,11 +205,12 @@ body {
 }
 
 .page-header {
-  height: var(--header-h);
-  min-height: var(--header-h);
+  height: calc(var(--header-h) + var(--safe-top));
+  min-height: calc(var(--header-h) + var(--safe-top));
   display: flex;
   align-items: center;
   padding: 0 16px;
+  padding-top: var(--safe-top);
   border-bottom: 0.5px solid var(--glass-border-bottom);
   z-index: 10;
   position: relative;
@@ -247,7 +249,7 @@ body {
    ═══════════════════════════════════════════════════════════════ */
 .tabbar {
   display: flex;
-  height: var(--tabbar-h);
+  height: calc(var(--tabbar-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   z-index: 10;
   position: relative;
@@ -255,7 +257,7 @@ body {
   border-bottom: none;
   border-left: none;
   border-right: none;
-  margin: 0 12px 8px;
+  margin: 0 12px calc(8px + var(--safe-bottom));
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
