@@ -302,12 +302,9 @@ function TwoFactorAuth({ onBack, t }: { onBack: () => void; t: (k: string) => st
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Check if 2FA is enabled by trying to get TOTP status
-    // We use the setup endpoint — if there's already an enabled TOTP, we show 'on'
-    get('/api/sessions').then(() => {
-      // Indirect check: try setup. Actually we need a status endpoint.
-      // For now, let's just try setup to see if one exists, then switch accordingly.
-      setStep('off')
+    // Check if 2FA is enabled via the dedicated status endpoint
+    get<{ enabled: boolean }>('/api/totp/status').then(res => {
+      setStep(res.enabled ? 'on' : 'off')
     }).catch(() => setStep('off'))
   }, [])
 

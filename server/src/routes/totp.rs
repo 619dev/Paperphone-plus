@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, routing::post, extract::State, Json, http::HeaderMap};
+use axum::{Router, routing::{get, post}, extract::State, Json, http::HeaderMap};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -8,6 +8,7 @@ use crate::auth::jwt::{sign_token, verify_token};
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
+        .route("/status", get(totp_status))
         .route("/setup", post(setup_totp))
         .route("/enable", post(enable_totp))
         .route("/verify", post(verify_totp))
@@ -28,10 +29,25 @@ fn make_totp(secret_bytes: Vec<u8>, account: &str) -> Result<totp_rs::TOTP, totp
     )
 }
 
+async fn totp_status(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let row: Option<(i8,)> = sqlx::query_as("SELECT enabled FROM user_totp WHERE user_id = ? AND enabled = 1")
+        .bind(&auth.0.id).fetch_optional(&state.db).await.unwrap_or(None);
+    Ok(Json(serde_json::json!({ "enabled": row.is_some() })))
+}
+
 async fn setup_totp(
     State(state): State<Arc<AppState>>,
     auth: AuthUser,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    // Refuse to overwrite an already-enabled TOTP
+    let existing: Option<(i8,)> = sqlx::query_as("SELECT enabled FROM user_totp WHERE user_id = ? AND enabled = 1")
+        .bind(&auth.0.id).fetch_optional(&state.db).await.unwrap_or(None);
+    if existing.is_some() {
+        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "2FA is already enabled. Disable it first." }))));
+    }
     // Compute everything synchronously, then drop non-Send types before .await
     let (secret_base32, uri, codes, codes_json) = {
         use totp_rs::Secret;
