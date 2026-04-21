@@ -34,7 +34,12 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'PaperPhone', options)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      // If app is in foreground, suppress push notification (WebSocket handles it)
+      const anyVisible = clients.some(c => c.visibilityState === 'visible')
+      if (anyVisible) return
+      return self.registration.showNotification(data.title || 'PaperPhone', options)
+    })
   )
 })
 

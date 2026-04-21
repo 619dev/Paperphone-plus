@@ -155,6 +155,15 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
 
                     let _ = tx.send(serde_json::json!({"type":"auth_ok","user_id":claims.id}).to_string());
 
+                    // Set initial heartbeat in Redis (60s TTL)
+                    if let Ok(mut conn) = state.redis.get().await {
+                        let _: Result<(), _> = deadpool_redis::redis::cmd("SET")
+                            .arg(format!("heartbeat:{}", claims.id))
+                            .arg("1")
+                            .arg("EX").arg(60)
+                            .query_async(&mut *conn).await;
+                    }
+
                     // Flush pending call signaling
                     flush_pending_call(&state, &claims.id, &tx).await;
 
@@ -175,6 +184,18 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                 continue;
             }
         };
+
+        // ── HEARTBEAT ────────────────────────────────────────────
+        if msg_type == "ping" {
+            if let Ok(mut conn) = state.redis.get().await {
+                let _: Result<(), _> = deadpool_redis::redis::cmd("SET")
+                    .arg(format!("heartbeat:{}", uid))
+                    .arg("1")
+                    .arg("EX").arg(60)
+                    .query_async(&mut *conn).await;
+            }
+            continue;
+        }
 
         // ── PRIVATE MESSAGE ──────────────────────────────────────
         if msg_type == "message" && parsed.get("to").is_some() && parsed.get("group_id").is_none() {
@@ -203,8 +224,8 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             .bind(msg_sub_type).bind(delivered as i8)
             .execute(&state.db).await.ok();
 
-            // Push notification if offline
-            if !delivered {
+            // Push notification if offline or stale connection (no recent heartbeat)
+            if !delivered || !has_fresh_heartbeat(&state, to).await {
                 push_offline_message(&state, &uid, to).await;
             }
 
@@ -247,8 +268,8 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             for (member_id, muted) in &members {
                 if member_id != &uid {
                     let delivered = state.ws_clients.send_to_user(member_id, envelope.clone());
-                    // Push notification if offline AND not muted
-                    if !delivered && *muted == 0 {
+                    // Push notification if (offline or stale) AND not muted
+                    if (!delivered || !has_fresh_heartbeat(&state, member_id).await) && *muted == 0 {
                         push_offline_message(&state, &uid, member_id).await;
                     }
                 }
@@ -406,6 +427,9 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                 let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
                     .arg(format!("online:{}", uid))
                     .query_async(&mut *conn).await;
+                let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
+                    .arg(format!("heartbeat:{}", uid))
+                    .query_async(&mut *conn).await;
             }
         }
     }
@@ -470,6 +494,18 @@ async fn flush_offline_messages(state: &Arc<AppState>, user_id: &str, tx: &mpsc:
         });
         let _ = tx.send(serde_json::to_string(&envelope).unwrap_or_default());
     }
+}
+
+/// Check if user has sent a heartbeat recently (within last 60s).
+/// Returns false if heartbeat expired (app backgrounded/suspended) or Redis unavailable.
+async fn has_fresh_heartbeat(state: &Arc<AppState>, user_id: &str) -> bool {
+    if let Ok(mut conn) = state.redis.get().await {
+        let result: Result<Option<String>, _> = deadpool_redis::redis::cmd("GET")
+            .arg(format!("heartbeat:{}", user_id))
+            .query_async(&mut *conn).await;
+        return matches!(result, Ok(Some(_)));
+    }
+    false
 }
 
 async fn push_offline_message(state: &Arc<AppState>, sender_id: &str, recipient_id: &str) {
