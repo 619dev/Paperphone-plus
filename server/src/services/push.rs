@@ -65,6 +65,15 @@ pub async fn push_to_user(db: &sqlx::MySqlPool, config: &Config, user_id: &str, 
             if let Ok(client) = web_push::IsahcWebPushClient::new() {
                 match client.send(message).await {
                     Ok(_) => tracing::debug!("[Push] Notification sent to user {}", user_id),
+                    Err(ref e) if matches!(e, web_push::WebPushError::EndpointNotValid | web_push::WebPushError::EndpointNotFound) => {
+                        tracing::info!("[Push] Removing stale subscription for user {}: {:?}", user_id, e);
+                        let _ = sqlx::query(
+                            "DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?"
+                        )
+                        .bind(user_id)
+                        .bind(endpoint)
+                        .execute(db).await;
+                    }
                     Err(e) => tracing::warn!("[Push] Send failed for user {}: {:?}", user_id, e),
                 }
             }
