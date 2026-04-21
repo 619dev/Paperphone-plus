@@ -8,6 +8,7 @@ import { get, post, put, del, uploadFile } from '../api/http'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
+import { logoutOneSignal } from '../api/onesignal'
 import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle } from 'lucide-react'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr'
@@ -66,6 +67,7 @@ export default function Profile() {
   const handleLogout = () => {
     disconnectWs()
     clearKeys()
+    logoutOneSignal()
     logout()
     navigate('/login')
   }

@@ -20,6 +20,7 @@ import NotificationToast from './components/NotificationToast'
 import { CallProvider } from './contexts/CallContext'
 import { GroupCallProvider } from './contexts/GroupCallContext'
 import { registerServiceWorker, subscribePush, isPushSubscribed } from './api/push'
+import { initOneSignal, loginOneSignal } from './api/onesignal'
 import { post } from './api/http'
 
 function ProtectedLayout() {
@@ -51,7 +52,28 @@ function ProtectedLayout() {
       }
     })()
 
-    // ── OneSignal registration (Median.co native wrapper) ──
+    // ── OneSignal Web SDK v16 ──
+    // Initialize and login so this device gets push via FCM (critical for Android)
+    ;(async () => {
+      try {
+        const token = useStore.getState().token
+        if (!token) return
+
+        // Decode user_id from JWT payload for OneSignal login
+        const userId = getUserIdFromToken(token)
+        if (!userId) return
+
+        const ok = await initOneSignal()
+        if (ok) {
+          await loginOneSignal(userId)
+          console.log('[OneSignal] ✅ Web SDK v16 fully initialized')
+        }
+      } catch (e) {
+        console.warn('[OneSignal] Web SDK init failed:', e)
+      }
+    })()
+
+    // ── OneSignal registration (Median.co native wrapper — fallback) ──
     // The Median.co WebView bridge injects window.median asynchronously,
     // so we poll for it with a retry mechanism.
     let attempt = 0
@@ -96,22 +118,8 @@ function ProtectedLayout() {
     }
     tryRegisterMedian()
 
-    // ── OneSignal Web SDK (if loaded globally) ──
-    ;(async () => {
-      try {
-        const w = window as any
-        if (w.OneSignal) {
-          const playerId = await w.OneSignal.getUserId?.()
-          if (playerId) {
-            console.log('[OneSignal] Web SDK player_id:', playerId)
-            await post('/api/push/onesignal', {
-              player_id: playerId,
-              platform: 'web',
-            })
-          }
-        }
-      } catch {}
-    })()
+    // ── Android battery optimization guidance ──
+    showAndroidBatteryGuide()
   }, [])
 
   return (
@@ -159,4 +167,63 @@ export default function App() {
       </Routes>
     </BrowserRouter>
   )
+}
+
+/**
+ * Decode user_id from a JWT token without a library.
+ * JWT format: header.payload.signature — we only need the payload.
+ */
+function getUserIdFromToken(token: string): string | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return payload.id || payload.sub || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Show a one-time guidance popup for Android users about disabling battery optimization.
+ * This dramatically improves push notification reliability on Chinese OEM devices.
+ */
+function showAndroidBatteryGuide(): void {
+  // Only show on Android
+  if (!/Android/i.test(navigator.userAgent)) return
+
+  // Only show once
+  const STORAGE_KEY = 'android_battery_guide_shown'
+  if (localStorage.getItem(STORAGE_KEY)) return
+  localStorage.setItem(STORAGE_KEY, '1')
+
+  // Delay to avoid blocking initial render
+  setTimeout(() => {
+    const isZH = /zh/i.test(navigator.language)
+
+    const title = isZH ? '📱 开启消息通知' : '📱 Enable Notifications'
+    const message = isZH
+      ? '为确保消息及时送达，请进行以下设置：\n\n'
+        + '1️⃣ 允许 PaperPhone 发送通知\n'
+        + '2️⃣ 关闭电池优化（设置 → 电池 → 不受限制）\n'
+        + '3️⃣ 允许后台运行\n\n'
+        + '不同品牌操作路径略有不同：\n'
+        + '• 小米/红米：设置 → 应用管理 → 省电策略 → 无限制\n'
+        + '• 华为/荣耀：设置 → 电池 → 启动管理 → 手动管理\n'
+        + '• OPPO/vivo：设置 → 电池 → 后台耗电管理\n'
+        + '• 三星：设置 → 电池 → 后台使用限制\n'
+      : 'To ensure timely message delivery:\n\n'
+        + '1️⃣ Allow PaperPhone to send notifications\n'
+        + '2️⃣ Disable battery optimization for this app\n'
+        + '3️⃣ Allow background activity\n\n'
+        + 'Go to: Settings → Battery → Unrestricted'
+
+    // Use a non-blocking alert
+    if ('Notification' in window && Notification.permission === 'default') {
+      // If notification permission hasn't been requested yet, show guidance after
+      console.log('[Android] Battery optimization guide:', message)
+    } else {
+      alert(message)
+    }
+  }, 3000)
 }

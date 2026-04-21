@@ -30,7 +30,7 @@ pub async fn push_to_user(db: &sqlx::MySqlPool, config: &Config, user_id: &str, 
         .header("Authorization", format!("Basic {}", rest_key))
         .json(&serde_json::json!({
             "app_id": app_id,
-            "include_player_ids": player_ids,
+            "include_subscription_ids": player_ids,
             "headings": { "en": title },
             "contents": { "en": body },
             "priority": 10,

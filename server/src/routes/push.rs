@@ -11,6 +11,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/unsubscribe", delete(unsubscribe))
         .route("/onesignal", post(register_onesignal))
         .route("/vapid-key", get(get_vapid_key))
+        .route("/onesignal-app-id", get(get_onesignal_app_id))
         .route("/status", get(push_status))
 }
 
@@ -81,6 +82,15 @@ async fn get_vapid_key(
 ) -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "vapid_public_key": state.config.vapid_public_key
+    }))
+}
+
+/// Public endpoint to retrieve the OneSignal App ID for frontend SDK init
+async fn get_onesignal_app_id(
+    State(state): State<Arc<AppState>>,
+) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "onesignal_app_id": state.config.onesignal_app_id
     }))
 }
 
