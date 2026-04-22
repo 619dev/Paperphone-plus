@@ -17,6 +17,7 @@ export const zh: Record<string, string> = {
   'auth.use_recovery': '使用恢复代码',
   'auth.recovery_code': '恢复代码',
   'auth.subtitle': '端到端加密即时通讯',
+  'auth.server_url_placeholder': '服务器地址 (https://...)',
 
   // Security badges
   'security.local_keys': '密钥只保存在本地',
@@ -349,4 +350,10 @@ export const zh: Record<string, string> = {
   'notification.file': '[文件]',
   'notification.video': '[视频]',
   'notification.sticker': '[表情]',
+
+  // Privacy Policy
+  'privacy.title': '隐私政策',
+  'privacy.hero_title': '您的隐私至关重要',
+  'privacy.hero_subtitle': '我们致力于保护您的个人信息和通信安全',
+  'privacy.last_updated': '最后更新',
 }

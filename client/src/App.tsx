@@ -13,6 +13,7 @@ import UserProfile from './pages/UserProfile'
 import GroupInfo from './pages/GroupInfo'
 import Moments from './pages/Moments'
 import Timeline from './pages/Timeline'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import TabBar from './components/TabBar'
 import CallOverlay from './components/CallOverlay'
 import GroupCallOverlay from './components/GroupCallOverlay'
@@ -135,6 +136,7 @@ function ProtectedLayout() {
           <Route path="/group/:id" element={<GroupInfo />} />
           <Route path="/moments" element={<Moments />} />
           <Route path="/timeline" element={<Timeline />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="*" element={<Navigate to="/chats" replace />} />
         </Routes>
         <TabBar />
@@ -163,6 +165,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={token ? <Navigate to="/chats" replace /> : <Login />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/*" element={token ? <ProtectedLayout /> : <Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

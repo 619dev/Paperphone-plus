@@ -7,6 +7,7 @@ export const ru: Record<string, string> = {
   'auth.totp_code': 'Код подтверждения', 'auth.verify': 'Подтвердить',
   'auth.use_recovery': 'Использовать код восстановления', 'auth.recovery_code': 'Код восстановления',
   'auth.subtitle': 'Мессенджер со сквозным шифрованием',
+  'auth.server_url_placeholder': 'URL сервера (https://...)',
   'security.local_keys': 'Ключи хранятся локально', 'security.e2e': 'Сквозное шифрование', 'security.forward': 'Прямая секретность', 'security.quantum': 'Квантовая устойчивость',
 
   'tab.chats': 'Чаты', 'tab.contacts': 'Контакты', 'tab.discover': 'Обзор', 'tab.profile': 'Профиль',
@@ -88,4 +89,5 @@ export const ru: Record<string, string> = {
   'fingerprint.title': 'Отпечаток ключа', 'fingerprint.identity_key': 'Отпечаток ключа идентификации', 'fingerprint.my_key_title': 'Мой ключ идентификации', 'fingerprint.my_key_subtitle': 'Отпечаток моего ключа идентификации', 'fingerprint.my_key_desc': 'Это отпечаток вашего ключа идентификации. Чтобы проверить шифрование с контактом, откройте его профиль и проверьте «код безопасности».', 'fingerprint.my_key_verify_hint': 'Чтобы проверить сквозное шифрование, откройте профиль контакта → нажмите «Проверить шифрование» и сравните код безопасности лично.', 'fingerprint.description': 'Сравните этот отпечаток с контактом лично, чтобы убедиться, что ваша связь не перехватывается третьей стороной.', 'fingerprint.copy': 'Копировать', 'fingerprint.copied': 'Скопировано', 'fingerprint.how_to_verify': 'Как проверить?', 'fingerprint.verify_steps': 'Встретьтесь с контактом лично и сравните отпечатки. Откройте Настройки → Отпечаток ключа и убедитесь, что каждая строка совпадает.',
   'safety.title': 'Шифрование', 'safety.verify_encryption': 'Проверить шифрование', 'safety.description': 'Если вы и ваш контакт видите одинаковый код безопасности, ваше сквозное шифрование защищено и не было перехвачено.', 'safety.how_to_verify': 'Как проверить?', 'safety.verify_steps': 'Встретьтесь с контактом лично (или используйте другой доверенный канал). Откройте профили друг друга, нажмите «Проверить шифрование» и сравните код безопасности строка за строкой. Если они совпадают, шифрование безопасно.',
   'notification.new_message': 'Новое сообщение', 'notification.incoming_call': 'Входящий голосовой звонок', 'notification.incoming_video_call': 'Входящий видеозвонок', 'notification.image': '[Изображение]', 'notification.voice': '[Голос]', 'notification.file': '[Файл]', 'notification.video': '[Видео]', 'notification.sticker': '[Стикер]',
+  'privacy.title': 'Политика конфиденциальности', 'privacy.hero_title': 'Ваша конфиденциальность важна', 'privacy.hero_subtitle': 'Мы обеспечиваем защиту ваших личных данных и безопасность коммуникаций', 'privacy.last_updated': 'Последнее обновление',
 }

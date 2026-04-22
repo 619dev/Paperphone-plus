@@ -6,6 +6,7 @@ export const ja: Record<string, string> = {
   'auth.registering': '登録中...', 'auth.totp_required': '二段階認証コードを入力',
   'auth.totp_code': '認証コード', 'auth.verify': '確認', 'auth.use_recovery': 'リカバリーコードを使用',
   'auth.recovery_code': 'リカバリーコード', 'auth.subtitle': 'エンドツーエンド暗号化メッセンジャー',
+  'auth.server_url_placeholder': 'サーバーURL (https://...)',
   'security.local_keys': '鍵はローカルに保存', 'security.e2e': 'エンドツーエンド暗号化', 'security.forward': '前方秘匿性', 'security.quantum': '耐量子暗号化',
 
   'tab.chats': 'チャット', 'tab.contacts': '連絡先', 'tab.discover': '発見', 'tab.profile': 'プロフィール',
@@ -85,4 +86,5 @@ export const ja: Record<string, string> = {
   'fingerprint.title': '鍵の指紋', 'fingerprint.identity_key': '身元鍵の指紋', 'fingerprint.my_key_title': '自分の身元鍵', 'fingerprint.my_key_subtitle': '自分の身元鍵の指紋', 'fingerprint.my_key_desc': 'これはあなたの身元鍵の指紋です。連絡先との暗号化を確認するには、相手のプロフィールで「安全番号」を確認してください。', 'fingerprint.my_key_verify_hint': 'エンドツーエンド暗号化を確認するには、連絡先のプロフィール → 「暗号化を確認」をタップし、安全番号を直接比較してください。', 'fingerprint.description': 'この指紋を連絡先と直接比較して、通信が第三者に傍受されていないことを確認してください。', 'fingerprint.copy': 'コピー', 'fingerprint.copied': 'コピーしました', 'fingerprint.how_to_verify': '確認方法', 'fingerprint.verify_steps': '連絡先と直接会って指紋を比較してください。お互いに「設定 → 鍵の指紋」を開き、すべての行が一致することを確認します。',
   'safety.title': '暗号化の確認', 'safety.verify_encryption': '暗号化を確認', 'safety.description': 'あなたと連絡先で同じ安全番号が表示されていれば、エンドツーエンド暗号化は安全で、第三者に傍受されていません。', 'safety.how_to_verify': '確認方法', 'safety.verify_steps': '連絡先と直接会って（または信頼できる別のチャネルで）、お互いのプロフィールを開き、「暗号化を確認」をタップして、安全番号を1行ずつ比較してください。一致していれば暗号化は安全です。',
   'notification.new_message': '新着メッセージ', 'notification.incoming_call': '音声着信', 'notification.incoming_video_call': 'ビデオ着信', 'notification.image': '[画像]', 'notification.voice': '[音声]', 'notification.file': '[ファイル]', 'notification.video': '[動画]', 'notification.sticker': '[スタンプ]',
+  'privacy.title': 'プライバシーポリシー', 'privacy.hero_title': 'あなたのプライバシーを大切に', 'privacy.hero_subtitle': '個人情報と通信の安全を守ることに尽力しています', 'privacy.last_updated': '最終更新',
 }

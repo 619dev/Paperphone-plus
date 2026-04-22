@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { post, put } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { ShieldCheck, Lock, Shield, Link, Atom } from 'lucide-react'
+import { ShieldCheck, Lock, Shield, Link, Atom, Server } from 'lucide-react'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
@@ -14,6 +14,8 @@ export default function Login() {
   const setAuth = useStore(s => s.setAuth)
   const lang = useStore(s => s.lang)
   const setLang = useStore(s => s.setLang)
+  const serverUrl = useStore(s => s.serverUrl)
+  const setServerUrl = useStore(s => s.setServerUrl)
 
   const [isRegister, setIsRegister] = useState(false)
   const [username, setUsername] = useState('')
@@ -206,6 +208,19 @@ export default function Login() {
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="input-group">
+            <div className="server-url-input">
+              <Server size={16} className="server-url-icon" />
+              <input
+                className="input" id="server-url-input"
+                type="url"
+                placeholder={t('auth.server_url_placeholder')}
+                value={serverUrl} onChange={e => setServerUrl(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="input-group">
             <input
               className="input" id="username-input"
               type="text" autoComplete="username"
@@ -263,6 +278,10 @@ export default function Login() {
               {langNames[l]}
             </button>
           ))}
+        </div>
+
+        <div className="login-privacy-link">
+          <a onClick={() => navigate('/privacy')}>{t('privacy.title')}</a>
         </div>
       </div>
     </div>

@@ -11,8 +11,8 @@ function getWsUrl(): string {
   const custom = import.meta.env.VITE_WS_URL
   if (custom) return custom
 
-  // Derive from VITE_API_URL (backend address) when frontend is deployed separately
-  const apiUrl = import.meta.env.VITE_API_URL
+  // Derive from user-configured serverUrl or VITE_API_URL
+  const apiUrl = localStorage.getItem('serverUrl') || import.meta.env.VITE_API_URL
   if (apiUrl) {
     const url = apiUrl.replace(/\/$/, '') // trim trailing slash
     const wsUrl = url.replace(/^http/, 'ws') // http→ws, https→wss

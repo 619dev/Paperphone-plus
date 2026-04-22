@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_API_URL || ''
+function getBase(): string {
+  return localStorage.getItem('serverUrl') || import.meta.env.VITE_API_URL || ''
+}
 
 export async function api<T = any>(
   path: string,
@@ -13,7 +15,7 @@ export async function api<T = any>(
     headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(`${BASE}${path}`, { ...opts, headers })
+  const res = await fetch(`${getBase()}${path}`, { ...opts, headers })
 
   if (res.status === 401) {
     localStorage.removeItem('token')
@@ -95,7 +97,7 @@ export function uploadFileWithProgress(
     xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')))
 
     const token = localStorage.getItem('token')
-    xhr.open('POST', `${BASE}/api/upload`)
+    xhr.open('POST', `${getBase()}/api/upload`)
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     xhr.send(form)
   })
@@ -109,8 +111,9 @@ export function uploadFileWithProgress(
  */
 export function normalizeFileUrl(url: string | null | undefined): string {
   if (!url) return ''
-  if (BASE && url.startsWith('/')) {
-    return `${BASE}${url}`
+  const base = getBase()
+  if (base && url.startsWith('/')) {
+    return `${base}${url}`
   }
   return url
 }

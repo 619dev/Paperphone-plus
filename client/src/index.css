@@ -822,6 +822,31 @@ textarea.input {
   gap: 16px;
 }
 
+/* Server URL input with icon prefix */
+.server-url-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.server-url-input .server-url-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color var(--duration) var(--ease);
+  z-index: 1;
+}
+
+.server-url-input .input {
+  padding-left: 40px;
+}
+
+.server-url-input .input:focus + .server-url-icon,
+.server-url-input:focus-within .server-url-icon {
+  color: var(--accent);
+}
+
 .login-toggle {
   text-align: center;
   margin-top: 16px;
@@ -1706,4 +1731,167 @@ textarea.input {
   .tabbar {
     margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Login Page — Privacy Link
+   ═══════════════════════════════════════════════════════════════ */
+.login-privacy-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.login-privacy-link a {
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--duration) var(--ease);
+}
+
+.login-privacy-link a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Privacy Policy Page
+   ═══════════════════════════════════════════════════════════════ */
+.privacy-policy-body {
+  padding: 0 0 32px;
+}
+
+.privacy-hero {
+  text-align: center;
+  padding: 32px 24px 24px;
+  background: linear-gradient(135deg, var(--accent-bg) 0%, rgba(212, 160, 23, 0.08) 100%);
+  border-bottom: 0.5px solid var(--glass-border);
+}
+
+.privacy-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+  color: white;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 24px var(--accent-glow);
+}
+
+.privacy-hero-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.privacy-hero-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.privacy-updated {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 16px 24px 8px;
+}
+
+.privacy-section {
+  padding: 8px 16px;
+}
+
+.privacy-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 8px;
+  color: var(--accent);
+}
+
+.privacy-section-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.privacy-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0;
+  padding: 8px 0;
+}
+
+.privacy-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--glass-shadow);
+  transition: all var(--duration) var(--ease);
+}
+
+.privacy-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.privacy-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+}
+
+.privacy-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.privacy-card ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.privacy-card ul li {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.privacy-card.highlight {
+  background: linear-gradient(135deg, rgba(212, 160, 23, 0.08), rgba(212, 160, 23, 0.04));
+  border-color: rgba(212, 160, 23, 0.2);
+}
+
+.privacy-card.highlight ul li {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.privacy-footer {
+  text-align: center;
+  padding: 24px 16px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.privacy-footer p {
+  margin: 0;
 }

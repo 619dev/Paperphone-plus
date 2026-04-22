@@ -9,7 +9,7 @@ import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
 import { logoutOneSignal } from '../api/onesignal'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText } from 'lucide-react'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr'
 
@@ -167,6 +167,15 @@ export default function Profile() {
             </div>
           </>
         )}
+
+        <div className="divider" />
+
+        {/* About */}
+        <div className="section-title">{t('profile.about')}</div>
+        <div className="settings-item" onClick={() => navigate('/privacy')}>
+          <span className="label"><FileText size={16} /> {t('privacy.title')}</span>
+          <span className="arrow"><ChevronRight size={14} /></span>
+        </div>
 
         <div className="divider" />
 

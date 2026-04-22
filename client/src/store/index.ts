@@ -62,6 +62,10 @@ export interface GroupMember {
 }
 
 interface AppStore {
+  // Server URL
+  serverUrl: string
+  setServerUrl: (url: string) => void
+
   // Auth
   token: string | null
   user: User | null
@@ -103,6 +107,14 @@ interface AppStore {
 }
 
 export const useStore = create<AppStore>((set, get) => ({
+  // Server URL
+  serverUrl: localStorage.getItem('serverUrl') || '',
+  setServerUrl: (url) => {
+    const trimmed = url.replace(/\/+$/, '') // trim trailing slashes
+    localStorage.setItem('serverUrl', trimmed)
+    set({ serverUrl: trimmed })
+  },
+
   // Auth
   token: localStorage.getItem('token'),
   user: JSON.parse(localStorage.getItem('user') || 'null'),

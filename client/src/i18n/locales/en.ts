@@ -16,6 +16,7 @@ export const en: Record<string, string> = {
   'auth.use_recovery': 'Use recovery code',
   'auth.recovery_code': 'Recovery Code',
   'auth.subtitle': 'End-to-end encrypted messaging',
+  'auth.server_url_placeholder': 'Server URL (https://...)',
 
   // Security badges
   'security.local_keys': 'Keys stored locally',
@@ -335,4 +336,10 @@ export const en: Record<string, string> = {
   'notification.file': '[File]',
   'notification.video': '[Video]',
   'notification.sticker': '[Sticker]',
+
+  // Privacy Policy
+  'privacy.title': 'Privacy Policy',
+  'privacy.hero_title': 'Your Privacy Matters',
+  'privacy.hero_subtitle': 'We are committed to protecting your personal information and communication security',
+  'privacy.last_updated': 'Last updated',
 }

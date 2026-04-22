@@ -6,6 +6,7 @@ export const ko: Record<string, string> = {
   'auth.registering': '가입 중...', 'auth.totp_required': '2단계 인증 코드를 입력하세요',
   'auth.totp_code': '인증 코드', 'auth.verify': '확인', 'auth.use_recovery': '복구 코드 사용',
   'auth.recovery_code': '복구 코드', 'auth.subtitle': '종단간 암호화 메신저',
+  'auth.server_url_placeholder': '서버 URL (https://...)',
   'security.local_keys': '키는 로컬에만 저장', 'security.e2e': '종단간 암호화', 'security.forward': '순방향 비밀성', 'security.quantum': '양자 내성 암호화',
 
   'tab.chats': '채팅', 'tab.contacts': '연락처', 'tab.discover': '발견', 'tab.profile': '프로필',
@@ -86,4 +87,5 @@ export const ko: Record<string, string> = {
   'fingerprint.title': '키 지문', 'fingerprint.identity_key': '신원 키 지문', 'fingerprint.my_key_title': '내 신원 키', 'fingerprint.my_key_subtitle': '내 신원 키 지문', 'fingerprint.my_key_desc': '이것은 당신의 신원 키 지문입니다. 연락처와의 암호화를 확인하려면 상대방의 프로필에서 「안전 번호」를 확인하세요.', 'fingerprint.my_key_verify_hint': '종단 간 암호화를 확인하려면 연락처의 프로필 → 「암호화 확인」을 탭하고 안전 번호를 직접 비교하세요.', 'fingerprint.description': '이 지문을 연락처와 직접 비교하여 통신이 제3자에 의해 가로채지 않았는지 확인하세요.', 'fingerprint.copy': '복사', 'fingerprint.copied': '복사됨', 'fingerprint.how_to_verify': '확인 방법', 'fingerprint.verify_steps': '연락처와 직접 만나 지문을 비교하세요. 설정 → 키 지문을 열고 모든 줄이 일치하는지 확인합니다.',
   'safety.title': '암호화 확인', 'safety.verify_encryption': '암호화 확인', 'safety.description': '당신과 연락처가 동일한 안전 번호를 보고 있다면, 종단 간 암호화가 안전하며 제3자에 의해 가로채지 않은 것입니다.', 'safety.how_to_verify': '확인 방법', 'safety.verify_steps': '연락처와 직접 만나(또는 신뢰할 수 있는 다른 채널을 통해) 서로의 프로필을 열고 「암호화 확인」을 탭하여 안전 번호를 한 줄씩 비교하세요. 일치하면 암호화가 안전합니다.',
   'notification.new_message': '새 메시지', 'notification.incoming_call': '음성 수신', 'notification.incoming_video_call': '영상 수신', 'notification.image': '[이미지]', 'notification.voice': '[음성]', 'notification.file': '[파일]', 'notification.video': '[동영상]', 'notification.sticker': '[스티커]',
+  'privacy.title': '개인정보 처리방침', 'privacy.hero_title': '개인정보 보호를 중요시합니다', 'privacy.hero_subtitle': '개인정보와 통신 보안을 보호하기 위해 최선을 다합니다', 'privacy.last_updated': '최종 업데이트',
 }
