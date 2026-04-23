@@ -25,10 +25,13 @@ struct TokenResponse {
 
 /// Get a valid OAuth2 access token for FCM, using cache when possible.
 async fn get_access_token(config: &Config) -> Option<String> {
-    let (client_email, private_key) = match (&config.fcm_client_email, &config.fcm_private_key) {
+    let (client_email, private_key_raw) = match (&config.fcm_client_email, &config.fcm_private_key) {
         (Some(email), Some(key)) => (email.clone(), key.clone()),
         _ => return None,
     };
+
+    // Normalize escaped newlines in PEM key (common in env vars)
+    let private_key = private_key_raw.replace("\\n", "\n");
 
     // Check cache
     {
