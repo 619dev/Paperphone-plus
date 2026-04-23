@@ -74,6 +74,16 @@ pub async fn push_to_user(db: &sqlx::MySqlPool, config: &Config, user_id: &str, 
                         .bind(endpoint)
                         .execute(db).await;
                     }
+                    Err(ref e) if format!("{:?}", e).contains("403") => {
+                        // 403 = VAPID key mismatch; this subscription will never work — remove it
+                        tracing::info!("[Push] Removing mismatched-VAPID subscription for user {} (403 Forbidden)", user_id);
+                        let _ = sqlx::query(
+                            "DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?"
+                        )
+                        .bind(user_id)
+                        .bind(endpoint)
+                        .execute(db).await;
+                    }
                     Err(e) => tracing::warn!("[Push] Send failed for user {}: {:?}", user_id, e),
                 }
             }
