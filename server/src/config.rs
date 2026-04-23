@@ -44,6 +44,10 @@ pub struct Config {
     pub onesignal_app_id: Option<String>,
     pub onesignal_rest_key: Option<String>,
 
+    // ntfy Push (for Chinese Android devices without GMS)
+    pub ntfy_base_url: String,
+    pub ntfy_token: Option<String>,
+
     // Telegram stickers
     pub telegram_bot_token: Option<String>,
     pub sticker_packs: Option<String>,
@@ -90,6 +94,9 @@ impl Config {
 
             onesignal_app_id: env_opt("ONESIGNAL_APP_ID"),
             onesignal_rest_key: env_opt("ONESIGNAL_REST_KEY"),
+
+            ntfy_base_url: env_or("NTFY_BASE_URL", "https://ntfy.sh"),
+            ntfy_token: env_opt("NTFY_TOKEN"),
 
             telegram_bot_token: env_opt("TELEGRAM_BOT_TOKEN"),
             sticker_packs: env_opt("STICKER_PACKS"),

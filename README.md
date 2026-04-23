@@ -41,7 +41,7 @@
 | 👥 群聊 | 最多 2000 人群组，纯文本消息（无加密），免打扰模式，成员管理 |
 | 👫 好友系统 | 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组 |
 | ⏱️ 消息自动删除 | 5 档可选（永不/1天/3天/1周/1月），私聊双方均可设置，群聊群主专属 |
-| 🔔 消息推送 | Web Push (VAPID) + FCM + OneSignal 三通道，离线也能收到通知 |
+| 🔔 消息推送 | Web Push (VAPID) + FCM + OneSignal + ntfy 四通道，离线也能收到通知（国产安卓免 Google 服务） |
 | 🌐 多语言 | 中文、英文、日语、韩语、法语、德语、俄语、西班牙语（自动检测 + 手动切换） |
 | 📱 iOS 永久免签 | PWA H5 → Safari「添加到主屏幕」，无需企业证书 |
 | 💬 消息功能 | 文字、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音消息、Emoji 面板（200+，8 分类）、Telegram 贴纸包、已读状态 |
@@ -190,13 +190,14 @@ METERED_TURN_API_KEY=your_metered_api_key_here
 
 ---
 
-离线消息通知通过**三通道**推送，最大化消息送达率：
+离线消息通知通过**四通道**推送，最大化消息送达率：
 
 | 通道 | 适用场景 | 配置 |
 |------|----------|------|
 | Web Push (VAPID) | 浏览器 (Chrome/Edge/Firefox) + iOS PWA (Safari 16.4+) | VAPID 密钥 |
 | FCM (Firebase) | Capacitor 打包的原生 Android App | Firebase 服务账号 JSON |
 | OneSignal | Median.co 打包的原生 Android/iOS App | OneSignal App ID + REST Key |
+| ntfy | 国产安卓设备（华为/小米/OPPO/vivo 等无 Google 服务） | 无需配置（默认使用 ntfy.sh 公共服务） |
 
 ### 配置 Web Push
 1. 生成 VAPID 密钥（仅需一次）：
@@ -290,6 +291,27 @@ MIIEvQIBADANBgkqhkiG9w0BAQE...
 - 日志出现 `[FCM] ✅ Push sent to user xxx` → FCM 发送成功，问题在客户端
 - 无任何 FCM 相关日志 → `FCM_PROJECT_ID` 未配置或 `fcm_tokens` 表中没有该用户的 token
 
+### 配置 ntfy（国产安卓设备无 Google 服务）
+
+对于华为、小米、OPPO、vivo 等无法使用 Google Mobile Services 的国产安卓设备，PaperPhone 支持通过 [ntfy](https://ntfy.sh) 发送推送通知。
+
+**默认配置（零配置即可使用）**：使用 ntfy.sh 公共服务，无需任何额外配置。
+
+**可选配置**（自建 ntfy 服务器时使用）：
+
+```env
+NTFY_BASE_URL=https://your-ntfy-server.com
+NTFY_TOKEN=your_optional_auth_token
+```
+
+**用户使用流程**：
+1. 安装 ntfy App（[Google Play](https://play.google.com/store/apps/details?id=io.heckel.ntfy) / [F-Droid](https://f-droid.org/packages/io.heckel.ntfy/) / [直接下载](https://ntfy.sh)）
+2. 在 PaperPhone 设置页找到「ntfy 推送」卡片
+3. 复制显示的 topic 名称，在 ntfy App 中订阅
+4. 点击「注册推送」按钮完成注册
+
+> **安全说明**：ntfy 通知内容为明文（通知标题和摘要），不包含消息原文内容。如需更高安全性，可自建 ntfy 服务器。
+
 ---
 
 ## iOS 永久免签部署
@@ -373,7 +395,8 @@ paperphone-plus/
 │       ├── services/
 │       │   ├── push.rs              # Web Push VAPID 服务
 │       │   ├── fcm.rs               # Firebase Cloud Messaging 服务
-│       │   └── onesignal.rs         # OneSignal REST API 服务
+│       │   ├── onesignal.rs         # OneSignal REST API 服务
+│       │   └── ntfy.rs              # ntfy 推送服务（国产安卓）
 │       └── ws/
 │           └── server.rs            # WebSocket 路由（消息/通话信令/已读/推送）
 │
@@ -441,6 +464,7 @@ paperphone-plus/
 | `push_subscriptions` | Web Push 推送订阅（VAPID） |
 | `fcm_tokens` | FCM 设备令牌（Capacitor Android） |
 | `onesignal_players` | OneSignal 设备注册（Median.co） |
+| `ntfy_subscriptions` | ntfy 推送订阅（国产安卓设备） |
 | `user_totp` | TOTP 两步验证密钥与恢复码 |
 | `sessions` | 多设备会话管理 |
 | `friend_tags` / `friend_tag_assignments` | 好友标签系统 |
@@ -494,6 +518,8 @@ paperphone-plus/
 | `FCM_PRIVATE_KEY` | Firebase 服务账号私钥（可选，支持 `\n` 转义和真实换行两种格式，详见[FCM 配置说明](#配置-fcmcapacitor-原生-android-app)） | — |
 | `ONESIGNAL_APP_ID` | OneSignal App ID（可选，Median.co） | — |
 | `ONESIGNAL_REST_KEY` | OneSignal REST API Key（可选） | — |
+| `NTFY_BASE_URL` | ntfy 服务器地址（可选，默认使用 ntfy.sh 公共服务） | `https://ntfy.sh` |
+| `NTFY_TOKEN` | ntfy 认证 Token（可选，自建服务器时使用） | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选，贴纸包代理） | — |
 | `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 8 个默认包 |
 ---

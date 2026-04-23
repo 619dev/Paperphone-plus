@@ -314,3 +314,15 @@ CREATE TABLE IF NOT EXISTS fcm_tokens (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_fcm_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── ntfy Subscriptions (push via ntfy.sh for Chinese Android without GMS) ──
+CREATE TABLE IF NOT EXISTS ntfy_subscriptions (
+  id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     VARCHAR(36)     NOT NULL,
+  ntfy_topic  VARCHAR(64)     NOT NULL,
+  platform    VARCHAR(16)     DEFAULT 'android',
+  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_ntfy (user_id, ntfy_topic),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_ntfy_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

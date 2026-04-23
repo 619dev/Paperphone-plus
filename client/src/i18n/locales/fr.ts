@@ -61,7 +61,9 @@ export const fr: Record<string, string> = {
   'profile.change_password': 'Changer le mot de passe', 'profile.two_factor': 'Auth à deux facteurs',
   'profile.about': 'À propos', 'profile.logout': 'Déconnexion', 'profile.tags': 'Tags d\'amis',
   'profile.my_qr': 'Mon QR code', 'profile.qr_scan_hint': 'Scannez ce QR code pour m\'ajouter comme ami',
-  'profile.notifications': 'Notifications', 'pwa.install_title': 'Ajouter à l\'écran d\'accueil', 'pwa.install_step1': '1. Appuyez sur le bouton Partager ⬆️ dans Safari', 'pwa.install_step2': '2. Faites défiler et appuyez sur « Sur l\'écran d\'accueil »', 'pwa.install_step3': '3. Appuyez sur « Ajouter » en haut à droite',
+  'profile.notifications': 'Notifications',
+  'ntfy.title': 'ntfy Push (Android Chine)', 'ntfy.description': 'Si votre téléphone Android ne prend pas en charge les services Google (Huawei, etc.), vous pouvez recevoir des notifications push via ntfy.', 'ntfy.step1': '1. Installez l\'application ntfy depuis votre magasin d\'apps', 'ntfy.step2': '2. Dans l\'app ntfy, appuyez sur + et abonnez-vous à ce sujet :', 'ntfy.step3': '3. Appuyez sur le bouton ci-dessous pour vous inscrire', 'ntfy.register': 'Enregistrer le push', 'ntfy.registered': '✅ Enregistré', 'ntfy.copy_topic': 'Copier le sujet', 'ntfy.copied': 'Copié', 'ntfy.download_ntfy': 'Télécharger ntfy', 'ntfy.register_failed': 'Échec de l\'inscription, veuillez réessayer',
+  'pwa.install_title': 'Ajouter à l\'écran d\'accueil', 'pwa.install_step1': '1. Appuyez sur le bouton Partager ⬆️ dans Safari', 'pwa.install_step2': '2. Faites défiler et appuyez sur « Sur l\'écran d\'accueil »', 'pwa.install_step3': '3. Appuyez sur « Ajouter » en haut à droite',
 
   'call.incoming': 'Appel entrant', 'call.outgoing': 'Appel en cours...', 'call.connected': 'Connecté',
   'call.ended': 'Appel terminé', 'call.video': 'Appel vidéo', 'call.voice': 'Appel vocal',

@@ -194,6 +194,19 @@ export const en: Record<string, string> = {
   'profile.push_blocked': 'Notifications are blocked. Please enable them in your browser settings.',
   'profile.push_failed': 'Failed to enable notifications. Check console for details.',
 
+  // ntfy Push
+  'ntfy.title': 'ntfy Push (China Android)',
+  'ntfy.description': 'If your Android phone does not support Google services (Huawei, etc.), you can receive push notifications via ntfy.',
+  'ntfy.step1': '1. Install the ntfy app from your app store',
+  'ntfy.step2': '2. In the ntfy app, tap + and subscribe to this topic:',
+  'ntfy.step3': '3. Tap the button below to register',
+  'ntfy.register': 'Register Push',
+  'ntfy.registered': '✅ Registered',
+  'ntfy.copy_topic': 'Copy Topic',
+  'ntfy.copied': 'Copied',
+  'ntfy.download_ntfy': 'Download ntfy App',
+  'ntfy.register_failed': 'Registration failed, please try again',
+
   // PWA Install
   'pwa.install_title': 'Add to Home Screen',
   'pwa.install_step1': '1. Tap the Share button ⬆️ in Safari toolbar',

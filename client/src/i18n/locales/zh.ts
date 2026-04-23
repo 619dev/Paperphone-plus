@@ -204,6 +204,19 @@ export const zh: Record<string, string> = {
   'profile.push_blocked': '通知已被浏览器拦截。请在浏览器设置中允许通知权限。',
   'profile.push_failed': '开启通知失败，请查看控制台日志。',
 
+  // ntfy Push
+  'ntfy.title': 'ntfy 推送（国产安卓）',
+  'ntfy.description': '如果你使用的是华为、小米等无法使用 Google 服务的安卓手机，可以通过 ntfy 接收消息推送通知。',
+  'ntfy.step1': '1. 从应用商店安装 ntfy App',
+  'ntfy.step2': '2. 在 ntfy App 中点击 + 订阅以下主题：',
+  'ntfy.step3': '3. 点击下方按钮完成注册',
+  'ntfy.register': '注册推送',
+  'ntfy.registered': '✅ 已注册',
+  'ntfy.copy_topic': '复制主题',
+  'ntfy.copied': '已复制',
+  'ntfy.download_ntfy': '下载 ntfy App',
+  'ntfy.register_failed': '注册失败，请重试',
+
   // PWA Install
   'pwa.install_title': '添加到主屏幕',
   'pwa.install_step1': '1. 点击底部 Safari 工具栏的分享按钮 ⬆️',

@@ -61,7 +61,9 @@ export const ru: Record<string, string> = {
   'profile.change_password': 'Сменить пароль', 'profile.two_factor': 'Двухфакторная авторизация',
   'profile.about': 'О приложении', 'profile.logout': 'Выйти', 'profile.tags': 'Теги друзей',
   'profile.my_qr': 'Мой QR-код', 'profile.qr_scan_hint': 'Отсканируйте этот QR-код, чтобы добавить меня в друзья',
-  'profile.notifications': 'Уведомления', 'pwa.install_title': 'Добавить на экран', 'pwa.install_step1': '1. Нажмите кнопку «Поделиться» ⬆️ в Safari', 'pwa.install_step2': '2. Прокрутите и нажмите «На экран «Домой»»', 'pwa.install_step3': '3. Нажмите «Добавить» в правом верхнем углу',
+  'profile.notifications': 'Уведомления',
+  'ntfy.title': 'ntfy Push (Android Китай)', 'ntfy.description': 'Если ваш Android-телефон не поддерживает сервисы Google (Huawei и др.), вы можете получать push-уведомления через ntfy.', 'ntfy.step1': '1. Установите приложение ntfy из магазина приложений', 'ntfy.step2': '2. В приложении ntfy нажмите + и подпишитесь на эту тему:', 'ntfy.step3': '3. Нажмите кнопку ниже для регистрации', 'ntfy.register': 'Зарегистрировать push', 'ntfy.registered': '✅ Зарегистрировано', 'ntfy.copy_topic': 'Копировать тему', 'ntfy.copied': 'Скопировано', 'ntfy.download_ntfy': 'Скачать ntfy', 'ntfy.register_failed': 'Регистрация не удалась, попробуйте снова',
+  'pwa.install_title': 'Добавить на экран', 'pwa.install_step1': '1. Нажмите кнопку «Поделиться» ⬆️ в Safari', 'pwa.install_step2': '2. Прокрутите и нажмите «На экран «Домой»»', 'pwa.install_step3': '3. Нажмите «Добавить» в правом верхнем углу',
 
   'call.incoming': 'Входящий звонок', 'call.outgoing': 'Вызов...', 'call.connected': 'Подключён',
   'call.ended': 'Звонок завершён', 'call.video': 'Видеозвонок', 'call.voice': 'Голосовой звонок',

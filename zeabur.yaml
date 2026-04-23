@@ -33,7 +33,7 @@ spec:
     - 👤 **User Profile** — contact profile page with Moments feed, bidirectional privacy controls (hide their / hide mine)
     - 📰 **Timeline** — Xiaohongshu-style public feed with masonry layout, up to 50 images/videos + 2000-char text, anonymous posting, likes & comments
     - ⏱️ **Auto-Delete Messages** — 5 tiers: never / 1 day / 3 days / 1 week / 1 month
-    - 🔔 **Push Notifications** — Web Push (VAPID) + FCM + OneSignal triple-channel
+    - 🔔 **Push Notifications** — Web Push (VAPID) + FCM + OneSignal + ntfy quad-channel (Chinese Android without Google Services supported)
     - 🌐 **Multi-language** — Chinese, English, Japanese, Korean, French, German, Russian, Spanish
     - 📱 **iOS PWA** — "Add to Home Screen" via Safari, no enterprise cert needed
     - 💬 Rich messaging: text, images, video, document files (PDF/DOCX/XLSX etc. with type icons), voice, 200+ emoji (8 categories), Telegram sticker packs, delivery receipts, typing indicators
@@ -197,6 +197,21 @@ spec:
         Cloudflare TURN for NAT traversal in video/voice calls.
         Leave blank to skip Metered.ca (falls back to STUN only).
 
+    - key: NTFY_BASE_URL
+      type: STRING
+      name: ntfy Server URL (optional)
+      description: >-
+        Base URL for ntfy push notifications (for Chinese Android devices
+        without Google Services). Defaults to https://ntfy.sh public service.
+        Set to your own ntfy server URL if self-hosting.
+
+    - key: NTFY_TOKEN
+      type: STRING
+      name: ntfy Auth Token (optional)
+      description: >-
+        Authentication token for self-hosted ntfy servers.
+        Leave blank when using the public ntfy.sh service.
+
   services:
     # ── MySQL 8 ───────────────────────────────────────────────────────
     - name: MySQL
@@ -353,6 +368,10 @@ spec:
             default: ${FCM_PRIVATE_KEY}
           METERED_TURN_API_KEY:
             default: ${METERED_TURN_API_KEY}
+          NTFY_BASE_URL:
+            default: ${NTFY_BASE_URL}
+          NTFY_TOKEN:
+            default: ${NTFY_TOKEN}
           TELEGRAM_BOT_TOKEN:
             default: ${TELEGRAM_BOT_TOKEN}
           STICKER_PACKS:
@@ -403,7 +422,7 @@ localization:
       - 👤 **个人资料** — 联系人资料页（朋友圈动态 +「不看此人朋友圈」与「不让他看我的朋友圈」双向隐私控制）
       - 📰 **时间线** — 小红书风格公开发帖区，双列瀑布流布局，最多50个图片/视频+2000字文字，支持匿名发帖、点赞、评论
       - ⏱️ **消息自动删除** — 5 档可选（永不/1天/3天/1周/1月）
-      - 🔔 **消息推送** — Web Push (VAPID) + FCM + OneSignal 三通道
+      - 🔔 **消息推送** — Web Push (VAPID) + FCM + OneSignal + ntfy 四通道（国产安卓免 Google 服务）
       - 🌐 **多语言** — 中文、英文、日语、韩语、法语、德语、俄语、西班牙语
       - 📱 **iOS 永久免签** — Safari「添加到主屏幕」，无需企业证书
       - 💬 富文本消息、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音、Emoji（200+，8 分类）、Telegram 贴纸包、送达回执、打字状态

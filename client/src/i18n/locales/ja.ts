@@ -58,7 +58,9 @@ export const ja: Record<string, string> = {
   'profile.sessions': 'デバイス', 'profile.theme': 'ダークモード', 'profile.language': '言語',
   'profile.change_password': 'パスワード変更', 'profile.two_factor': '二段階認証',
   'profile.about': 'について', 'profile.logout': 'ログアウト',  'profile.tags': 'タグ', 'profile.my_qr': 'マイQRコード', 'profile.qr_scan_hint': 'このQRコードをスキャンして友達に追加',
-  'profile.notifications': '通知', 'pwa.install_title': 'ホーム画面に追加', 'pwa.install_step1': '1. Safariの共有ボタン ⬆️ をタップ', 'pwa.install_step2': '2.「ホーム画面に追加」をタップ', 'pwa.install_step3': '3. 右上の「追加」をタップ',
+  'profile.notifications': '通知',
+  'ntfy.title': 'ntfy プッシュ（中国Android）', 'ntfy.description': 'お使いのAndroid端末がGoogleサービスに対応していない場合（Huaweiなど）、ntfyでプッシュ通知を受信できます。', 'ntfy.step1': '1. アプリストアからntfyアプリをインストール', 'ntfy.step2': '2. ntfyアプリで＋をタップし、以下のトピックを購読：', 'ntfy.step3': '3. 下のボタンをタップして登録', 'ntfy.register': 'プッシュ登録', 'ntfy.registered': '✅ 登録済み', 'ntfy.copy_topic': 'トピックをコピー', 'ntfy.copied': 'コピーしました', 'ntfy.download_ntfy': 'ntfyアプリをダウンロード', 'ntfy.register_failed': '登録に失敗しました。もう一度お試しください',
+  'pwa.install_title': 'ホーム画面に追加', 'pwa.install_step1': '1. Safariの共有ボタン ⬆️ をタップ', 'pwa.install_step2': '2.「ホーム画面に追加」をタップ', 'pwa.install_step3': '3. 右上の「追加」をタップ',
 
   'call.incoming': '着信', 'call.outgoing': '発信中...', 'call.connected': '通話中',
   'call.ended': '通話終了', 'call.video': 'ビデオ通話', 'call.voice': '音声通話',

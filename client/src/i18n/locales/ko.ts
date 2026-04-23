@@ -59,7 +59,9 @@ export const ko: Record<string, string> = {
   'profile.change_password': '비밀번호 변경', 'profile.two_factor': '2단계 인증',
   'profile.about': '정보', 'profile.logout': '로그아웃', 'profile.tags': '친구 태그',
   'profile.my_qr': '내 QR 코드', 'profile.qr_scan_hint': '이 QR 코드를 스캔하여 친구로 추가',
-  'profile.notifications': '알림', 'pwa.install_title': '홈 화면에 추가', 'pwa.install_step1': '1. Safari 도구 모음의 공유 버튼 ⬆️ 탭', 'pwa.install_step2': '2. "홈 화면에 추가" 탭', 'pwa.install_step3': '3. 오른쪽 상단의 "추가" 탭',
+  'profile.notifications': '알림',
+  'ntfy.title': 'ntfy 푸시 (중국 Android)', 'ntfy.description': 'Android 기기가 Google 서비스를 지원하지 않는 경우(Huawei 등), ntfy를 통해 푸시 알림을 받을 수 있습니다.', 'ntfy.step1': '1. 앱 스토어에서 ntfy 앱을 설치하세요', 'ntfy.step2': '2. ntfy 앱에서 +를 탭하고 다음 주제를 구독하세요:', 'ntfy.step3': '3. 아래 버튼을 탭하여 등록하세요', 'ntfy.register': '푸시 등록', 'ntfy.registered': '✅ 등록됨', 'ntfy.copy_topic': '주제 복사', 'ntfy.copied': '복사됨', 'ntfy.download_ntfy': 'ntfy 앱 다운로드', 'ntfy.register_failed': '등록 실패, 다시 시도해 주세요',
+  'pwa.install_title': '홈 화면에 추가', 'pwa.install_step1': '1. Safari 도구 모음의 공유 버튼 ⬆️ 탭', 'pwa.install_step2': '2. "홈 화면에 추가" 탭', 'pwa.install_step3': '3. 오른쪽 상단의 "추가" 탭',
 
   'call.incoming': '수신 전화', 'call.outgoing': '발신 중...', 'call.connected': '통화 중',
   'call.ended': '통화 종료', 'call.video': '영상 통화', 'call.voice': '음성 통화',

@@ -22,7 +22,7 @@ import { CallProvider } from './contexts/CallContext'
 import { GroupCallProvider } from './contexts/GroupCallContext'
 import { registerServiceWorker, subscribePush, isPushSubscribed } from './api/push'
 import { initOneSignal, loginOneSignal } from './api/onesignal'
-import { post } from './api/http'
+import { get, post } from './api/http'
 import { isNativePlatform } from './utils/platform'
 import { initNativePush } from './api/nativePush'
 
@@ -34,6 +34,22 @@ function ProtectedLayout() {
     if (isNativePlatform()) {
       // ── Capacitor Native: use FCM directly ──
       initNativePush().catch(e => console.warn('[NativePush] Init failed:', e))
+
+      // ── ntfy fallback: auto-register topic for Chinese Android without GMS ──
+      ;(async () => {
+        try {
+          const topicRes = await get<{ ntfy_topic: string }>('/api/push/ntfy-topic')
+          if (topicRes?.ntfy_topic) {
+            const statusRes = await get<any>('/api/push/status')
+            if (!statusRes?.user_ntfy_subscriptions || statusRes.user_ntfy_subscriptions === 0) {
+              await post('/api/push/ntfy', { ntfy_topic: topicRes.ntfy_topic, platform: 'android' })
+              console.log('[ntfy] ✅ Auto-registered topic:', topicRes.ntfy_topic)
+            }
+          }
+        } catch (e) {
+          console.warn('[ntfy] Auto-register failed:', e)
+        }
+      })()
     } else {
       // ── Web/PWA: use Service Worker + Web Push + OneSignal ──
       registerServiceWorker().then(() => {

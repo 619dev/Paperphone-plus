@@ -41,7 +41,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 👥 Group Chat | Up to 2000 members, plain-text messages (no encryption), Do Not Disturb mode, member management |
 | 👫 Friend System | Friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping |
 | ⏱️ Auto-Delete Messages | 5 tiers (never / 1 day / 3 days / 1 week / 1 month), settable by either party in DMs, owner-only in groups |
-| 🔔 Push Notifications | Web Push (VAPID) + FCM + OneSignal triple-channel — reach users even when offline |
+| 🔔 Push Notifications | Web Push (VAPID) + FCM + OneSignal + ntfy quad-channel — reach users even when offline (Chinese Android without Google Services supported) |
 | 🌐 Multi-Language | Chinese, English, Japanese, Korean, French, German, Russian, Spanish — auto-detect + manual switch |
 | 📱 iOS — No Enterprise Cert | PWA via Safari "Add to Home Screen", works permanently without Apple signing |
 | 💬 Rich Messaging | Text, images, video, document files, voice messages, 200+ emoji, Telegram sticker packs, delivery receipts, typing indicators |
@@ -147,6 +147,8 @@ cd client && npm install && npm run dev
 | `FCM_PRIVATE_KEY` | Firebase service account private key (optional, supports both `\n` escape and real newlines; see below) | — |
 | `ONESIGNAL_APP_ID` | OneSignal App ID (optional) | — |
 | `ONESIGNAL_REST_KEY` | OneSignal REST API Key (optional) | — |
+| `NTFY_BASE_URL` | ntfy server URL (optional, uses public ntfy.sh by default) | `https://ntfy.sh` |
+| `NTFY_TOKEN` | ntfy auth token (optional, for self-hosted servers) | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token (optional) | — |
 | `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 8 built-in defaults |
 
@@ -181,6 +183,28 @@ The `private_key` field in Firebase service account JSON contains an RSA private
 - `[FCM] No access token available` → Private key format error (newline issue)
 - `[FCM] ✅ Push sent to user xxx` → FCM sending works, issue is client-side
 - No FCM logs at all → `FCM_PROJECT_ID` not set or no token in `fcm_tokens` table
+
+### ntfy Push (Chinese Android Devices without Google Services)
+
+For Android devices without Google Mobile Services (Huawei, Xiaomi, OPPO, vivo, etc.), PaperPhone supports push notifications via [ntfy](https://ntfy.sh).
+
+**Default setup (zero configuration)**: Uses the public ntfy.sh service. No additional configuration needed.
+
+**Optional configuration** (for self-hosted ntfy servers):
+
+```env
+NTFY_BASE_URL=https://your-ntfy-server.com
+NTFY_TOKEN=your_optional_auth_token
+```
+
+**User setup flow**:
+1. Install the ntfy app ([Google Play](https://play.google.com/store/apps/details?id=io.heckel.ntfy) / [F-Droid](https://f-droid.org/packages/io.heckel.ntfy/) / [Direct Download](https://ntfy.sh))
+2. Open PaperPhone Settings and find the "ntfy Push" card
+3. Copy the displayed topic name and subscribe to it in the ntfy app
+4. Tap "Register Push" to complete registration
+
+> **Security note**: ntfy notifications contain notification titles and summaries in plaintext (not the actual message content). For higher security, consider self-hosting an ntfy server.
+
 
 ---
 

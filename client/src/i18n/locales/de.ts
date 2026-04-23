@@ -61,7 +61,9 @@ export const de: Record<string, string> = {
   'profile.change_password': 'Passwort ändern', 'profile.two_factor': 'Zwei-Faktor-Auth',
   'profile.about': 'Über', 'profile.logout': 'Abmelden', 'profile.tags': 'Freund-Tags',
   'profile.my_qr': 'Mein QR-Code', 'profile.qr_scan_hint': 'Scannen Sie diesen QR-Code, um mich als Freund hinzuzufügen',
-  'profile.notifications': 'Benachrichtigungen', 'pwa.install_title': 'Zum Startbildschirm', 'pwa.install_step1': '1. Tippen Sie auf die Teilen-Taste ⬆️ in Safari', 'pwa.install_step2': '2. Scrollen und „Zum Home-Bildschirm" tippen', 'pwa.install_step3': '3. Oben rechts „Hinzufügen" tippen',
+  'profile.notifications': 'Benachrichtigungen',
+  'ntfy.title': 'ntfy Push (China-Android)', 'ntfy.description': 'Wenn Ihr Android-Gerät keine Google-Dienste unterstützt (Huawei usw.), können Sie Benachrichtigungen über ntfy empfangen.', 'ntfy.step1': '1. Installieren Sie die ntfy-App aus Ihrem App Store', 'ntfy.step2': '2. Tippen Sie in der ntfy-App auf + und abonnieren Sie dieses Thema:', 'ntfy.step3': '3. Tippen Sie auf die Schaltfläche unten, um sich zu registrieren', 'ntfy.register': 'Push registrieren', 'ntfy.registered': '✅ Registriert', 'ntfy.copy_topic': 'Thema kopieren', 'ntfy.copied': 'Kopiert', 'ntfy.download_ntfy': 'ntfy-App herunterladen', 'ntfy.register_failed': 'Registrierung fehlgeschlagen, bitte erneut versuchen',
+  'pwa.install_title': 'Zum Startbildschirm', 'pwa.install_step1': '1. Tippen Sie auf die Teilen-Taste ⬆️ in Safari', 'pwa.install_step2': '2. Scrollen und „Zum Home-Bildschirm" tippen', 'pwa.install_step3': '3. Oben rechts „Hinzufügen" tippen',
 
   'call.incoming': 'Eingehender Anruf', 'call.outgoing': 'Anrufen...', 'call.connected': 'Verbunden',
   'call.ended': 'Anruf beendet', 'call.video': 'Videoanruf', 'call.voice': 'Sprachanruf',

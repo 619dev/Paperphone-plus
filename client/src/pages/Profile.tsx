@@ -9,7 +9,7 @@ import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
 import { logoutOneSignal } from '../api/onesignal'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink } from 'lucide-react'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr'
 
@@ -38,6 +38,30 @@ export default function Profile() {
 
   useEffect(() => {
     isPushSubscribed().then(setPushEnabled)
+  }, [])
+
+  // ntfy state
+  const [ntfyTopic, setNtfyTopic] = useState('')
+  const [ntfyUrl, setNtfyUrl] = useState('')
+  const [ntfyRegistered, setNtfyRegistered] = useState(false)
+  const [ntfyLoading, setNtfyLoading] = useState(false)
+  const [ntfyCopied, setNtfyCopied] = useState(false)
+  const isAndroid = /Android/i.test(navigator.userAgent)
+
+  useEffect(() => {
+    if (!isAndroid) return
+    // Fetch ntfy topic and check subscription status
+    get<{ ntfy_topic: string; ntfy_url: string }>('/api/push/ntfy-topic')
+      .then(res => {
+        setNtfyTopic(res.ntfy_topic)
+        setNtfyUrl(res.ntfy_url)
+      })
+      .catch(() => {})
+    get<any>('/api/push/status')
+      .then(res => {
+        if (res.user_ntfy_subscriptions > 0) setNtfyRegistered(true)
+      })
+      .catch(() => {})
   }, [])
 
   const togglePush = async () => {
@@ -163,6 +187,77 @@ export default function Profile() {
                 {t('pwa.install_step1')}<br />
                 {t('pwa.install_step2')}<br />
                 {t('pwa.install_step3')}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ntfy Push for Chinese Android */}
+        {isAndroid && ntfyTopic && (
+          <>
+            <div className="divider" />
+            <div style={{
+              margin: '0 16px', padding: '16px', borderRadius: 12,
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.10), rgba(59,130,246,0.10))',
+              border: '1px solid rgba(16,185,129,0.2)',
+            }}>
+              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Bell size={16} /> {t('ntfy.title')}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>
+                {t('ntfy.description')}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.8 }}>
+                {t('ntfy.step1')}<br />
+                {t('ntfy.step2')}
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 8,
+                background: 'var(--bg-card)', borderRadius: 8, padding: '10px 12px',
+              }}>
+                <code style={{ flex: 1, fontSize: 14, fontWeight: 600, color: 'var(--accent)', wordBreak: 'break-all' }}>
+                  {ntfyTopic}
+                </code>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(ntfyTopic)
+                    setNtfyCopied(true)
+                    setTimeout(() => setNtfyCopied(false), 2000)
+                  }}
+                  style={{ minWidth: 70, fontSize: 12 }}
+                >
+                  {ntfyCopied ? <><Check size={12} /> {t('ntfy.copied')}</> : <><Copy size={12} /> {t('ntfy.copy_topic')}</>}
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+                {t('ntfy.step3')}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className={`btn btn-sm ${ntfyRegistered ? '' : 'btn-primary'}`}
+                  disabled={ntfyLoading || ntfyRegistered}
+                  style={{ flex: 1 }}
+                  onClick={async () => {
+                    setNtfyLoading(true)
+                    try {
+                      await post('/api/push/ntfy', { ntfy_topic: ntfyTopic, platform: 'android' })
+                      setNtfyRegistered(true)
+                    } catch {
+                      alert(t('ntfy.register_failed'))
+                    }
+                    setNtfyLoading(false)
+                  }}
+                >
+                  {ntfyRegistered ? t('ntfy.registered') : ntfyLoading ? t('common.loading') : t('ntfy.register')}
+                </button>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => window.open('https://ntfy.sh', '_blank')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <ExternalLink size={12} /> {t('ntfy.download_ntfy')}
+                </button>
               </div>
             </div>
           </>
