@@ -115,7 +115,7 @@ export default function Timeline() {
                 <div style={{ padding: '8px 10px 6px' }}>
                   <div style={{
                     fontSize: 13, fontWeight: 500, lineHeight: 1.4,
-                    display: '-webkit-box', WebkitLineClamp: 2,
+                    display: '-webkit-box', WebkitLineClamp: cover ? 2 : 8,
                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     marginBottom: 6,
                   }}>
