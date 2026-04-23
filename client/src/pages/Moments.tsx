@@ -100,7 +100,7 @@ export default function Moments() {
           const imgCount = m.images?.length || 0
           const isOwner = m.user_id === user?.id
           return (
-            <div key={m.id} className="moment-card">
+            <div key={m.id} className={`moment-card${imgCount === 0 && (!m.videos || m.videos.length === 0) ? ' text-only' : ''}`}>
               <div className="moment-header">
                 <div className="avatar avatar-sm">
                   {m.user?.avatar ? <img src={m.user.avatar} alt="" /> : m.user?.nickname?.[0]}

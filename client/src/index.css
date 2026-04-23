@@ -1002,6 +1002,13 @@ textarea.input {
   font-size: 14px;
   line-height: 1.6;
   margin-bottom: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Text-only posts: show at least 8 lines of text */
+.moment-card.text-only .moment-text {
+  min-height: calc(14px * 1.6 * 8); /* 8 lines × font-size × line-height ≈ 179px */
 }
 
 .moment-images {

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useStore } from './store'
 import { useSocket } from './hooks/useSocket'
@@ -23,104 +23,108 @@ import { GroupCallProvider } from './contexts/GroupCallContext'
 import { registerServiceWorker, subscribePush, isPushSubscribed } from './api/push'
 import { initOneSignal, loginOneSignal } from './api/onesignal'
 import { post } from './api/http'
+import { isNativePlatform } from './utils/platform'
+import { initNativePush } from './api/nativePush'
 
 function ProtectedLayout() {
   useSocket()
 
   // Auto-subscribe to push notifications when authenticated
   useEffect(() => {
-    // ── Register Service Worker first ──
-    registerServiceWorker().then(() => {
-      console.log('[Push] Service worker ready')
-    }).catch(() => {})
+    if (isNativePlatform()) {
+      // ── Capacitor Native: use FCM directly ──
+      initNativePush().catch(e => console.warn('[NativePush] Init failed:', e))
+    } else {
+      // ── Web/PWA: use Service Worker + Web Push + OneSignal ──
+      registerServiceWorker().then(() => {
+        console.log('[Push] Service worker ready')
+      }).catch(() => {})
 
-    // ── Web Push (VAPID) ──
-    ;(async () => {
-      try {
-        // Request notification permission if not yet asked
-        if ('Notification' in window && Notification.permission === 'default') {
-          await Notification.requestPermission()
-        }
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const alreadySub = await isPushSubscribed()
-          if (!alreadySub) {
-            const ok = await subscribePush()
-            if (ok) console.log('[Push] Web Push subscribed successfully')
+      // Web Push (VAPID)
+      ;(async () => {
+        try {
+          if ('Notification' in window && Notification.permission === 'default') {
+            await Notification.requestPermission()
           }
-        }
-      } catch (e) {
-        console.warn('[Push] Web Push subscription failed:', e)
-      }
-    })()
-
-    // ── OneSignal Web SDK v16 ──
-    // Initialize and login so this device gets push via FCM (critical for Android)
-    ;(async () => {
-      try {
-        const token = useStore.getState().token
-        if (!token) return
-
-        // Decode user_id from JWT payload for OneSignal login
-        const userId = getUserIdFromToken(token)
-        if (!userId) return
-
-        const ok = await initOneSignal()
-        if (ok) {
-          await loginOneSignal(userId)
-          console.log('[OneSignal] ✅ Web SDK v16 fully initialized')
-        }
-      } catch (e) {
-        console.warn('[OneSignal] Web SDK init failed:', e)
-      }
-    })()
-
-    // ── OneSignal registration (Median.co native wrapper — fallback) ──
-    // The Median.co WebView bridge injects window.median asynchronously,
-    // so we poll for it with a retry mechanism.
-    let attempt = 0
-    const maxAttempts = 20 // ~10 seconds
-    const tryRegisterMedian = () => {
-      const w = window as any
-      if (w.median?.onesignal?.onesignalInfo) {
-        console.log('[OneSignal] Median.co bridge detected, requesting player info...')
-        w.median.onesignal.onesignalInfo((info: any) => {
-          console.log('[OneSignal] Got info:', JSON.stringify(info))
-          if (info?.oneSignalUserId) {
-            console.log('[OneSignal] Registering player_id:', info.oneSignalUserId)
-            post('/api/push/onesignal', {
-              player_id: info.oneSignalUserId,
-              platform: info.platform || 'android',
-            }).then(() => {
-              console.log('[OneSignal] ✅ Player ID registered on server')
-            }).catch((e: any) => {
-              console.error('[OneSignal] Failed to register player_id:', e)
-            })
-          } else {
-            console.warn('[OneSignal] No oneSignalUserId in info')
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const alreadySub = await isPushSubscribed()
+            if (!alreadySub) {
+              const ok = await subscribePush()
+              if (ok) console.log('[Push] Web Push subscribed successfully')
+            }
           }
-        })
-      } else if (w.gonative?.onesignal?.onesignalInfo) {
-        // Legacy GoNative bridge (older Median.co versions)
-        console.log('[OneSignal] GoNative bridge detected')
-        w.gonative.onesignal.onesignalInfo((info: any) => {
-          if (info?.oneSignalUserId) {
-            post('/api/push/onesignal', {
-              player_id: info.oneSignalUserId,
-              platform: info.platform || 'android',
-            }).catch(() => {})
+        } catch (e) {
+          console.warn('[Push] Web Push subscription failed:', e)
+        }
+      })()
+
+      // OneSignal Web SDK v16
+      ;(async () => {
+        try {
+          const token = useStore.getState().token
+          if (!token) return
+          const userId = getUserIdFromToken(token)
+          if (!userId) return
+          const ok = await initOneSignal()
+          if (ok) {
+            await loginOneSignal(userId)
+            console.log('[OneSignal] ✅ Web SDK v16 fully initialized')
           }
-        })
-      } else {
-        attempt++
-        if (attempt < maxAttempts) {
-          setTimeout(tryRegisterMedian, 500)
+        } catch (e) {
+          console.warn('[OneSignal] Web SDK init failed:', e)
+        }
+      })()
+
+      // OneSignal Median.co native wrapper fallback
+      let attempt = 0
+      const maxAttempts = 20
+      const tryRegisterMedian = () => {
+        const w = window as any
+        if (w.median?.onesignal?.onesignalInfo) {
+          w.median.onesignal.onesignalInfo((info: any) => {
+            if (info?.oneSignalUserId) {
+              post('/api/push/onesignal', {
+                player_id: info.oneSignalUserId,
+                platform: info.platform || 'android',
+              }).catch(() => {})
+            }
+          })
+        } else if (w.gonative?.onesignal?.onesignalInfo) {
+          w.gonative.onesignal.onesignalInfo((info: any) => {
+            if (info?.oneSignalUserId) {
+              post('/api/push/onesignal', {
+                player_id: info.oneSignalUserId,
+                platform: info.platform || 'android',
+              }).catch(() => {})
+            }
+          })
+        } else {
+          attempt++
+          if (attempt < maxAttempts) setTimeout(tryRegisterMedian, 500)
         }
       }
+      tryRegisterMedian()
+
+      // Android battery optimization guidance (web only)
+      showAndroidBatteryGuide()
     }
-    tryRegisterMedian()
+  }, [])
 
-    // ── Android battery optimization guidance ──
-    showAndroidBatteryGuide()
+  // ── Capacitor: Android back button handling ──
+  useEffect(() => {
+    if (!isNativePlatform()) return
+    let cleanup: (() => void) | undefined
+    import('@capacitor/app').then(({ App }) => {
+      const listener = App.addListener('backButton', ({ canGoBack }) => {
+        if (canGoBack) {
+          window.history.back()
+        } else {
+          App.exitApp()
+        }
+      })
+      cleanup = () => { listener.then(l => l.remove()) }
+    })
+    return () => { cleanup?.() }
   }, [])
 
   return (
@@ -159,6 +163,34 @@ export default function App() {
   // Hydrate crypto keys from IndexedDB (tier 4 of 4-tier key persistence)
   useEffect(() => {
     loadFromIndexedDB().catch(() => {})
+  }, [])
+
+  // ── Capacitor: Deep Link handler ──
+  // Handles paperphone:// URLs to navigate within the app
+  useEffect(() => {
+    if (!isNativePlatform()) return
+    let cleanup: (() => void) | undefined
+    import('@capacitor/app').then(({ App: CapApp }) => {
+      const listener = CapApp.addListener('appUrlOpen', (event) => {
+        console.log('[DeepLink] URL opened:', event.url)
+        // paperphone://chat/123  → /chat/123
+        // paperphone://user/abc  → /user/abc
+        // paperphone://add-friend?id=xxx → /contacts?add=xxx
+        try {
+          const url = new URL(event.url)
+          const path = url.pathname || url.host + (url.pathname || '')
+          if (path) {
+            window.location.href = '/' + path.replace(/^\/+/, '')
+          }
+        } catch {
+          // Fallback: strip scheme and navigate
+          const path = event.url.replace(/^paperphone:\/\//, '')
+          if (path) window.location.href = '/' + path
+        }
+      })
+      cleanup = () => { listener.then(l => l.remove()) }
+    })
+    return () => { cleanup?.() }
   }, [])
 
   return (
