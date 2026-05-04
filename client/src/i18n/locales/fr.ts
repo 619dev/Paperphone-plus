@@ -93,4 +93,18 @@ export const fr: Record<string, string> = {
   'safety.title': 'Chiffrement', 'safety.verify_encryption': 'Vérifier le chiffrement', 'safety.description': 'Si vous et votre contact voyez le même numéro de sécurité, votre communication chiffrée de bout en bout est sécurisée et n\'a pas été interceptée.', 'safety.how_to_verify': 'Comment vérifier ?', 'safety.verify_steps': 'Rencontrez votre contact en personne (ou utilisez un autre canal de confiance). Ouvrez mutuellement vos profils, appuyez sur « Vérifier le chiffrement » et comparez le numéro de sécurité ligne par ligne. S\'ils correspondent, votre chiffrement est sécurisé.',
   'notification.new_message': 'Nouveau message', 'notification.incoming_call': 'Appel vocal entrant', 'notification.incoming_video_call': 'Appel vidéo entrant', 'notification.image': '[Image]', 'notification.voice': '[Audio]', 'notification.file': '[Fichier]', 'notification.video': '[Vidéo]', 'notification.sticker': '[Sticker]',
   'privacy.title': 'Politique de confidentialité', 'privacy.hero_title': 'Votre vie privée compte', 'privacy.hero_subtitle': 'Nous nous engageons à protéger vos informations personnelles et la sécurité de vos communications', 'privacy.last_updated': 'Dernière mise à jour',
+
+  // Proxy
+  'profile.network': 'Réseau',
+  'proxy.title': 'Paramètres du proxy',
+  'proxy.enabled': 'Activer le proxy',
+  'proxy.type': 'Type de proxy',
+  'proxy.host': 'Adresse du serveur',
+  'proxy.port': 'Port',
+  'proxy.username': "Nom d'utilisateur",
+  'proxy.password': 'Mot de passe',
+  'proxy.optional': 'Facultatif',
+  'proxy.saved': 'Enregistré',
+  'proxy.clear': 'Effacer',
+  'proxy.hint': "Après la configuration d'un serveur proxy, l'application accédera au réseau via le proxy. Prend en charge les protocoles SOCKS5, HTTP et HTTPS. Dans un navigateur web, configurez le proxy au niveau du navigateur ou du système. Sur le client Android, les paramètres de proxy s'appliquent directement.",
 }

@@ -93,4 +93,18 @@ export const de: Record<string, string> = {
   'safety.title': 'Verschlüsselung', 'safety.verify_encryption': 'Verschlüsselung überprüfen', 'safety.description': 'Wenn Sie und Ihr Kontakt dieselbe Sicherheitsnummer sehen, ist Ihre Ende-zu-Ende-verschlüsselte Kommunikation sicher und wurde nicht abgefangen.', 'safety.how_to_verify': 'Wie verifizieren?', 'safety.verify_steps': 'Treffen Sie Ihren Kontakt persönlich (oder nutzen Sie einen anderen vertrauenswürdigen Kanal). Öffnen Sie gegenseitig Ihre Profile, tippen Sie auf „Verschlüsselung überprüfen" und vergleichen Sie die Sicherheitsnummer Zeile für Zeile. Stimmen sie überein, ist Ihre Verschlüsselung sicher.',
   'notification.new_message': 'Neue Nachricht', 'notification.incoming_call': 'Eingehender Sprachanruf', 'notification.incoming_video_call': 'Eingehender Videoanruf', 'notification.image': '[Bild]', 'notification.voice': '[Sprache]', 'notification.file': '[Datei]', 'notification.video': '[Video]', 'notification.sticker': '[Sticker]',
   'privacy.title': 'Datenschutzrichtlinie', 'privacy.hero_title': 'Ihre Privatsphäre ist uns wichtig', 'privacy.hero_subtitle': 'Wir setzen uns für den Schutz Ihrer persönlichen Daten und Kommunikationssicherheit ein', 'privacy.last_updated': 'Zuletzt aktualisiert',
+
+  // Proxy
+  'profile.network': 'Netzwerk',
+  'proxy.title': 'Proxy-Einstellungen',
+  'proxy.enabled': 'Proxy aktivieren',
+  'proxy.type': 'Proxy-Typ',
+  'proxy.host': 'Serveradresse',
+  'proxy.port': 'Port',
+  'proxy.username': 'Benutzername',
+  'proxy.password': 'Passwort',
+  'proxy.optional': 'Optional',
+  'proxy.saved': 'Gespeichert',
+  'proxy.clear': 'Löschen',
+  'proxy.hint': 'Nach der Konfiguration eines Proxy-Servers greift die App über den Proxy auf das Netzwerk zu. Unterstützt SOCKS5-, HTTP- und HTTPS-Proxy-Protokolle. In einem Webbrowser konfigurieren Sie den Proxy auf Browser- oder Systemebene. Auf dem Android-Client werden die Proxy-Einstellungen direkt angewendet.',
 }

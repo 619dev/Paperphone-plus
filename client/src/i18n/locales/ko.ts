@@ -91,4 +91,18 @@ export const ko: Record<string, string> = {
   'safety.title': '암호화 확인', 'safety.verify_encryption': '암호화 확인', 'safety.description': '당신과 연락처가 동일한 안전 번호를 보고 있다면, 종단 간 암호화가 안전하며 제3자에 의해 가로채지 않은 것입니다.', 'safety.how_to_verify': '확인 방법', 'safety.verify_steps': '연락처와 직접 만나(또는 신뢰할 수 있는 다른 채널을 통해) 서로의 프로필을 열고 「암호화 확인」을 탭하여 안전 번호를 한 줄씩 비교하세요. 일치하면 암호화가 안전합니다.',
   'notification.new_message': '새 메시지', 'notification.incoming_call': '음성 수신', 'notification.incoming_video_call': '영상 수신', 'notification.image': '[이미지]', 'notification.voice': '[음성]', 'notification.file': '[파일]', 'notification.video': '[동영상]', 'notification.sticker': '[스티커]',
   'privacy.title': '개인정보 처리방침', 'privacy.hero_title': '개인정보 보호를 중요시합니다', 'privacy.hero_subtitle': '개인정보와 통신 보안을 보호하기 위해 최선을 다합니다', 'privacy.last_updated': '최종 업데이트',
+
+  // Proxy
+  'profile.network': '네트워크',
+  'proxy.title': '프록시 설정',
+  'proxy.enabled': '프록시 활성화',
+  'proxy.type': '프록시 유형',
+  'proxy.host': '서버 주소',
+  'proxy.port': '포트',
+  'proxy.username': '사용자 이름',
+  'proxy.password': '비밀번호',
+  'proxy.optional': '선택사항',
+  'proxy.saved': '저장됨',
+  'proxy.clear': '초기화',
+  'proxy.hint': '프록시 서버를 설정하면 앱이 프록시를 통해 네트워크에 접속합니다. SOCKS5, HTTP, HTTPS 프록시 프로토콜을 지원합니다. 웹 브라우저에서 사용할 경우 브라우저 또는 시스템 수준에서 프록시를 설정하세요. Android 클라이언트에서는 프록시 설정이 직접 적용됩니다.',
 }

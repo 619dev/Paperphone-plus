@@ -93,4 +93,18 @@ export const ru: Record<string, string> = {
   'safety.title': 'Шифрование', 'safety.verify_encryption': 'Проверить шифрование', 'safety.description': 'Если вы и ваш контакт видите одинаковый код безопасности, ваше сквозное шифрование защищено и не было перехвачено.', 'safety.how_to_verify': 'Как проверить?', 'safety.verify_steps': 'Встретьтесь с контактом лично (или используйте другой доверенный канал). Откройте профили друг друга, нажмите «Проверить шифрование» и сравните код безопасности строка за строкой. Если они совпадают, шифрование безопасно.',
   'notification.new_message': 'Новое сообщение', 'notification.incoming_call': 'Входящий голосовой звонок', 'notification.incoming_video_call': 'Входящий видеозвонок', 'notification.image': '[Изображение]', 'notification.voice': '[Голос]', 'notification.file': '[Файл]', 'notification.video': '[Видео]', 'notification.sticker': '[Стикер]',
   'privacy.title': 'Политика конфиденциальности', 'privacy.hero_title': 'Ваша конфиденциальность важна', 'privacy.hero_subtitle': 'Мы обеспечиваем защиту ваших личных данных и безопасность коммуникаций', 'privacy.last_updated': 'Последнее обновление',
+
+  // Proxy
+  'profile.network': 'Сеть',
+  'proxy.title': 'Настройки прокси',
+  'proxy.enabled': 'Включить прокси',
+  'proxy.type': 'Тип прокси',
+  'proxy.host': 'Адрес сервера',
+  'proxy.port': 'Порт',
+  'proxy.username': 'Имя пользователя',
+  'proxy.password': 'Пароль',
+  'proxy.optional': 'Необязательно',
+  'proxy.saved': 'Сохранено',
+  'proxy.clear': 'Очистить',
+  'proxy.hint': 'После настройки прокси-сервера приложение будет обращаться к сети через прокси. Поддерживаются протоколы SOCKS5, HTTP и HTTPS. В веб-браузере настройте прокси на уровне браузера или системы. На Android-клиенте настройки прокси применяются напрямую.',
 }

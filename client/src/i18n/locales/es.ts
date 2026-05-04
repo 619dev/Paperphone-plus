@@ -93,4 +93,18 @@ export const es: Record<string, string> = {
   'safety.title': 'Cifrado', 'safety.verify_encryption': 'Verificar cifrado', 'safety.description': 'Si usted y su contacto ven el mismo número de seguridad, su comunicación cifrada de extremo a extremo es segura y no ha sido interceptada.', 'safety.how_to_verify': '¿Cómo verificar?', 'safety.verify_steps': 'Reúnase con su contacto en persona (o use otro canal de confianza). Abran mutuamente sus perfiles, toquen «Verificar cifrado» y comparen el número de seguridad línea por línea. Si coinciden, su cifrado es seguro.',
   'notification.new_message': 'Nuevo mensaje', 'notification.incoming_call': 'Llamada de voz entrante', 'notification.incoming_video_call': 'Videollamada entrante', 'notification.image': '[Imagen]', 'notification.voice': '[Voz]', 'notification.file': '[Archivo]', 'notification.video': '[Video]', 'notification.sticker': '[Sticker]',
   'privacy.title': 'Política de privacidad', 'privacy.hero_title': 'Su privacidad es importante', 'privacy.hero_subtitle': 'Nos comprometemos a proteger su información personal y la seguridad de sus comunicaciones', 'privacy.last_updated': 'Última actualización',
+
+  // Proxy
+  'profile.network': 'Red',
+  'proxy.title': 'Configuración de proxy',
+  'proxy.enabled': 'Activar proxy',
+  'proxy.type': 'Tipo de proxy',
+  'proxy.host': 'Dirección del servidor',
+  'proxy.port': 'Puerto',
+  'proxy.username': 'Usuario',
+  'proxy.password': 'Contraseña',
+  'proxy.optional': 'Opcional',
+  'proxy.saved': 'Guardado',
+  'proxy.clear': 'Borrar',
+  'proxy.hint': 'Tras configurar un servidor proxy, la aplicación accederá a la red a través del proxy. Admite protocolos SOCKS5, HTTP y HTTPS. En un navegador web, configure el proxy a nivel del navegador o del sistema. En el cliente Android, la configuración del proxy se aplica directamente.',
 }

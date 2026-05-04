@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../store'
+import { useStore, ProxyConfig } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { clearKeys, getKeys } from '../crypto/keystore'
 import { disconnectWs } from '../api/socket'
@@ -9,9 +9,9 @@ import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
 import { logoutOneSignal } from '../api/onesignal'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink, Wifi } from 'lucide-react'
 
-type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr'
+type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -103,6 +103,7 @@ export default function Profile() {
   if (subView === 'language') return <LanguagePicker onBack={() => setSubView(null)} t={t} lang={lang} setLang={setLang} />
   if (subView === 'fingerprint') return <KeyFingerprint onBack={() => setSubView(null)} t={t} user={user} />
   if (subView === 'myqr') return <MyQRCode onBack={() => setSubView(null)} t={t} user={user} />
+  if (subView === 'proxy') return <ProxySettings onBack={() => setSubView(null)} t={t} />
 
   return (
     <div className="page" id="profile-page">
@@ -161,6 +162,15 @@ export default function Profile() {
         <div className="settings-item" onClick={() => setSubView('language')}>
           <span className="label"><Globe size={16} /> {t('profile.language')}</span>
           <span className="value">{langNames[lang]}</span>
+        </div>
+
+        <div className="divider" />
+
+        {/* Network */}
+        <div className="section-title">{t('profile.network')}</div>
+        <div className="settings-item" onClick={() => setSubView('proxy')}>
+          <span className="label"><Wifi size={16} /> {t('proxy.title')}</span>
+          <span className="arrow"><ChevronRight size={14} /></span>
         </div>
 
         {/* Push notifications */}
@@ -849,6 +859,178 @@ function MyQRCode({ onBack, t, user }: { onBack: () => void; t: (k: string) => s
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', maxWidth: 280 }}>
           {t('profile.qr_scan_hint')}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUB-VIEW: Proxy Settings
+   ═══════════════════════════════════════════════════════════════════════════ */
+function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => string }) {
+  const proxy = useStore(s => s.proxy)
+  const setProxy = useStore(s => s.setProxy)
+  const clearProxy = useStore(s => s.clearProxy)
+
+  const [enabled, setEnabled] = useState(proxy.enabled)
+  const [proxyType, setProxyType] = useState<'socks5' | 'http' | 'https'>(proxy.type)
+  const [host, setHost] = useState(proxy.host)
+  const [port, setPort] = useState(proxy.port)
+  const [username, setUsername] = useState(proxy.username)
+  const [password, setPassword] = useState(proxy.password)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = () => {
+    const config: ProxyConfig = { enabled, type: proxyType, host, port, username, password }
+    setProxy(config)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  const handleClear = () => {
+    clearProxy()
+    setEnabled(false)
+    setProxyType('http')
+    setHost('')
+    setPort('')
+    setUsername('')
+    setPassword('')
+  }
+
+  const typeOptions: Array<{ value: 'socks5' | 'http' | 'https'; label: string }> = [
+    { value: 'http', label: 'HTTP' },
+    { value: 'https', label: 'HTTPS' },
+    { value: 'socks5', label: 'SOCKS5' },
+  ]
+
+  return (
+    <div className="page" id="proxy-settings-page">
+      <div className="page-header">
+        <button className="back-btn" onClick={onBack}><ChevronLeft size={20} /></button>
+        <h1>{t('proxy.title')}</h1>
+      </div>
+      <div className="page-body" style={{ padding: 16 }}>
+        {/* Enable toggle */}
+        <div className="settings-item" onClick={() => setEnabled(!enabled)}>
+          <span className="label"><Wifi size={16} /> {t('proxy.enabled')}</span>
+          <div className={`toggle ${enabled ? 'active' : ''}`} />
+        </div>
+
+        <div style={{
+          opacity: enabled ? 1 : 0.45,
+          pointerEvents: enabled ? 'auto' : 'none',
+          transition: 'opacity 0.3s ease',
+        }}>
+          {/* Proxy type selector */}
+          <div style={{ marginTop: 16, marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{t('proxy.type')}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {typeOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  className={`btn btn-sm ${proxyType === opt.value ? 'btn-primary' : ''}`}
+                  onClick={() => setProxyType(opt.value)}
+                  style={{
+                    flex: 1,
+                    borderRadius: 10,
+                    fontSize: 13,
+                    fontWeight: proxyType === opt.value ? 700 : 400,
+                    padding: '10px 0',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Host & Port */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div style={{ flex: 3 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{t('proxy.host')}</div>
+              <input
+                className="input" id="proxy-host-input"
+                type="text"
+                placeholder="proxy.example.com"
+                value={host}
+                onChange={e => setHost(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{t('proxy.port')}</div>
+              <input
+                className="input" id="proxy-port-input"
+                type="text"
+                inputMode="numeric"
+                placeholder="1080"
+                value={port}
+                onChange={e => setPort(e.target.value.replace(/\D/g, ''))}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          {/* Username */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{t('proxy.username')}</div>
+            <input
+              className="input" id="proxy-username-input"
+              type="text"
+              autoComplete="off"
+              placeholder={t('proxy.optional')}
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+            />
+          </div>
+
+          {/* Password */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{t('proxy.password')}</div>
+            <input
+              className="input" id="proxy-password-input"
+              type="password"
+              autoComplete="off"
+              placeholder={t('proxy.optional')}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Hint */}
+        <div style={{
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08))',
+          border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: 12,
+          fontSize: 13,
+          color: 'var(--text-muted)',
+          lineHeight: 1.6,
+          marginBottom: 20,
+        }}>
+          {t('proxy.hint')}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            className="btn btn-primary btn-full"
+            onClick={handleSave}
+            disabled={enabled && (!host || !port)}
+            style={{ flex: 2 }}
+          >
+            {saved ? <><CheckCircle size={14} /> {t('proxy.saved')}</> : t('common.save')}
+          </button>
+          <button
+            className="btn btn-full"
+            onClick={handleClear}
+            style={{ flex: 1 }}
+          >
+            {t('proxy.clear')}
+          </button>
         </div>
       </div>
     </div>

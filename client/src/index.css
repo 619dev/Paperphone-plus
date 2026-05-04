@@ -1350,6 +1350,11 @@ textarea.input {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 500px; }
+}
+
 /* Ensure smooth transitions for page navigations */
 .page {
   animation: page-enter 0.35s var(--ease);

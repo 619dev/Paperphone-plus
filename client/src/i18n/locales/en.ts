@@ -360,4 +360,18 @@ export const en: Record<string, string> = {
   'privacy.hero_title': 'Your Privacy Matters',
   'privacy.hero_subtitle': 'We are committed to protecting your personal information and communication security',
   'privacy.last_updated': 'Last updated',
+
+  // Proxy
+  'profile.network': 'Network',
+  'proxy.title': 'Proxy Settings',
+  'proxy.enabled': 'Enable Proxy',
+  'proxy.type': 'Proxy Type',
+  'proxy.host': 'Server Address',
+  'proxy.port': 'Port',
+  'proxy.username': 'Username',
+  'proxy.password': 'Password',
+  'proxy.optional': 'Optional',
+  'proxy.saved': 'Saved',
+  'proxy.clear': 'Clear',
+  'proxy.hint': 'After configuring a proxy server, the app will access the network through the proxy. Supports SOCKS5, HTTP, and HTTPS proxy protocols. When using in a web browser, configure the proxy at the browser or system level. On the Android client, the proxy settings take effect directly.',
 }

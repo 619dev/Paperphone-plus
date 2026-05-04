@@ -61,10 +61,24 @@ export interface GroupMember {
   muted: boolean
 }
 
+export interface ProxyConfig {
+  enabled: boolean
+  type: 'socks5' | 'http' | 'https'
+  host: string
+  port: string
+  username: string
+  password: string
+}
+
 interface AppStore {
   // Server URL
   serverUrl: string
   setServerUrl: (url: string) => void
+
+  // Proxy
+  proxy: ProxyConfig
+  setProxy: (proxy: ProxyConfig) => void
+  clearProxy: () => void
 
   // Auth
   token: string | null
@@ -113,6 +127,20 @@ export const useStore = create<AppStore>((set, get) => ({
     const trimmed = url.replace(/\/+$/, '') // trim trailing slashes
     localStorage.setItem('serverUrl', trimmed)
     set({ serverUrl: trimmed })
+  },
+
+  // Proxy
+  proxy: JSON.parse(localStorage.getItem('proxyConfig') || 'null') || {
+    enabled: false, type: 'http' as const, host: '', port: '', username: '', password: '',
+  },
+  setProxy: (proxy) => {
+    localStorage.setItem('proxyConfig', JSON.stringify(proxy))
+    set({ proxy })
+  },
+  clearProxy: () => {
+    const empty: ProxyConfig = { enabled: false, type: 'http', host: '', port: '', username: '', password: '' }
+    localStorage.removeItem('proxyConfig')
+    set({ proxy: empty })
   },
 
   // Auth

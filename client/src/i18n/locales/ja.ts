@@ -90,4 +90,18 @@ export const ja: Record<string, string> = {
   'safety.title': '暗号化の確認', 'safety.verify_encryption': '暗号化を確認', 'safety.description': 'あなたと連絡先で同じ安全番号が表示されていれば、エンドツーエンド暗号化は安全で、第三者に傍受されていません。', 'safety.how_to_verify': '確認方法', 'safety.verify_steps': '連絡先と直接会って（または信頼できる別のチャネルで）、お互いのプロフィールを開き、「暗号化を確認」をタップして、安全番号を1行ずつ比較してください。一致していれば暗号化は安全です。',
   'notification.new_message': '新着メッセージ', 'notification.incoming_call': '音声着信', 'notification.incoming_video_call': 'ビデオ着信', 'notification.image': '[画像]', 'notification.voice': '[音声]', 'notification.file': '[ファイル]', 'notification.video': '[動画]', 'notification.sticker': '[スタンプ]',
   'privacy.title': 'プライバシーポリシー', 'privacy.hero_title': 'あなたのプライバシーを大切に', 'privacy.hero_subtitle': '個人情報と通信の安全を守ることに尽力しています', 'privacy.last_updated': '最終更新',
+
+  // Proxy
+  'profile.network': 'ネットワーク',
+  'proxy.title': 'プロキシ設定',
+  'proxy.enabled': 'プロキシを有効にする',
+  'proxy.type': 'プロキシタイプ',
+  'proxy.host': 'サーバーアドレス',
+  'proxy.port': 'ポート',
+  'proxy.username': 'ユーザー名',
+  'proxy.password': 'パスワード',
+  'proxy.optional': '任意',
+  'proxy.saved': '保存済み',
+  'proxy.clear': 'クリア',
+  'proxy.hint': 'プロキシサーバーを設定すると、アプリはプロキシ経由でネットワークにアクセスします。SOCKS5、HTTP、HTTPSプロキシプロトコルをサポートしています。Webブラウザで使用する場合は、ブラウザまたはシステムレベルでプロキシを設定してください。Androidクライアントでは、プロキシ設定が直接適用されます。',
 }

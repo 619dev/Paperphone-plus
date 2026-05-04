@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { post, put } from '../api/http'
-import { useStore } from '../store'
+import { useStore, ProxyConfig } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { ShieldCheck, Lock, Shield, Link, Atom, Server } from 'lucide-react'
+import { ShieldCheck, Lock, Shield, Link, Atom, Server, Wifi, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
@@ -23,6 +23,25 @@ export default function Login() {
   const [nickname, setNickname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Proxy state
+  const proxy = useStore(s => s.proxy)
+  const setProxy = useStore(s => s.setProxy)
+  const [showProxy, setShowProxy] = useState(false)
+  const [proxyEnabled, setProxyEnabled] = useState(proxy.enabled)
+  const [proxyType, setProxyType] = useState<'socks5' | 'http' | 'https'>(proxy.type)
+  const [proxyHost, setProxyHost] = useState(proxy.host)
+  const [proxyPort, setProxyPort] = useState(proxy.port)
+  const [proxyUser, setProxyUser] = useState(proxy.username)
+  const [proxyPass, setProxyPass] = useState(proxy.password)
+  const [proxySaved, setProxySaved] = useState(false)
+
+  const handleProxySave = () => {
+    const config: ProxyConfig = { enabled: proxyEnabled, type: proxyType, host: proxyHost, port: proxyPort, username: proxyUser, password: proxyPass }
+    setProxy(config)
+    setProxySaved(true)
+    setTimeout(() => setProxySaved(false), 2000)
+  }
 
   // 2FA state
   const [needs2fa, setNeeds2fa] = useState(false)
@@ -219,6 +238,130 @@ export default function Login() {
               />
             </div>
           </div>
+
+          {/* Proxy Settings Toggle */}
+          <div
+            id="login-proxy-toggle"
+            onClick={() => setShowProxy(!showProxy)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '8px 14px',
+              borderRadius: 10,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              color: proxyEnabled ? 'var(--accent)' : 'var(--text-muted)',
+              background: proxyEnabled
+                ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12))'
+                : 'var(--bg-card)',
+              border: proxyEnabled
+                ? '1px solid rgba(99,102,241,0.25)'
+                : '1px solid var(--border)',
+              transition: 'all 0.3s ease',
+              userSelect: 'none',
+            }}
+          >
+            <Wifi size={14} />
+            {t('proxy.title')}
+            {proxyEnabled && <span style={{ fontSize: 11, opacity: 0.7 }}>●</span>}
+            {showProxy ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
+
+          {/* Proxy Settings Panel */}
+          {showProxy && (
+            <div style={{
+              background: 'var(--bg-card)',
+              borderRadius: 12,
+              padding: '14px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              animation: 'slideDown 0.25s ease',
+            }}>
+              {/* Enable toggle */}
+              <div
+                onClick={() => setProxyEnabled(!proxyEnabled)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer', padding: '4px 0',
+                }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Wifi size={14} /> {t('proxy.enabled')}
+                </span>
+                <div className={`toggle ${proxyEnabled ? 'active' : ''}`} />
+              </div>
+
+              <div style={{
+                opacity: proxyEnabled ? 1 : 0.4,
+                pointerEvents: proxyEnabled ? 'auto' : 'none',
+                transition: 'opacity 0.2s',
+                display: 'flex', flexDirection: 'column', gap: 10,
+              }}>
+                {/* Type selector */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['http', 'https', 'socks5'] as const).map(tp => (
+                    <button
+                      key={tp}
+                      type="button"
+                      className={`btn btn-sm ${proxyType === tp ? 'btn-primary' : ''}`}
+                      onClick={() => setProxyType(tp)}
+                      style={{ flex: 1, borderRadius: 8, fontSize: 12, padding: '7px 0' }}
+                    >
+                      {tp.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Host + Port */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    className="input" id="login-proxy-host"
+                    type="text" placeholder={t('proxy.host')}
+                    value={proxyHost} onChange={e => setProxyHost(e.target.value)}
+                    style={{ flex: 3 }}
+                  />
+                  <input
+                    className="input" id="login-proxy-port"
+                    type="text" inputMode="numeric" placeholder={t('proxy.port')}
+                    value={proxyPort} onChange={e => setProxyPort(e.target.value.replace(/\D/g, ''))}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+
+                {/* Username + Password */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    className="input" id="login-proxy-user"
+                    type="text" autoComplete="off" placeholder={`${t('proxy.username')} (${t('proxy.optional')})`}
+                    value={proxyUser} onChange={e => setProxyUser(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    className="input" id="login-proxy-pass"
+                    type="password" autoComplete="off" placeholder={`${t('proxy.password')} (${t('proxy.optional')})`}
+                    value={proxyPass} onChange={e => setProxyPass(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+
+                {/* Save button */}
+                <button
+                  type="button"
+                  className="btn btn-primary btn-full btn-sm"
+                  onClick={handleProxySave}
+                  disabled={proxyEnabled && (!proxyHost || !proxyPort)}
+                  style={{ borderRadius: 8 }}
+                >
+                  {proxySaved ? <><CheckCircle size={12} /> {t('proxy.saved')}</> : t('common.save')}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="input-group">
             <input

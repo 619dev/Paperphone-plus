@@ -374,4 +374,18 @@ export const zh: Record<string, string> = {
   'privacy.hero_title': '您的隐私至关重要',
   'privacy.hero_subtitle': '我们致力于保护您的个人信息和通信安全',
   'privacy.last_updated': '最后更新',
+
+  // Proxy
+  'profile.network': '网络设置',
+  'proxy.title': '代理设置',
+  'proxy.enabled': '启用代理',
+  'proxy.type': '代理类型',
+  'proxy.host': '服务器地址',
+  'proxy.port': '端口',
+  'proxy.username': '用户名',
+  'proxy.password': '密码',
+  'proxy.optional': '选填',
+  'proxy.saved': '已保存',
+  'proxy.clear': '清除',
+  'proxy.hint': '配置代理服务器后，应用将通过代理访问网络。支持 SOCKS5、HTTP 和 HTTPS 代理协议。在 Web 浏览器中使用时，需要在浏览器或系统层面配置代理。在 Android 客户端中，代理配置将直接生效。',
 }
