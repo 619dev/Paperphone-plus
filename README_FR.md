@@ -6,6 +6,8 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -58,6 +60,7 @@ Frontend (client/)
 - 💬 Messages enrichis (texte, images, vidéos, documents, audio, emoji, stickers)
 - 🌐 8 langues (détection auto + changement manuel)
 - 📱 PWA iOS (installation permanente)
+- 📱 Application Android native — Disponible sur [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), avec notifications push FCM
 - 🔑 Authentification à deux facteurs (TOTP)
 - 🌐 Paramètres de proxy — Support SOCKS5 / HTTP / HTTPS, configurable sur les pages de connexion et de paramètres (adresse, port, identifiant, mot de passe)
 

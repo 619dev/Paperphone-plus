@@ -6,6 +6,8 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -58,6 +60,7 @@ Frontend (client/)
 - 💬 Rich-Nachrichten (Text, Bilder, Videos, Dokumente, Sprache, Emoji, Sticker)
 - 🌐 8 Sprachen (automatische Erkennung + manuelle Umschaltung)
 - 📱 iOS PWA (permanente Installation)
+- 📱 Native Android-App — Verfügbar im [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), mit FCM-Push-Benachrichtigungen
 - 🔑 Zwei-Faktor-Authentifizierung (TOTP)
 - 🌐 Proxy-Einstellungen — SOCKS5 / HTTP / HTTPS Proxy-Unterstützung, konfigurierbar auf Login- und Einstellungsseiten (Adresse, Port, Benutzername, Passwort)
 

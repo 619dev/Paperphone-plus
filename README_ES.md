@@ -6,6 +6,8 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -58,6 +60,7 @@ Frontend (client/)
 - 💬 Mensajes enriquecidos (texto, imágenes, videos, documentos, audio, emoji, stickers)
 - 🌐 8 idiomas (detección automática + cambio manual)
 - 📱 PWA iOS (instalación permanente)
+- 📱 Aplicación Android nativa — Disponible en [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), con soporte de notificaciones push FCM
 - 🔑 Autenticación de dos factores (TOTP)
 - 🌐 Configuración de proxy — Soporte SOCKS5 / HTTP / HTTPS, configurable en las páginas de inicio de sesión y ajustes (dirección, puerto, usuario, contraseña)
 

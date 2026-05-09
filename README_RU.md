@@ -6,6 +6,8 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -58,6 +60,7 @@
 - 💬 Мультимедийные сообщения (текст, изображения, видео, документы, голос, эмодзи, стикеры)
 - 🌐 8 языков (автоопределение + ручной выбор)
 - 📱 iOS PWA (постоянная установка)
+- 📱 Нативное Android-приложение — Доступно в [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), с поддержкой FCM push-уведомлений
 - 🔑 Двухфакторная аутентификация (TOTP)
 - 🌐 Настройки прокси — поддержка SOCKS5 / HTTP / HTTPS прокси, настройка на страницах входа и настроек (адрес, порт, имя пользователя, пароль)
 

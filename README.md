@@ -6,6 +6,8 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -46,6 +48,7 @@
 | 🔔 消息推送 | Web Push (VAPID) + FCM + OneSignal + ntfy 四通道，离线也能收到通知（国产安卓免 Google 服务） |
 | 🌐 多语言 | 中文、英文、日语、韩语、法语、德语、俄语、西班牙语（自动检测 + 手动切换） |
 | 📱 iOS 永久免签 | PWA H5 → Safari「添加到主屏幕」，无需企业证书 |
+| 📱 Android 原生 App | 已上架 [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)，支持 FCM 推送通知 |
 | 💬 消息功能 | 文字、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音消息、Emoji 面板（200+，8 分类）、Telegram 贴纸包、已读状态 |
 | 📤 文件上传 | 单文件最大 500MB，支持 Cloudflare R2 或本地存储，带进度条动画 |
 | 🌐 朋友圈 | 发动态（文字+最多9张图或1个视频≤10分钟）、点赞（显示好友头像）、评论、标签可见性控制 |

@@ -6,6 +6,8 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+
 ---
 
 <details>
@@ -58,6 +60,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 - 💬 리치 메시지 (텍스트, 이미지, 영상, 문서, 음성, 이모지, 스티커)
 - 🌐 8개 언어 지원 (자동 감지 + 수동 전환)
 - 📱 iOS PWA 지원 (영구 설치)
+- 📱 Android 네이티브 앱 — [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)에서 다운로드 가능, FCM 푸시 알림 지원
 - 🔑 2단계 인증 (TOTP)
 - 🌐 프록시 설정 — SOCKS5 / HTTP / HTTPS 프록시 지원, 로그인 및 설정 페이지에서 서버 주소, 포트, 사용자 이름, 비밀번호 설정 가능
 
