@@ -71,6 +71,10 @@ git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
 docker compose up -d
 
+# Frontend auf Vercel bereitstellen (keine Umgebungsvariablen erforderlich)
+# In Vercel: Root Directory = client/, Build = npm run build, Output = dist/
+# Geben Sie die Backend-Server-Adresse auf der Login-Seite ein, um sich zu verbinden
+
 # Lokale Entwicklung
 cd server && cargo run --release  # Backend
 cd client && npm install && npm run dev  # Frontend

@@ -71,6 +71,10 @@ git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
 docker compose up -d
 
+# Vercel에 프론트엔드 배포 (환경 변수 설정 불필요)
+# Vercel에서 Root Directory = client/, Build = npm run build, Output = dist/ 설정
+# 로그인 화면에서 백엔드 서버 주소를 입력하면 바로 연결됩니다
+
 # 로컬 개발
 cd server && cargo run --release  # 백엔드
 cd client && npm install && npm run dev  # 프론트엔드

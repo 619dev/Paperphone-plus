@@ -95,7 +95,7 @@ Cryptographic Layer
 > **Advanced: Zeabur + Vercel Hybrid Deployment**
 > After deploying on Zeabur, you can manually delete the **client** service and deploy the frontend on Vercel instead (see Option 2 below).
 > This way server/MySQL/Redis are hosted on Zeabur while the frontend is accelerated by Vercel's global CDN.
-> The frontend auto-discovers the backend address — no additional environment variables needed.
+> The frontend requires **no environment variables on Vercel** — users simply enter the backend server address on the login page.
 
 ### Option 1: Docker Compose (Recommended)
 ```bash
@@ -110,8 +110,10 @@ open http://localhost
 ```bash
 # 1. Fork this repo
 # 2. Import in Vercel: Root Directory = client/, Build = npm run build, Output = dist/
+#    No environment variables needed
 # 3. Deploy backend via Docker or Zeabur
-#    The frontend auto-discovers the backend address — no need to set VITE_API_URL
+# 4. Open the Vercel-deployed frontend, enter the backend server address on the login page
+#    e.g. https://your-server.zeabur.app
 ```
 
 ### Option 3: Local Development

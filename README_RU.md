@@ -71,6 +71,10 @@ git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
 docker compose up -d
 
+# Развернуть фронтенд на Vercel (переменные окружения не требуются)
+# В Vercel: Root Directory = client/, Build = npm run build, Output = dist/
+# Введите адрес backend-сервера на странице входа для подключения
+
 # Локальная разработка
 cd server && cargo run --release  # Бэкенд
 cd client && npm install && npm run dev  # Фронтенд

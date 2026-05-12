@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "{{VITE_API_URL}}/api/:path*" },
-    { "source": "/ws", "destination": "{{VITE_API_URL}}/ws" },
-    { "source": "/health", "destination": "{{VITE_API_URL}}/health" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

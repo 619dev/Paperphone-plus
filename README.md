@@ -95,7 +95,7 @@
 > **进阶方案：Zeabur + Vercel 混合部署**
 > 可以在 Zeabur 部署完成后，手动删除 Zeabur 上的 **client** 服务，改用 Vercel 部署前端（参见下方“方式二”）。
 > 这样 server/MySQL/Redis 由 Zeabur 托管，前端由 Vercel CDN 加速，全球访问更快。
-> 前端会自动发现后端地址，无需额外配置环境变量。
+> Vercel 上无需设置任何环境变量，用户在前端登录界面填写后端服务器地址即可连接。
 
 **已知注意事项：**
 - 首次启动 server 会自动创建数据库表（`CREATE TABLE IF NOT EXISTS`），无需手动导入 schema
@@ -133,9 +133,12 @@ open http://localhost
 #    - Root Directory: client/
 #    - Build Command: npm run build
 #    - Output Directory: dist/
+#    - 无需设置任何环境变量
 
 # 3. 后端使用 Docker 部署或 Zeabur 部署
-#    前端会自动发现后端地址，无需设置 VITE_API_URL 环境变量
+
+# 4. 打开 Vercel 部署的前端页面，在登录界面填写后端服务器地址即可
+#    例如：https://your-server.zeabur.app
 ```
 
 ### 方式三：本地手动启动
@@ -419,7 +422,7 @@ paperphone-plus/
 └── client/                          # React + TypeScript + Vite 前端
     ├── package.json
     ├── Dockerfile
-    ├── vercel.json                  # Vercel 部署配置
+    ├── vercel.json                  # Vercel 部署配置（SPA 路由 + 安全头，无需环境变量）
     ├── vite.config.ts
     ├── tsconfig.json
     ├── index.html
