@@ -115,4 +115,11 @@ export const ko: Record<string, string> = {
   'proxy.timeout': '시간 초과',
   'proxy.max_reached': '최대 5개 프록시 한도 도달',
   'proxy.manage_hint': '로그인 후 설정 → 프록시 설정에서 프록시를 관리하세요',
+
+  // Delete Account
+  'profile.delete_account': '계정 삭제',
+  'profile.delete_warning': '이 작업은 취소할 수 없습니다. 계정을 삭제하면 메시지, 연락처, 모먼트를 포함한 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.',
+  'profile.delete_confirm': '계정 삭제',
+  'profile.delete_enter_password': '비밀번호를 입력하여 확인',
+  'profile.delete_need_password': '비밀번호를 입력해 주세요',
 }

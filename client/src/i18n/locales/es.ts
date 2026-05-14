@@ -117,4 +117,11 @@ export const es: Record<string, string> = {
   'proxy.timeout': 'Tiempo agotado',
   'proxy.max_reached': 'Máximo de 5 proxies alcanzado',
   'proxy.manage_hint': 'Gestiona proxies en Ajustes → Proxy tras iniciar sesión',
+
+  // Delete Account
+  'profile.delete_account': 'Eliminar cuenta',
+  'profile.delete_warning': 'Esta acción no se puede deshacer. Al eliminar tu cuenta, se borrarán permanentemente todos tus datos, incluyendo mensajes, contactos y momentos. Estos datos no se pueden recuperar.',
+  'profile.delete_confirm': 'Eliminar cuenta',
+  'profile.delete_enter_password': 'Ingresa tu contraseña para confirmar',
+  'profile.delete_need_password': 'Por favor ingresa tu contraseña',
 }

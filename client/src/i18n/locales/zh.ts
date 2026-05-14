@@ -398,4 +398,11 @@ export const zh: Record<string, string> = {
   'proxy.timeout': '超时',
   'proxy.max_reached': '已达到最多 5 条代理上限',
   'proxy.manage_hint': '登录后在 设置 → 代理设置 中管理代理',
+
+  // Delete Account
+  'profile.delete_account': '删除账号',
+  'profile.delete_warning': '此操作不可撤销。删除账号后，你的所有数据（包括聊天记录、联系人、朋友圈等）将被永久删除，且无法恢复。',
+  'profile.delete_confirm': '确认删除',
+  'profile.delete_enter_password': '请输入密码以确认',
+  'profile.delete_need_password': '请输入密码',
 }

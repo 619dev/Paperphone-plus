@@ -117,4 +117,11 @@ export const fr: Record<string, string> = {
   'proxy.timeout': 'Délai expiré',
   'proxy.max_reached': 'Maximum de 5 proxys atteint',
   'proxy.manage_hint': 'Gérez les proxys dans Paramètres → Proxy après connexion',
+
+  // Delete Account
+  'profile.delete_account': 'Supprimer le compte',
+  'profile.delete_warning': 'Cette action est irréversible. La suppression de votre compte supprimera définitivement toutes vos données, y compris les messages, les contacts et les moments. Ces données ne pourront pas être récupérées.',
+  'profile.delete_confirm': 'Supprimer le compte',
+  'profile.delete_enter_password': 'Entrez votre mot de passe pour confirmer',
+  'profile.delete_need_password': 'Veuillez entrer votre mot de passe',
 }

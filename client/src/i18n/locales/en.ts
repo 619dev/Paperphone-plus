@@ -384,4 +384,11 @@ export const en: Record<string, string> = {
   'proxy.timeout': 'Timeout',
   'proxy.max_reached': 'Maximum of 5 proxies reached',
   'proxy.manage_hint': 'Manage proxies in Settings → Proxy Settings after login',
+
+  // Delete Account
+  'profile.delete_account': 'Delete Account',
+  'profile.delete_warning': 'This action cannot be undone. Deleting your account will permanently remove all your data, including messages, contacts, and moments. This data cannot be recovered.',
+  'profile.delete_confirm': 'Delete Account',
+  'profile.delete_enter_password': 'Enter your password to confirm',
+  'profile.delete_need_password': 'Please enter your password',
 }

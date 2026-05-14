@@ -114,4 +114,11 @@ export const ja: Record<string, string> = {
   'proxy.timeout': 'タイムアウト',
   'proxy.max_reached': 'プロキシは最大5つまで',
   'proxy.manage_hint': 'ログイン後、設定 → プロキシ設定 でプロキシを管理',
+
+  // Delete Account
+  'profile.delete_account': 'アカウントを削除',
+  'profile.delete_warning': 'この操作は取り消せません。アカウントを削除すると、メッセージ、連絡先、モーメンツを含むすべてのデータが永久に削除され、復元できません。',
+  'profile.delete_confirm': 'アカウントを削除',
+  'profile.delete_enter_password': 'パスワードを入力して確認',
+  'profile.delete_need_password': 'パスワードを入力してください',
 }

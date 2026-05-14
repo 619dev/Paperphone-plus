@@ -117,4 +117,11 @@ export const de: Record<string, string> = {
   'proxy.timeout': 'Zeitüberschreitung',
   'proxy.max_reached': 'Maximum von 5 Proxys erreicht',
   'proxy.manage_hint': 'Proxys verwalten unter Einstellungen → Proxy nach dem Login',
+
+  // Delete Account
+  'profile.delete_account': 'Konto löschen',
+  'profile.delete_warning': 'Diese Aktion kann nicht rückgängig gemacht werden. Durch das Löschen Ihres Kontos werden alle Ihre Daten dauerhaft gelöscht, einschließlich Nachrichten, Kontakte und Momente. Diese Daten können nicht wiederhergestellt werden.',
+  'profile.delete_confirm': 'Konto löschen',
+  'profile.delete_enter_password': 'Passwort zur Bestätigung eingeben',
+  'profile.delete_need_password': 'Bitte geben Sie Ihr Passwort ein',
 }

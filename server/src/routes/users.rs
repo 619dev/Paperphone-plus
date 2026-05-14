@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, routing::{get, put}, extract::{State, Path, Query}, Json};
+use axum::{Router, routing::{get, put, post}, extract::{State, Path, Query}, Json};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -15,6 +15,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/nickname", put(update_nickname))
         .route("/password", put(change_password))
         .route("/keys", put(update_keys))
+        .route("/delete", post(delete_account))
 }
 
 #[derive(Deserialize)]
@@ -235,6 +236,70 @@ async fn update_keys(
                 .execute(&state.db).await.ok();
         }
     }
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+#[derive(Deserialize)]
+struct DeleteAccountReq {
+    password: String,
+}
+
+async fn delete_account(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+    Json(body): Json<DeleteAccountReq>,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    use argon2::{Argon2, PasswordVerifier};
+
+    // Verify password
+    let user: Option<(String,)> = sqlx::query_as("SELECT password FROM users WHERE id = ?")
+        .bind(&auth.0.id)
+        .fetch_optional(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    let (pw_hash,) = user.ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "User not found" }))))?;
+
+    let parsed = argon2::PasswordHash::new(&pw_hash)
+        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "Hash error" }))))?;
+    Argon2::default()
+        .verify_password(body.password.as_bytes(), &parsed)
+        .map_err(|_| (axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid password" }))))?;
+
+    let uid = &auth.0.id;
+
+    // Delete messages sent by or to this user
+    sqlx::query("DELETE FROM messages WHERE from_id = ? OR (to_id = ? AND type = 'private')")
+        .bind(uid).bind(uid)
+        .execute(&state.db).await.ok();
+
+    // Delete groups owned by this user (CASCADE will handle group_members, group_invites)
+    sqlx::query("DELETE FROM `groups` WHERE owner_id = ?")
+        .bind(uid)
+        .execute(&state.db).await.ok();
+
+    // Delete the user record (CASCADE handles: prekeys, friends, group_members,
+    // moments, moment_likes, moment_comments, push_subscriptions, onesignal_players,
+    // sessions, friend_tags, friend_tag_assignments, user_totp, moment_privacy,
+    // timeline_posts, timeline_likes, timeline_comments, group_invites, fcm_tokens,
+    // ntfy_subscriptions)
+    sqlx::query("DELETE FROM users WHERE id = ?")
+        .bind(uid)
+        .execute(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    // Clean up Redis
+    if let Ok(mut conn) = state.redis.get().await {
+        let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
+            .arg(format!("online:{}", uid))
+            .arg(format!("heartbeat:{}", uid))
+            .query_async(&mut *conn).await;
+    }
+
+    // Disconnect WebSocket connections for this user
+    state.ws_clients.send_to_user(uid, serde_json::json!({"type": "account_deleted"}));
+
+    tracing::info!("🗑️ Account deleted: user_id={}", uid);
 
     Ok(Json(serde_json::json!({ "ok": true })))
 }

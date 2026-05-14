@@ -117,4 +117,11 @@ export const ru: Record<string, string> = {
   'proxy.timeout': 'Тайм-аут',
   'proxy.max_reached': 'Достигнут лимит в 5 прокси',
   'proxy.manage_hint': 'Управление прокси в Настройки → Прокси после входа',
+
+  // Delete Account
+  'profile.delete_account': 'Удалить аккаунт',
+  'profile.delete_warning': 'Это действие нельзя отменить. Удаление аккаунта навсегда удалит все ваши данные, включая сообщения, контакты и моменты. Эти данные невозможно восстановить.',
+  'profile.delete_confirm': 'Удалить аккаунт',
+  'profile.delete_enter_password': 'Введите пароль для подтверждения',
+  'profile.delete_need_password': 'Пожалуйста, введите пароль',
 }

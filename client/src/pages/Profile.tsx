@@ -9,7 +9,7 @@ import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
 import { logoutOneSignal } from '../api/onesignal'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink, Wifi } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle } from 'lucide-react'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
 
@@ -94,6 +94,33 @@ export default function Profile() {
     logoutOneSignal()
     logout()
     navigate('/login')
+  }
+
+  // Delete account state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError(t('profile.delete_need_password'))
+      return
+    }
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await post('/api/users/delete', { password: deletePassword })
+      disconnectWs()
+      clearKeys()
+      logoutOneSignal()
+      logout()
+      navigate('/login')
+    } catch (err: any) {
+      setDeleteError(err.message || t('common.error'))
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   if (subView === 'password') return <ChangePassword onBack={() => setSubView(null)} t={t} />
@@ -284,11 +311,75 @@ export default function Profile() {
 
         <div className="divider" />
 
-        <div style={{ padding: '24px 16px' }}>
+        <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <button className="btn btn-danger btn-full" id="logout-btn" onClick={handleLogout}>
             {t('profile.logout')}
           </button>
+          <button
+            className="btn btn-full" id="delete-account-btn"
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--danger)',
+              color: 'var(--danger)',
+              fontSize: 14,
+            }}
+          >
+            <Trash2 size={14} style={{ marginRight: 6 }} /> {t('profile.delete_account')}
+          </button>
         </div>
+
+        {/* Delete Account Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+          }} onClick={() => setShowDeleteConfirm(false)}>
+            <div style={{
+              background: 'var(--bg-primary)', borderRadius: 16, padding: 24,
+              maxWidth: 360, width: '100%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <AlertTriangle size={40} style={{ color: 'var(--danger)', marginBottom: 8 }} />
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+                  {t('profile.delete_account')}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                  {t('profile.delete_warning')}
+                </div>
+              </div>
+              <input
+                className="input"
+                type="password"
+                placeholder={t('profile.delete_enter_password')}
+                value={deletePassword}
+                onChange={e => setDeletePassword(e.target.value)}
+                style={{ marginBottom: 12 }}
+              />
+              {deleteError && <div className="error-msg" style={{ marginBottom: 12 }}>{deleteError}</div>}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  className="btn btn-full"
+                  onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}
+                  style={{ flex: 1 }}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  className="btn btn-danger btn-full"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteLoading || !deletePassword}
+                  style={{ flex: 1 }}
+                >
+                  {deleteLoading ? t('common.loading') : t('profile.delete_confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
