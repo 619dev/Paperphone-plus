@@ -62,6 +62,8 @@ Frontend (client/)
 - 📱 PWA iOS (instalación permanente)
 - 📱 Aplicación Android nativa — Disponible en [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), con soporte de notificaciones push FCM
 - 🔑 Autenticación de dos factores (TOTP)
+- 🛡️ Moderación de contenido — Reportes de usuarios (6 categorías) + bloqueo de usuarios (ocultación instantánea) + Términos de uso (EULA)
+- 🔧 Panel de administración — Dashboard web integrado (`/admin`, ruta configurable), protegido por contraseña, revisar reportes, eliminar contenido, banear usuarios — 8 idiomas
 - 🌐 Configuración de proxy — Soporte SOCKS5 / HTTP / HTTPS, configurable en las páginas de inicio de sesión y ajustes (dirección, puerto, usuario, contraseña)
 
 ## Despliegue

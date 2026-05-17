@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, routing::{get, put, post}, extract::{State, Path, Query}, Json};
+use axum::{Router, routing::{get, put, post, delete}, extract::{State, Path, Query}, Json};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -16,6 +16,9 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/password", put(change_password))
         .route("/keys", put(update_keys))
         .route("/delete", post(delete_account))
+        .route("/block", post(block_user))
+        .route("/block", get(get_blocked_users))
+        .route("/block/{id}", delete(unblock_user))
 }
 
 #[derive(Deserialize)]
@@ -302,4 +305,64 @@ async fn delete_account(
     tracing::info!("🗑️ Account deleted: user_id={}", uid);
 
     Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+// ── Block User ──────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct BlockReq {
+    user_id: String,
+}
+
+async fn block_user(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+    Json(body): Json<BlockReq>,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    if body.user_id == auth.0.id {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Cannot block yourself" }))));
+    }
+
+    sqlx::query(
+        "INSERT IGNORE INTO user_blocks (user_id, blocked_id) VALUES (?, ?)"
+    )
+    .bind(&auth.0.id)
+    .bind(&body.user_id)
+    .execute(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    tracing::info!("🚫 User {} blocked {}", auth.0.id, body.user_id);
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+async fn unblock_user(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+    Path(blocked_id): Path<String>,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    sqlx::query(
+        "DELETE FROM user_blocks WHERE user_id = ? AND blocked_id = ?"
+    )
+    .bind(&auth.0.id)
+    .bind(&blocked_id)
+    .execute(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+async fn get_blocked_users(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT blocked_id FROM user_blocks WHERE user_id = ?"
+    )
+    .bind(&auth.0.id)
+    .fetch_all(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    let blocked_ids: Vec<String> = rows.into_iter().map(|(id,)| id).collect();
+    Ok(Json(serde_json::json!(blocked_ids)))
 }

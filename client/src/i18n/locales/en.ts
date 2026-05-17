@@ -391,4 +391,39 @@ export const en: Record<string, string> = {
   'profile.delete_confirm': 'Delete Account',
   'profile.delete_enter_password': 'Enter your password to confirm',
   'profile.delete_need_password': 'Please enter your password',
+
+  // Terms of Use / EULA
+  'terms.title': 'Terms of Use',
+  'terms.agree_prefix': 'I have read and agree to the ',
+  'terms.agree_link': 'Terms of Use',
+  'terms.must_agree': 'You must agree to the Terms of Use to create an account',
+  'terms.hero_title': 'Terms of Use',
+  'terms.hero_subtitle': 'Please read these terms carefully before using PaperPhone Plus',
+
+  // Report
+  'report.title': 'Report Content',
+  'report.reason': 'Reason for reporting',
+  'report.reason_offensive': 'Offensive or inappropriate content',
+  'report.reason_spam': 'Spam or advertising',
+  'report.reason_harassment': 'Harassment or bullying',
+  'report.reason_violence': 'Violence or threats',
+  'report.reason_misinformation': 'Misinformation',
+  'report.reason_other': 'Other',
+  'report.detail_placeholder': 'Additional details (optional)',
+  'report.submit': 'Submit Report',
+  'report.success': 'Report submitted. We will review it within 24 hours.',
+  'report.failed': 'Failed to submit report. Please try again.',
+  'report.report_post': 'Report Post',
+  'report.report_message': 'Report Message',
+  'report.report_user': 'Report User',
+
+  // Block
+  'block.user': 'Block User',
+  'block.confirm_title': 'Block this user?',
+  'block.confirm_desc': 'Blocked users cannot send you messages. Their content will be removed from your feed. You can unblock them later.',
+  'block.success': 'User blocked successfully',
+  'block.failed': 'Failed to block user',
+  'unblock.user': 'Unblock User',
+  'unblock.success': 'User unblocked',
+  'unblock.failed': 'Failed to unblock user',
 }

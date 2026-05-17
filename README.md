@@ -60,6 +60,8 @@
 | 📷 扫码加好友/入群 | 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1 周/1 月/3 月） |
 | 🏗️ 可自托管 | Docker Compose 一键部署，Zeabur 一键云部署，前端可部署至 Vercel |
 | 🌐 代理设置 | 支持 SOCKS5 / HTTP / HTTPS 代理协议，可在登录页和设置页配置代理服务器地址、端口、用户名和密码，方便受限网络环境下使用 |
+| 🛡️ 内容审核 | 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA |
+| 🔧 管理后台 | 内嵌 Web 管理面板（`/admin`，路径可自定义），密码保护，审核举报、删除违规内容、封禁用户，支持 8 种语言 |
 
 ---
 
@@ -410,7 +412,9 @@ paperphone-plus/
 │       │   ├── stickers.rs          # Telegram 贴纸包代理（缓存）
 │       │   ├── totp.rs              # TOTP 两步验证
 │       │   ├── sessions.rs          # 会话管理（多设备登录）
-│       │   └── tags.rs              # 好友标签 CRUD
+│       │   ├── tags.rs              # 好友标签 CRUD
+│       │   ├── report.rs            # 内容举报
+│       │   └── admin/               # 管理后台（内嵌 HTML SPA + API）
 │       ├── services/
 │       │   ├── push.rs              # Web Push VAPID 服务
 │       │   ├── fcm.rs               # Firebase Cloud Messaging 服务
@@ -492,6 +496,8 @@ paperphone-plus/
 | `timeline_likes` | 时间线点赞 |
 | `timeline_comments` | 时间线评论（支持匿名） |
 | `group_invites` | 群邀请链接（含有效期，用于二维码加群） |
+| `reports` | 用户举报记录（举报人、目标、原因、状态） |
+| `user_blocks` | 用户拉黑关系 |
 
 ---
 
@@ -541,6 +547,8 @@ paperphone-plus/
 | `NTFY_TOKEN` | ntfy 认证 Token（可选，自建服务器时使用） | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选，贴纸包代理） | — |
 | `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 8 个默认包 |
+| `ADMIN_PATH` | 管理后台 URL 路径 | `/admin` |
+| `ADMIN_PASSWORD` | 管理后台访问密码（**生产必改**） | `admin123` |
 ---
 如果这个项目对你有用的话，请我喝罐可乐吧。
 <br>

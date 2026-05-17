@@ -46,6 +46,8 @@ spec:
     - 👫 **Friend System** — friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping
     - 📤 **File Upload** — up to 500MB per file, Cloudflare R2 or local storage, with progress animation
     - 🌐 **Proxy Settings** — SOCKS5 / HTTP / HTTPS proxy support, configurable on login and settings pages (address, port, username, password)
+    - 🛡️ **Content Moderation** — User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA)
+    - 🔧 **Admin Panel** — Embedded web dashboard (`/admin`, path customizable via `ADMIN_PATH`), password-protected, review reports, delete content, ban users — 8 languages
 
     ## After Deployment
     1. Open the domain assigned to the **client** service.
@@ -54,6 +56,7 @@ spec:
     4. (Optional) Configure Cloudflare TURN for cross-network video calls — set `CF_CALLS_APP_ID` and `CF_CALLS_APP_SECRET`.
     5. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push, `FCM_*` for native Android (Capacitor).
     6. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
+    7. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
 
     ## Tip: Zeabur + Vercel Hybrid
     You can delete the deployed **client** service on Zeabur and use **Vercel** to host the frontend instead.
@@ -213,6 +216,20 @@ spec:
       description: >-
         Authentication token for self-hosted ntfy servers.
         Leave blank when using the public ntfy.sh service.
+
+    - key: ADMIN_PASSWORD
+      type: STRING
+      name: Admin Panel Password
+      description: >-
+        Password for accessing the built-in admin panel at /admin.
+        Change this to a strong password in production. Default: admin123.
+
+    - key: ADMIN_PATH
+      type: STRING
+      name: Admin Panel Path (optional)
+      description: >-
+        Custom URL path for the admin panel. Default: /admin.
+        Change this for security through obscurity.
 
   services:
     # ── MySQL 8 ───────────────────────────────────────────────────────
@@ -378,6 +395,10 @@ spec:
             default: ${TELEGRAM_BOT_TOKEN}
           STICKER_PACKS:
             default: ${STICKER_PACKS}
+          ADMIN_PASSWORD:
+            default: ${ADMIN_PASSWORD}
+          ADMIN_PATH:
+            default: ${ADMIN_PATH}
           SERVER_URL:
             default: ${ZEABUR_WEB_URL}
             expose: true
@@ -437,6 +458,8 @@ localization:
       - 👫 **好友系统** — 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组
       - 📤 **文件上传** — 单文件最大 500MB，支持 Cloudflare R2 或本地存储，带进度条动画
       - 🌐 **代理设置** — 支持 SOCKS5 / HTTP / HTTPS 代理协议，登录页和设置页均可配置（地址、端口、用户名、密码）
+      - 🛡️ **内容审核** — 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA
+      - 🔧 **管理后台** — 内嵌 Web 管理面板（`/admin`，路径可通过 `ADMIN_PATH` 自定义），密码保护，审核举报、删除内容、封禁用户，支持 8 种语言
 
       ## 部署后操作
       1. 打开分配给 **client** 服务的域名。
@@ -445,6 +468,7 @@ localization:
       4. （可选）配置 Cloudflare TURN 以支持跨公网视频通话。
       5. （可选）设置 `VAPID_*` 变量启用浏览器推送通知，`FCM_*` 启用原生 Android 推送（Capacitor）。
       6. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
+      7. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
 
       ## 进阶方案：Zeabur + Vercel 混合部署
       部署完成后，可以手动删除 Zeabur 上的 **client** 服务，改用 **Vercel** 部署前端。

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { get, post, del, uploadFile as httpUploadFile, normalizeFileUrl } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { ChevronLeft, ChevronRight, Film, Heart, ImageIcon, MessageCircle, Pencil, Trash2, VenetianMask, X, Play, FileText, User } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Film, Heart, ImageIcon, MessageCircle, Pencil, Trash2, VenetianMask, X, Play, FileText, User, Flag } from 'lucide-react'
 
 /** Capture the first frame of a video File as a JPEG Blob */
 const generateVideoThumbnail = (file: File): Promise<Blob | null> =>
@@ -43,6 +43,7 @@ export default function Timeline() {
   const [loading, setLoading] = useState(true)
   const [showComposer, setShowComposer] = useState(false)
   const [selectedPost, setSelectedPost] = useState<any>(null)
+  const blockedUsers = useStore(s => s.blockedUsers)
 
   const loadPosts = async () => {
     try {
@@ -83,7 +84,7 @@ export default function Timeline() {
 
         {/* Masonry / Waterfall two-column grid */}
         <div style={{ columnCount: 2, columnGap: 4 }}>
-          {posts.map(p => {
+          {posts.filter(p => !blockedUsers.includes(p.user_id)).map(p => {
             const cover = p.media?.[0]
             const isVideo = cover?.media_type === 'video'
             return (
@@ -180,6 +181,26 @@ function PostDetail({ t, postId, user, onBack }: {
   const [commentText, setCommentText] = useState('')
   const [isAnon, setIsAnon] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
+  const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const REPORT_REASONS = [
+    { key: 'report.reason_offensive', value: 'offensive' },
+    { key: 'report.reason_spam', value: 'spam' },
+    { key: 'report.reason_harassment', value: 'harassment' },
+    { key: 'report.reason_violence', value: 'violence' },
+    { key: 'report.reason_other', value: 'other' },
+  ]
+  const handleReportPost = async () => {
+    if (!reportReason) return
+    setReportSubmitting(true)
+    try {
+      await post(`/api/report`, { target_type: 'timeline_post', target_id: String(postId), reason: reportReason })
+      alert(t('report.success'))
+      setShowReport(false)
+      setReportReason('')
+    } catch { alert(t('report.failed')) } finally { setReportSubmitting(false) }
+  }
 
   const loadPost = async () => {
     try { const data = await get(`/api/timeline/${postId}`); setPost(data) } catch {}
@@ -223,6 +244,9 @@ function PostDetail({ t, postId, user, onBack }: {
         <h1>{t('timeline.detail')}</h1>
         {isOwner && (
           <button className="icon-btn" onClick={deletePost} style={{ marginLeft: 'auto', color: 'var(--danger)' }}><Trash2 size={18} /></button>
+        )}
+        {!isOwner && (
+          <button className="icon-btn" onClick={() => setShowReport(!showReport)} style={{ marginLeft: isOwner ? 0 : 'auto', color: 'var(--text-muted)' }} title={t('report.report_post')}><Flag size={18} /></button>
         )}
       </div>
       <div className="page-body" style={{ paddingBottom: 80 }}>
@@ -376,6 +400,22 @@ function PostDetail({ t, postId, user, onBack }: {
             </div>
           ))}
         </div>
+        {showReport && (
+          <div style={{ margin: '0 16px 12px', padding: 14, borderRadius: 12, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{t('report.reason')}</div>
+            {REPORT_REASONS.map(r => (
+              <div key={r.value} onClick={() => setReportReason(r.value)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 13, background: reportReason === r.value ? 'rgba(239,68,68,0.08)' : 'transparent' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 8, border: reportReason === r.value ? '2px solid #ef4444' : '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {reportReason === r.value && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#ef4444' }} />}
+                </div>
+                <span>{t(r.key)}</span>
+              </div>
+            ))}
+            <button className="btn btn-sm" onClick={handleReportPost} disabled={!reportReason || reportSubmitting} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, fontSize: 13, opacity: !reportReason || reportSubmitting ? 0.5 : 1 }}>
+              {reportSubmitting ? t('common.loading') : t('report.submit')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Comment input bar */}

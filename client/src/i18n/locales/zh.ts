@@ -405,4 +405,39 @@ export const zh: Record<string, string> = {
   'profile.delete_confirm': '确认删除',
   'profile.delete_enter_password': '请输入密码以确认',
   'profile.delete_need_password': '请输入密码',
+
+  // Terms of Use / EULA
+  'terms.title': '使用条款',
+  'terms.agree_prefix': '我已阅读并同意',
+  'terms.agree_link': '使用条款',
+  'terms.must_agree': '请先同意使用条款才能创建账号',
+  'terms.hero_title': '使用条款',
+  'terms.hero_subtitle': '在使用 PaperPhone Plus 之前，请仔细阅读以下条款',
+
+  // Report
+  'report.title': '举报内容',
+  'report.reason': '举报原因',
+  'report.reason_offensive': '不当或冒犯性内容',
+  'report.reason_spam': '垃圾信息或广告',
+  'report.reason_harassment': '骚扰或欺凌',
+  'report.reason_violence': '暴力或威胁',
+  'report.reason_misinformation': '虚假信息',
+  'report.reason_other': '其他',
+  'report.detail_placeholder': '补充说明（可选）',
+  'report.submit': '提交举报',
+  'report.success': '举报已提交，我们将在24小时内处理。',
+  'report.failed': '举报提交失败，请重试。',
+  'report.report_post': '举报此动态',
+  'report.report_message': '举报此消息',
+  'report.report_user': '举报用户',
+
+  // Block
+  'block.user': '拉黑用户',
+  'block.confirm_title': '确定拉黑此用户？',
+  'block.confirm_desc': '被拉黑的用户将无法向你发送消息。他们的内容将从你的动态中移除。你可以随时取消拉黑。',
+  'block.success': '已成功拉黑该用户',
+  'block.failed': '拉黑失败',
+  'unblock.user': '取消拉黑',
+  'unblock.success': '已取消拉黑',
+  'unblock.failed': '取消拉黑失败',
 }

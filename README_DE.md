@@ -63,6 +63,8 @@ Frontend (client/)
 - 📱 Native Android-App — Verfügbar im [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), mit FCM-Push-Benachrichtigungen
 - 🔑 Zwei-Faktor-Authentifizierung (TOTP)
 - 🌐 Proxy-Einstellungen — SOCKS5 / HTTP / HTTPS Proxy-Unterstützung, konfigurierbar auf Login- und Einstellungsseiten (Adresse, Port, Benutzername, Passwort)
+- 🛡️ Inhaltsmoderation — Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung) + Nutzungsbedingungen (EULA)
+- 🔧 Admin-Panel — Eingebettetes Web-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen
 
 ## Bereitstellung
 ```bash

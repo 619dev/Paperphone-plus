@@ -60,6 +60,8 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 📷 QR Code Scan & Share | Scan QR codes to add friends or join groups with configurable expiry |
 | 🏗️ Self-Hostable | Docker Compose, Zeabur one-click, or frontend on Vercel |
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
+| 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
+| 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
 
 ---
 
@@ -173,6 +175,8 @@ Voice messages, 1:1 calls, and group calls all support real-time voice changing 
 | `NTFY_TOKEN` | ntfy auth token (optional, for self-hosted servers) | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token (optional) | — |
 | `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 8 built-in defaults |
+| `ADMIN_PATH` | Admin panel URL path | `/admin` |
+| `ADMIN_PASSWORD` | Admin panel password (**change in production**) | `admin123` |
 
 ### FCM Private Key Newline Handling
 

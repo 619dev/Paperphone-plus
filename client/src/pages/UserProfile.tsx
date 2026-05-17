@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { get, post, put, normalizeFileUrl } from '../api/http'
+import { get, post, put, del, normalizeFileUrl } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { getKeys } from '../crypto/keystore'
-import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Fingerprint, Lock, MessageCircle, Pencil, Phone, ShieldCheck } from 'lucide-react'
+import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Fingerprint, Lock, MessageCircle, Pencil, Phone, ShieldCheck, Flag, Ban } from 'lucide-react'
 
 export default function UserProfile() {
   const { id } = useParams<{ id: string }>()
@@ -33,6 +33,18 @@ export default function UserProfile() {
   const [safetyNumber, setSafetyNumber] = useState('')
   const [showSafetyNumber, setShowSafetyNumber] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Report
+  const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetail, setReportDetail] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+
+  // Block
+  const blockedUsers = useStore(s => s.blockedUsers)
+  const addBlockedUser = useStore(s => s.addBlockedUser)
+  const removeBlockedUser = useStore(s => s.removeBlockedUser)
+  const isBlocked = blockedUsers.includes(id || '')
 
   useEffect(() => {
     if (!id) return
@@ -167,6 +179,57 @@ export default function UserProfile() {
   if (loading || !user) return <div className="page"><div className="loading-spinner" /></div>
 
   const displayName = remark || user.nickname
+
+  const REPORT_REASONS = [
+    { key: 'report.reason_offensive', value: 'offensive' },
+    { key: 'report.reason_spam', value: 'spam' },
+    { key: 'report.reason_harassment', value: 'harassment' },
+    { key: 'report.reason_violence', value: 'violence' },
+    { key: 'report.reason_misinformation', value: 'misinformation' },
+    { key: 'report.reason_other', value: 'other' },
+  ]
+
+  const handleReport = async () => {
+    if (!reportReason) return
+    setReportSubmitting(true)
+    try {
+      await post('/api/report', {
+        target_type: 'user',
+        target_id: id,
+        reason: reportReason,
+        detail: reportDetail.trim() || undefined,
+      })
+      alert(t('report.success'))
+      setShowReport(false)
+      setReportReason('')
+      setReportDetail('')
+    } catch {
+      alert(t('report.failed'))
+    } finally {
+      setReportSubmitting(false)
+    }
+  }
+
+  const handleBlock = async () => {
+    if (!confirm(t('block.confirm_desc'))) return
+    try {
+      await post('/api/users/block', { user_id: id })
+      addBlockedUser(id!)
+      alert(t('block.success'))
+    } catch {
+      alert(t('block.failed'))
+    }
+  }
+
+  const handleUnblock = async () => {
+    try {
+      await del(`/api/users/block/${id}`)
+      removeBlockedUser(id!)
+      alert(t('unblock.success'))
+    } catch {
+      alert(t('unblock.failed'))
+    }
+  }
 
   return (
     <div className="page" id="user-profile-page">
@@ -406,6 +469,40 @@ export default function UserProfile() {
             </div>
           ))
         )}
+
+        {/* Report & Block section */}
+        <div className="section-title" style={{ padding: '16px 16px 6px' }}>
+          <Flag size={14} /> {t('report.report_user')}
+        </div>
+        <div className="settings-item" onClick={() => setShowReport(!showReport)} style={{ cursor: 'pointer' }}>
+          <span className="label" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
+            <Flag size={14} /> {t('report.report_user')}
+          </span>
+          <span className="arrow"><ChevronRight size={14} /></span>
+        </div>
+        {showReport && (
+          <div style={{ margin: '0 12px 8px', padding: 16, borderRadius: 12, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{t('report.reason')}</div>
+            {REPORT_REASONS.map(r => (
+              <div key={r.value} onClick={() => setReportReason(r.value)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', background: reportReason === r.value ? 'rgba(239,68,68,0.08)' : 'transparent', transition: 'background 0.2s' }}>
+                <div style={{ width: 18, height: 18, borderRadius: 9, border: reportReason === r.value ? '2px solid #ef4444' : '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {reportReason === r.value && <div style={{ width: 10, height: 10, borderRadius: 5, background: '#ef4444' }} />}
+                </div>
+                <span style={{ fontSize: 13 }}>{t(r.key)}</span>
+              </div>
+            ))}
+            <textarea className="input" placeholder={t('report.detail_placeholder')} value={reportDetail} onChange={e => setReportDetail(e.target.value)} style={{ minHeight: 60, fontSize: 13, resize: 'vertical' }} />
+            <button className="btn btn-sm" onClick={handleReport} disabled={!reportReason || reportSubmitting} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, fontSize: 14, opacity: !reportReason || reportSubmitting ? 0.5 : 1 }}>
+              {reportSubmitting ? t('common.loading') : t('report.submit')}
+            </button>
+          </div>
+        )}
+        <div className="settings-item" onClick={isBlocked ? handleUnblock : handleBlock} style={{ cursor: 'pointer' }}>
+          <span className="label" style={{ display: 'flex', alignItems: 'center', gap: 6, color: isBlocked ? 'var(--accent)' : '#ef4444' }}>
+            <Ban size={14} /> {isBlocked ? t('unblock.user') : t('block.user')}
+          </span>
+        </div>
+
       </div>
     </div>
   )

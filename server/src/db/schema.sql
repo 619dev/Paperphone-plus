@@ -326,3 +326,30 @@ CREATE TABLE IF NOT EXISTS ntfy_subscriptions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_ntfy_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── Content Reports (UGC moderation) ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS reports (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  reporter_id   VARCHAR(36)     NOT NULL,
+  target_type   VARCHAR(32)     NOT NULL,
+  target_id     VARCHAR(64)     NOT NULL,
+  reason        VARCHAR(64)     NOT NULL,
+  detail        TEXT            DEFAULT NULL,
+  status        ENUM('pending','reviewed','dismissed') NOT NULL DEFAULT 'pending',
+  created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_report_status (status, created_at),
+  INDEX idx_report_target (target_type, target_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── User Blocks ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_blocks (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       VARCHAR(36)     NOT NULL,
+  blocked_id    VARCHAR(36)     NOT NULL,
+  created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_block (user_id, blocked_id),
+  FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_block_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

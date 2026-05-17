@@ -123,6 +123,12 @@ interface AppStore {
   // WS
   wsConnected: boolean
   setWsConnected: (v: boolean) => void
+
+  // Blocked users
+  blockedUsers: string[]
+  setBlockedUsers: (users: string[]) => void
+  addBlockedUser: (userId: string) => void
+  removeBlockedUser: (userId: string) => void
 }
 
 export const useStore = create<AppStore>((set, get) => ({
@@ -274,4 +280,21 @@ export const useStore = create<AppStore>((set, get) => ({
   // WS
   wsConnected: false,
   setWsConnected: (v) => set({ wsConnected: v }),
+
+  // Blocked users
+  blockedUsers: JSON.parse(localStorage.getItem('blockedUsers') || '[]'),
+  setBlockedUsers: (users) => {
+    localStorage.setItem('blockedUsers', JSON.stringify(users))
+    set({ blockedUsers: users })
+  },
+  addBlockedUser: (userId) => {
+    const list = [...new Set([...get().blockedUsers, userId])]
+    localStorage.setItem('blockedUsers', JSON.stringify(list))
+    set({ blockedUsers: list })
+  },
+  removeBlockedUser: (userId) => {
+    const list = get().blockedUsers.filter(id => id !== userId)
+    localStorage.setItem('blockedUsers', JSON.stringify(list))
+    set({ blockedUsers: list })
+  },
 }))

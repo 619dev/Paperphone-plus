@@ -23,6 +23,7 @@ export default function Login() {
   const [nickname, setNickname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   // Proxy state (list-based)
   const proxyList = useStore(s => s.proxyList)
@@ -126,6 +127,11 @@ export default function Login() {
 
     try {
       if (isRegister) {
+        if (!agreedToTerms) {
+          setError(t('terms.must_agree'))
+          setLoading(false)
+          return
+        }
         // Generate crypto keys
         const sodium = await initSodium()
         const ikPair = await generateKeyPair()
@@ -548,13 +554,35 @@ export default function Login() {
 
           {error && <div style={{ color: 'var(--danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
 
-          <button className="btn btn-primary btn-full" type="submit" id="submit-btn" disabled={loading}>
+          <button className="btn btn-primary btn-full" type="submit" id="submit-btn" disabled={loading || (isRegister && !agreedToTerms)}>
             {loading
               ? (isRegister ? t('auth.registering') : t('auth.logging_in'))
               : (isRegister ? t('auth.register') : t('auth.login'))
             }
           </button>
         </form>
+
+        {/* Terms of Use checkbox (registration only) */}
+        {isRegister && (
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 8,
+            padding: '8px 4px', fontSize: 13, color: 'var(--text-secondary)',
+          }}>
+            <input
+              type="checkbox"
+              id="terms-checkbox"
+              checked={agreedToTerms}
+              onChange={e => setAgreedToTerms(e.target.checked)}
+              style={{ marginTop: 2, accentColor: 'var(--accent)', width: 18, height: 18, flexShrink: 0 }}
+            />
+            <label htmlFor="terms-checkbox" style={{ lineHeight: 1.4 }}>
+              {t('terms.agree_prefix')}
+              <a onClick={() => navigate('/terms')} style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>
+                {t('terms.agree_link')}
+              </a>
+            </label>
+          </div>
+        )}
 
         <div className="login-toggle">
           {isRegister ? t('auth.has_account') : t('auth.no_account')}{' '}
@@ -575,7 +603,9 @@ export default function Login() {
           ))}
         </div>
 
-        <div className="login-privacy-link">
+        <div className="login-privacy-link" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <a onClick={() => navigate('/terms')}>{t('terms.title')}</a>
+          <span style={{ opacity: 0.3 }}>|</span>
           <a onClick={() => navigate('/privacy')}>{t('privacy.title')}</a>
         </div>
       </div>

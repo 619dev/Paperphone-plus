@@ -92,6 +92,8 @@ async fn main() {
         .route("/ws", get(ws::server::ws_handler))
         // API routes
         .nest("/api", routes::api_router())
+        // Admin panel
+        .nest(&state.config.admin_path, routes::admin::router())
         .layer(DefaultBodyLimit::max(500 * 1024 * 1024)) // 500 MB upload limit
         .layer(cors)
         .with_state(state);

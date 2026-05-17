@@ -63,6 +63,8 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 - 📱 Android 네이티브 앱 — [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)에서 다운로드 가능, FCM 푸시 알림 지원
 - 🔑 2단계 인증 (TOTP)
 - 🌐 프록시 설정 — SOCKS5 / HTTP / HTTPS 프록시 지원, 로그인 및 설정 페이지에서 서버 주소, 포트, 사용자 이름, 비밀번호 설정 가능
+- 🛡️ 콘텐츠 관리 — 사용자 신고(6가지 카테고리) + 사용자 차단(즉시 숨김) + 이용약관(EULA)
+- 🔧 관리자 패널 — 내장 웹 관리 대시보드(`/admin`, 경로 변경 가능), 비밀번호 보호, 신고 검토, 콘텐츠 삭제, 사용자 차단 — 8개 언어 지원
 
 ## 배포
 ```bash

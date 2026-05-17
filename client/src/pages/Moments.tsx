@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { get, post, del, uploadFile as httpUploadFile, normalizeFileUrl } from '../api/http'
 import { useStore, Friend } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { Camera, ChevronLeft, ChevronRight, Eye, EyeOff, Film, Heart, ImageIcon, MessageCircle, Plus, Tag, X, Check, Globe, Users } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Eye, EyeOff, Film, Heart, ImageIcon, MessageCircle, Plus, Tag, X, Check, Globe, Users, Flag } from 'lucide-react'
 
 const MAX_IMAGES = 9
 const MAX_TEXT = 1024
@@ -45,6 +45,28 @@ export default function Moments() {
   const [moments, setMoments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showComposer, setShowComposer] = useState(false)
+
+  const [reportingId, setReportingId] = useState<number | null>(null)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const blockedUsers = useStore(s => s.blockedUsers)
+  const REPORT_REASONS = [
+    { key: 'report.reason_offensive', value: 'offensive' },
+    { key: 'report.reason_spam', value: 'spam' },
+    { key: 'report.reason_harassment', value: 'harassment' },
+    { key: 'report.reason_violence', value: 'violence' },
+    { key: 'report.reason_other', value: 'other' },
+  ]
+  const handleReportMoment = async (momentId: number) => {
+    if (!reportReason) return
+    setReportSubmitting(true)
+    try {
+      await post(`/api/report`, { target_type: 'moment', target_id: String(momentId), reason: reportReason })
+      alert(t('report.success'))
+      setReportingId(null)
+      setReportReason('')
+    } catch { alert(t('report.failed')) } finally { setReportSubmitting(false) }
+  }
 
   useEffect(() => {
     get('/api/moments').then(data => { setMoments(data); setLoading(false) }).catch(() => setLoading(false))
@@ -121,7 +143,7 @@ export default function Moments() {
           </div>
         )}
 
-        {moments.map(m => {
+        {moments.filter(m => !blockedUsers.includes(m.user_id)).map(m => {
           const liked = m.likes?.some((l: any) => l.id === user?.id)
           const imgCount = m.images?.length || 0
           const isOwner = m.user_id === user?.id
@@ -136,12 +158,10 @@ export default function Moments() {
                   <div className="moment-time">{formatTime(m.created_at)}</div>
                 </div>
                 {isOwner && (
-                  <button
-                    className="icon-btn"
-                    onClick={() => deleteMoment(m.id)}
-                    style={{ fontSize: 14, color: 'var(--text-muted)' }}
-                    title={t('common.delete')}
-                  ><X size={14} /></button>
+                  <button className="icon-btn" onClick={() => deleteMoment(m.id)} style={{ fontSize: 14, color: 'var(--text-muted)' }} title={t('common.delete')}><X size={14} /></button>
+                )}
+                {!isOwner && (
+                  <button className="icon-btn" onClick={() => { setReportingId(reportingId === m.id ? null : m.id); setReportReason('') }} style={{ fontSize: 14, color: 'var(--text-muted)' }} title={t('report.report_post')}><Flag size={14} /></button>
                 )}
               </div>
 
@@ -222,17 +242,23 @@ export default function Moments() {
               {/* Comment input */}
               {commentingId === m.id && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <input
-                    className="input"
-                    placeholder={t('moments.write_comment')}
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && submitComment(m.id)}
-                    style={{ flex: 1, fontSize: 13 }}
-                    autoFocus
-                  />
-                  <button className="btn btn-sm btn-primary" onClick={() => submitComment(m.id)}>
-                    {t('common.send')}
+                  <input className="input" placeholder={t('moments.write_comment')} value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => e.key === 'Enter' && submitComment(m.id)} style={{ flex: 1, fontSize: 13 }} autoFocus />
+                  <button className="btn btn-sm btn-primary" onClick={() => submitComment(m.id)}>{t('common.send')}</button>
+                </div>
+              )}
+              {reportingId === m.id && (
+                <div style={{ marginTop: 8, padding: 12, borderRadius: 10, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{t('report.reason')}</div>
+                  {REPORT_REASONS.map(r => (
+                    <div key={r.value} onClick={() => setReportReason(r.value)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, background: reportReason === r.value ? 'rgba(239,68,68,0.08)' : 'transparent' }}>
+                      <div style={{ width: 14, height: 14, borderRadius: 7, border: reportReason === r.value ? '2px solid #ef4444' : '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {reportReason === r.value && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#ef4444' }} />}
+                      </div>
+                      <span>{t(r.key)}</span>
+                    </div>
+                  ))}
+                  <button className="btn btn-sm" onClick={() => handleReportMoment(m.id)} disabled={!reportReason || reportSubmitting} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 0', fontWeight: 600, fontSize: 12, opacity: !reportReason || reportSubmitting ? 0.5 : 1 }}>
+                    {reportSubmitting ? t('common.loading') : t('report.submit')}
                   </button>
                 </div>
               )}
