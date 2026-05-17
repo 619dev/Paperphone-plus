@@ -308,6 +308,19 @@ APNS_RELAY_KEY=the_shared_secret_from_step_1
 
 > **Security note**: The relay only transmits push notification titles and summaries (e.g. "Someone sent you a message"), not actual message content. Device tokens cannot be used to read user data.
 
+---
+
+## Official APNS Push Relay
+
+Self-hosted server operators can use the official APNS push relay to enable iOS push notifications without configuring Apple credentials:
+
+```env
+# 2026-05-18
+APNS_RELAY_URL=https://619.chat
+APNS_RELAY_KEY=EzmpqftbsENaRUO6BTABxLV96q7RuEDyokXJr1DWdDjL54cLg7yXVUQqydCQvxrX
+```
+
+Add these two lines to your self-hosted server's `.env` file.
 
 ---
 

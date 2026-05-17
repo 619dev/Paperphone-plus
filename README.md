@@ -630,6 +630,21 @@ paperphone-plus/
 | `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 9 个默认包 |
 | `ADMIN_PATH` | 管理后台 URL 路径 | `/admin` |
 | `ADMIN_PASSWORD` | 管理后台访问密码（**生产必改**） | `admin123` |
+
+---
+
+## APNS Push Relay 官方中继服务
+
+自建服务器用户可使用以下官方 APNS 推送中继，无需自行配置 Apple 凭据即可让 iOS 用户收到推送通知：
+
+```env
+# 2026-05-18
+APNS_RELAY_URL=https://619.chat
+APNS_RELAY_KEY=EzmpqftbsENaRUO6BTABxLV96q7RuEDyokXJr1DWdDjL54cLg7yXVUQqydCQvxrX
+```
+
+将以上两行添加到自建服务器的 `.env` 文件中即可。
+
 ---
 如果这个项目对你有用的话，请我喝罐可乐吧。
 <br>
