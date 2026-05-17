@@ -410,7 +410,7 @@ export const zh: Record<string, string> = {
   'terms.title': '使用条款',
   'terms.agree_prefix': '我已阅读并同意',
   'terms.agree_link': '使用条款',
-  'terms.must_agree': '请先同意使用条款才能创建账号',
+  'terms.must_agree': '请先同意使用条款才能继续',
   'terms.hero_title': '使用条款',
   'terms.hero_subtitle': '在使用 PaperPhone Plus 之前，请仔细阅读以下条款',
 

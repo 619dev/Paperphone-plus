@@ -40,7 +40,7 @@ spec:
     - 💬 Rich messaging: text, images, video, document files (PDF/DOCX/XLSX etc. with type icons), voice, 200+ emoji (8 categories), Telegram sticker packs, delivery receipts, typing indicators
     - 🗂️ **Cloudflare R2** file storage (images, voice & video)
     - 🏷️ **Friend Tags** — tag-based contact filtering & Moments visibility control
-    - 🎭 **Telegram Sticker Packs** — dynamic sticker packs with configurable pack list, unlimited quantity
+    - 🎭 **Telegram Sticker Packs** — dynamic sticker packs with configurable pack list (9 built-in defaults), unlimited quantity
     - 🔑 **Two-Factor Auth (2FA)** — Google Authenticator TOTP, 8 recovery codes
     - 📷 **QR Code Scan & Share** — scan QR to add friends or join groups; group QR codes with configurable expiry (1 week / 1 month / 3 months)
     - 👫 **Friend System** — friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping
@@ -171,7 +171,7 @@ spec:
       description: >-
         Comma-separated list of Telegram sticker pack names with labels,
         in the format name:label (e.g. pack_name:My Pack,other_pack:Other Pack).
-        No limit on quantity. Leave blank to use the 8 built-in defaults.
+        No limit on quantity. Leave blank to use the 9 built-in defaults.
 
     - key: FCM_PROJECT_ID
       type: STRING
@@ -452,7 +452,7 @@ localization:
       - 💬 富文本消息、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音、Emoji（200+，8 分类）、Telegram 贴纸包、送达回执、打字状态
       - 🗂️ **Cloudflare R2** 对象存储（图片、语音与视频）
       - 🏷️ **好友标签** — 标签分类筛选通讯录 + 朋友圈可见性控制
-      - 🎭 **Telegram 贴纸包** — 动态贴纸包管理，可自定义包列表，数量无上限
+      - 🎭 **Telegram 贴纸包** — 动态贴纸包管理，可自定义包列表（内置 9 个默认包），数量无上限
       - 🔑 **两步验证 (2FA)** — Google Authenticator TOTP，8 个恢复码
       - 📷 **扫码加好友/入群** — 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1周/1月/3月）
       - 👫 **好友系统** — 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组

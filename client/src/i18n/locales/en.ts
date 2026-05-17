@@ -396,7 +396,7 @@ export const en: Record<string, string> = {
   'terms.title': 'Terms of Use',
   'terms.agree_prefix': 'I have read and agree to the ',
   'terms.agree_link': 'Terms of Use',
-  'terms.must_agree': 'You must agree to the Terms of Use to create an account',
+  'terms.must_agree': 'You must agree to the Terms of Use to continue',
   'terms.hero_title': 'Terms of Use',
   'terms.hero_subtitle': 'Please read these terms carefully before using PaperPhone Plus',
 

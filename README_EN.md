@@ -174,7 +174,7 @@ Voice messages, 1:1 calls, and group calls all support real-time voice changing 
 | `NTFY_BASE_URL` | ntfy server URL (optional, uses public ntfy.sh by default) | `https://ntfy.sh` |
 | `NTFY_TOKEN` | ntfy auth token (optional, for self-hosted servers) | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token (optional) | — |
-| `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 8 built-in defaults |
+| `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 9 built-in defaults |
 | `ADMIN_PATH` | Admin panel URL path | `/admin` |
 | `ADMIN_PASSWORD` | Admin panel password (**change in production**) | `admin123` |
 

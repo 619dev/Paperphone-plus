@@ -546,7 +546,7 @@ paperphone-plus/
 | `NTFY_BASE_URL` | ntfy 服务器地址（可选，默认使用 ntfy.sh 公共服务） | `https://ntfy.sh` |
 | `NTFY_TOKEN` | ntfy 认证 Token（可选，自建服务器时使用） | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选，贴纸包代理） | — |
-| `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 8 个默认包 |
+| `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 9 个默认包 |
 | `ADMIN_PATH` | 管理后台 URL 路径 | `/admin` |
 | `ADMIN_PASSWORD` | 管理后台访问密码（**生产必改**） | `admin123` |
 ---

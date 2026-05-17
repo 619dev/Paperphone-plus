@@ -31,6 +31,7 @@ async fn list_packs(
         ("ongeki", "Ongeki"),
         ("LINE_YURU_YURI", "Yuru Yuri"),
         ("mingfengOuO", "MingFeng"),
+        ("hanamarulily", "HanamaruLily"),
     ];
 
     let packs: Vec<serde_json::Value> = if let Some(ref custom) = state.config.sticker_packs {

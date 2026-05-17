@@ -58,6 +58,7 @@ Frontend (client/)
 - 🎙️ Modificateur de voix — Messages vocaux, appels 1v1 et appels de groupe avec 3 modes de modification (0.8x grave / 1.0x normal / 1.2x aigu), traitement en temps réel via Web Audio API
 - 👥 Chat de groupe (jusqu'à 2000 membres)
 - 💬 Messages enrichis (texte, images, vidéos, documents, audio, emoji, stickers)
+- 🎭 Packs de stickers Telegram — gestion dynamique des packs, 9 packs intégrés par défaut, personnalisable et quantité illimitée
 - 🌐 8 langues (détection auto + changement manuel)
 - 📱 PWA iOS (installation permanente)
 - 📱 Application Android native — Disponible sur [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), avec notifications push FCM
