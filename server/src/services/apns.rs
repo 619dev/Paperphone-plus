@@ -8,6 +8,22 @@ use std::time::{SystemTime, UNIX_EPOCH};
 static APNS_TOKEN_CACHE: std::sync::LazyLock<Mutex<Option<(String, u64)>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 
+/// Reusable HTTP/2 client for APNS requests.
+/// APNs requires HTTP/2 — using a shared client also improves performance
+/// by reusing connections.
+static APNS_CLIENT: std::sync::LazyLock<reqwest::Client> =
+    std::sync::LazyLock::new(|| {
+        reqwest::Client::builder()
+            .http2_prior_knowledge()
+            .build()
+            .expect("Failed to build APNS HTTP/2 client")
+    });
+
+/// Validate that a device token is a valid APNs token (64 hex characters).
+pub fn is_valid_apns_token(token: &str) -> bool {
+    token.len() == 64 && token.chars().all(|c| c.is_ascii_hexdigit())
+}
+
 #[derive(Serialize)]
 struct ApnsClaims {
     iss: String, // Team ID
@@ -86,8 +102,19 @@ pub async fn send_push(config: &Config, device_token: &str, title: &str, body: &
         "https://api.push.apple.com"
     };
 
-    let client = reqwest::Client::new();
-    let url = format!("{}/3/device/{}", base_url, device_token);
+    // Validate device token format
+    let normalized_token = device_token.to_lowercase();
+    if !is_valid_apns_token(&normalized_token) {
+        tracing::warn!(
+            "[APNS] ⚠️ Invalid device token (len={}, expected 64 hex): {}...",
+            device_token.len(),
+            &device_token[..20.min(device_token.len())]
+        );
+        return SendResult::StaleToken; // Treat as stale so it gets cleaned up
+    }
+
+    let client = &*APNS_CLIENT;
+    let url = format!("{}/3/device/{}", base_url, normalized_token);
 
     let payload = serde_json::json!({
         "aps": {

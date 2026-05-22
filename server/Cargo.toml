@@ -59,7 +59,7 @@ image = "0.25"
 base64 = "0.22"
 
 # HTTP client (for Telegram sticker proxy, OneSignal, CF TURN)
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2"] }
 
 # Logging
 tracing = "0.1"

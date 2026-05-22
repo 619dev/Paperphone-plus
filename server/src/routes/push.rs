@@ -224,13 +224,31 @@ async fn register_apns(
     auth: AuthUser,
     Json(body): Json<ApnsReq>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    // Normalize: lowercase, strip non-hex characters
+    let normalized: String = body.apns_token.chars()
+        .filter(|c| c.is_ascii_hexdigit())
+        .collect::<String>()
+        .to_lowercase();
+
+    // Validate: APNs device tokens must be exactly 64 hex characters (32 bytes)
+    if normalized.len() != 64 {
+        tracing::warn!(
+            "[APNS] ⚠️ Rejected invalid token from user {} (len={}, expected 64): {}...",
+            &auth.0.id, normalized.len(), &normalized[..20.min(normalized.len())]
+        );
+        return Err((
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "Invalid APNS token: must be 64 hex characters" })),
+        ));
+    }
+
     sqlx::query(
         "INSERT INTO apns_tokens (user_id, apns_token, platform) VALUES (?, ?, ?)
          ON DUPLICATE KEY UPDATE platform = VALUES(platform), updated_at = NOW()"
     )
-    .bind(&auth.0.id).bind(&body.apns_token).bind(&body.platform)
+    .bind(&auth.0.id).bind(&normalized).bind(&body.platform)
     .execute(&state.db).await.ok();
 
-    tracing::info!("[APNS] Token registered for user {}: {}...", &auth.0.id, &body.apns_token[..20.min(body.apns_token.len())]);
+    tracing::info!("[APNS] Token registered for user {}: {}...", &auth.0.id, &normalized[..20]);
     Ok(Json(serde_json::json!({ "ok": true })))
 }
