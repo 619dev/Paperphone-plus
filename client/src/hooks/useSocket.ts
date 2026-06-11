@@ -63,12 +63,34 @@ export function useSocket() {
           if (data.sender_key_version && data.nonce) {
             // Encrypted group message — decrypt with sender's key
             try {
-              const sk = getSenderKey(data.group_id, data.from)
+              let sk = getSenderKey(data.group_id, data.from)
+              if (!sk) {
+                // Don't have sender key yet — try fetching from server
+                try {
+                  const keys = getKeys()
+                  if (keys) {
+                    const skData = await get(`/api/groups/${data.group_id}/sender-keys`)
+                    if (skData?.keys && Array.isArray(skData.keys)) {
+                      for (const k of skData.keys) {
+                        if (!getSenderKey(data.group_id, k.from_id)) {
+                          try {
+                            const senderKey = await receiveSenderKey(
+                              k.encrypted_key, k.header, keys.ik_priv, null
+                            )
+                            storeSenderKey(data.group_id, k.from_id, senderKey, k.key_version || 1)
+                          } catch {}
+                        }
+                      }
+                    }
+                    sk = getSenderKey(data.group_id, data.from)
+                  }
+                } catch {}
+              }
               if (sk) {
                 const text = await decryptWithSenderKey(data.ciphertext, data.nonce, sk.senderKey)
                 msgToAdd = { ...data, decrypted: text }
               } else {
-                // Don't have sender key yet, show placeholder
+                // Still don't have sender key, show placeholder
                 msgToAdd = { ...data, decrypted: '🔒' }
               }
             } catch {

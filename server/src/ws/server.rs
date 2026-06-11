@@ -504,8 +504,8 @@ async fn flush_offline_messages(state: &Arc<AppState>, user_id: &str, tx: &mpsc:
     }
 
     // ── Step 3: Flush remaining valid offline group messages ────────────
-    let group_rows: Vec<(String, String, String, String, Option<String>, String, chrono::NaiveDateTime, String, Option<String>)> = sqlx::query_as(
-        "SELECT m.id, m.from_id, m.to_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar
+    let group_rows: Vec<(String, String, String, String, Option<String>, String, chrono::NaiveDateTime, String, Option<String>, Option<String>, Option<i64>)> = sqlx::query_as(
+        "SELECT m.id, m.from_id, m.to_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version
          FROM messages m
          LEFT JOIN users u ON u.id = m.from_id
          WHERE m.type = 'group' AND m.to_id IN (SELECT group_id FROM group_members WHERE user_id = ?)
@@ -517,8 +517,8 @@ async fn flush_offline_messages(state: &Arc<AppState>, user_id: &str, tx: &mpsc:
          ORDER BY m.created_at ASC LIMIT 50000"
     ).bind(user_id).bind(user_id).bind(user_id).fetch_all(&state.db).await.unwrap_or_default();
 
-    for (id, from_id, group_id, ct, hdr, msg_type, created, nick, avatar) in &group_rows {
-        let envelope = serde_json::json!({
+    for (id, from_id, group_id, ct, hdr, msg_type, created, nick, avatar, nonce, sender_key_version) in &group_rows {
+        let mut envelope = serde_json::json!({
             "type": "message", "id": id, "from": from_id,
             "from_nickname": nick, "from_avatar": avatar,
             "group_id": group_id, "msg_type": msg_type,
@@ -526,6 +526,12 @@ async fn flush_offline_messages(state: &Arc<AppState>, user_id: &str, tx: &mpsc:
             "ts": created.and_utc().timestamp_millis(),
             "offline": true,
         });
+        if let Some(n) = nonce {
+            envelope["nonce"] = serde_json::json!(n);
+        }
+        if let Some(skv) = sender_key_version {
+            envelope["sender_key_version"] = serde_json::json!(skv);
+        }
         let _ = tx.send(serde_json::to_string(&envelope).unwrap_or_default());
     }
 }
