@@ -5,7 +5,7 @@ import { useNotificationStore } from '../store/notificationStore'
 import { playMessageSound, showBrowserNotification, getMessagePreview } from '../utils/notification'
 import { getKeys } from '../crypto/keystore'
 import { decryptHybrid } from '../crypto/ratchet'
-import { getSenderKey, storeSenderKey, clearGroupSenderKeys, receiveSenderKey, removeSenderKey } from '../crypto/groupCrypto'
+import { getSenderKey, storeSenderKey, clearGroupSenderKeys, clearAllSenderKeys, receiveSenderKey, removeSenderKey } from '../crypto/groupCrypto'
 import { decryptWithSenderKey } from '../crypto/groupCrypto'
 import { get } from '../api/http'
 
@@ -305,6 +305,15 @@ export function useSocket() {
       }
     })
 
+    // Listen for sender key invalidation (user's identity keys changed)
+    const unsubSKInvalid = onWs('sender_key_invalidated', (data) => {
+      if (data.group_id && data.user_id) {
+        // Remove the invalidated user's sender key from local cache
+        removeSenderKey(data.group_id, data.user_id)
+        console.log(`[useSocket] Sender key invalidated for user ${data.user_id} in group ${data.group_id} (identity keys changed)`)
+      }
+    })
+
     return () => {
       unsubMsg()
       unsubAck()
@@ -314,6 +323,7 @@ export function useSocket() {
       unsubEncChange()
       unsubSKDist()
       unsubSKRotate()
+      unsubSKInvalid()
       disconnectWs()
     }
   }, [token])

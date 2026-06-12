@@ -16,7 +16,7 @@ const handlers = new Map<string, Set<MessageHandler>>()
  * receiveSenderKey() inside the distribution handler yields at `await`,
  * and the message handler fires before the key is stored → 🔒.
  */
-const SEQUENCED_TYPES = new Set(['sender_key_distribution', 'message'])
+const SEQUENCED_TYPES = new Set(['sender_key_distribution', 'sender_key_invalidated', 'message'])
 let _eventQueue: Promise<void> = Promise.resolve()
 
 function enqueueSequenced(fn: () => Promise<void>) {

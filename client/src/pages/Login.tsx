@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { post, put } from '../api/http'
+import { get, post, put } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { ShieldCheck, Lock, Shield, Link, Atom, Server, Wifi, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
+import { clearAllSenderKeys } from '../crypto/groupCrypto'
 
 export default function Login() {
   const { t } = useI18n()
@@ -90,6 +91,10 @@ export default function Login() {
     const idbKeys = await loadFromIndexedDB()
     if (idbKeys) return
     // 3. Generate fresh keys and upload public bundle
+    // This means the user lost their local keys (new device, cleared data, etc.)
+    // We MUST also reset sender key distributions on the server, because
+    // other group members' sender keys were encrypted with the OLD ik_pub
+    // and cannot be decrypted with the NEW ik_priv.
     try {
       const sodium = await initSodium()
       const ikPair = await generateKeyPair()
@@ -117,7 +122,48 @@ export default function Login() {
         kem_pub: signPair.publicKey,
         prekeys: opks.map(k => ({ key_id: k.key_id, opk_pub: k.pub })),
       })
-    } catch { /* best effort */ }
+      // Reset all sender key distributions on the server and notify group members.
+      // Old distributions were encrypted with the previous ik_pub and are now useless.
+      await post('/api/users/reset-sender-keys', {})
+      // Clear local sender key cache — all cached keys are invalid with new identity
+      clearAllSenderKeys()
+      console.log('[Login] New identity keys generated, sender keys reset')
+    } catch (err) {
+      console.warn('[Login] ensureKeysExist failed:', err)
+    }
+  }
+
+  /**
+   * One-time key consistency check for existing old accounts.
+   * If the local ik_pub doesn't match what's stored on the server,
+   * sync the local key to the server and reset sender key distributions.
+   * This handles the case where an old account still has its original
+   * local keys but the server has a different ik_pub (from a prior
+   * ensureKeysExist on another device).
+   */
+  const checkKeyConsistency = async () => {
+    try {
+      const keys = getKeys()
+      if (!keys) return
+      const me = await get('/api/users/me')
+      if (!me?.ik_pub) return
+      if (me.ik_pub === keys.ik_pub) return // Keys match — no action needed
+      // Mismatch! Local key is the source of truth (we have the private key).
+      // Update server to use our local ik_pub and reset stale sender keys.
+      console.warn('[Login] Key mismatch detected: local ik_pub differs from server. Syncing...')
+      await put('/api/users/keys', {
+        ik_pub: keys.ik_pub,
+        spk_pub: keys.spk_pub,
+        spk_sig: keys.spk_sig,
+        kem_pub: keys.sign_pub,
+        prekeys: keys.opks?.map(k => ({ key_id: k.key_id, opk_pub: k.pub })),
+      })
+      await post('/api/users/reset-sender-keys', {})
+      clearAllSenderKeys()
+      console.log('[Login] Key consistency restored, sender keys reset')
+    } catch (err) {
+      console.warn('[Login] checkKeyConsistency failed:', err)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,6 +231,8 @@ export default function Login() {
           setAuth(res.token, res.user)
           // Restore or generate keys after login
           await ensureKeysExist()
+          // Check if local keys match server (fixes existing old accounts)
+          await checkKeyConsistency()
           navigate('/chats')
         }
       }
@@ -203,6 +251,7 @@ export default function Login() {
       const res = await post('/api/totp/verify', { login_token: loginToken, code: totpCode })
       setAuth(res.token, res.user)
       await ensureKeysExist()
+      await checkKeyConsistency()
       navigate('/chats')
     } catch (err: any) {
       setError(err.message || t('common.error'))

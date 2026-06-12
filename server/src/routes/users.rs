@@ -15,6 +15,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/nickname", put(update_nickname))
         .route("/password", put(change_password))
         .route("/keys", put(update_keys))
+        .route("/reset-sender-keys", post(reset_sender_keys))
         .route("/delete", post(delete_account))
         .route("/block", post(block_user))
         .route("/block", get(get_blocked_users))
@@ -239,6 +240,56 @@ async fn update_keys(
                 .execute(&state.db).await.ok();
         }
     }
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+/// Reset all sender keys when a user's identity keys have changed.
+/// This cleans up stale sender key distributions that were encrypted with the old ik_pub,
+/// and notifies all encrypted group members to discard their cached sender keys for this user.
+async fn reset_sender_keys(
+    State(state): State<Arc<AppState>>,
+    auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let uid = &auth.0.id;
+
+    // 1. Delete all sender key distributions where this user is sender or recipient
+    sqlx::query("DELETE FROM group_sender_key_distributions WHERE from_id = ? OR to_id = ?")
+        .bind(uid).bind(uid)
+        .execute(&state.db).await.ok();
+
+    // 2. Delete sender key metadata for this user
+    sqlx::query("DELETE FROM group_sender_keys WHERE user_id = ?")
+        .bind(uid)
+        .execute(&state.db).await.ok();
+
+    // 3. Find all encrypted groups this user belongs to
+    let encrypted_groups: Vec<(String,)> = sqlx::query_as(
+        "SELECT gm.group_id FROM group_members gm
+         JOIN `groups` g ON g.id = gm.group_id
+         WHERE gm.user_id = ? AND g.encrypted = 1"
+    )
+    .bind(uid)
+    .fetch_all(&state.db).await.unwrap_or_default();
+
+    // 4. Notify all members of each encrypted group to discard this user's sender key
+    for (group_id,) in &encrypted_groups {
+        let members: Vec<(String,)> = sqlx::query_as(
+            "SELECT user_id FROM group_members WHERE group_id = ? AND user_id != ?"
+        )
+        .bind(group_id).bind(uid)
+        .fetch_all(&state.db).await.unwrap_or_default();
+
+        for (mid,) in &members {
+            state.ws_clients.send_to_user(mid, serde_json::json!({
+                "type": "sender_key_invalidated",
+                "group_id": group_id,
+                "user_id": uid,
+            }));
+        }
+    }
+
+    tracing::info!("🔑 Sender keys reset for user {} across {} encrypted groups", uid, encrypted_groups.len());
 
     Ok(Json(serde_json::json!({ "ok": true })))
 }

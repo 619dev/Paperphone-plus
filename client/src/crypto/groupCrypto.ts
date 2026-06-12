@@ -104,6 +104,15 @@ export function clearGroupSenderKeys(groupId: string) {
 }
 
 /**
+ * Remove ALL sender keys across all groups (when own identity keys change).
+ * All previously distributed sender keys become undecryptable with the new key pair.
+ */
+export function clearAllSenderKeys() {
+  senderKeyCache = []
+  saveSenderKeys()
+}
+
+/**
  * Remove a specific user's sender key (when they leave the group).
  */
 export function removeSenderKey(groupId: string, userId: string) {
