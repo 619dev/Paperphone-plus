@@ -125,12 +125,22 @@ export function useSocket() {
                 await fetchAndStoreSenderKeys(data.group_id)
                 sk = getSenderKey(data.group_id, data.from)
               }
+              if (!sk) {
+                // Still no key — retry after a brief delay.
+                // The sender distributes keys via HTTP POST before sending the WS message,
+                // but there can be a race where the message arrives before the POST response
+                // has been fully committed to the DB.
+                console.log(`[useSocket] Retrying sender key fetch after 1s delay for ${data.from} in group ${data.group_id}...`)
+                await new Promise(r => setTimeout(r, 1000))
+                await fetchAndStoreSenderKeys(data.group_id)
+                sk = getSenderKey(data.group_id, data.from)
+              }
               if (sk) {
                 const text = await decryptWithSenderKey(data.ciphertext, data.nonce, sk.senderKey)
                 msgToAdd = { ...data, decrypted: text }
               } else {
                 // Still don't have sender key — store as 🔒 but keep nonce in data for retry
-                console.warn(`[useSocket] Still no sender key for ${data.from} in group ${data.group_id} after fetch. Message will show 🔒`)
+                console.warn(`[useSocket] Still no sender key for ${data.from} in group ${data.group_id} after retries. Message will show 🔒`)
                 msgToAdd = { ...data, decrypted: '🔒' }
               }
             } catch (err) {
@@ -218,11 +228,15 @@ export function useSocket() {
       if (pending && data.msg_id) {
         const chatId = pending.group_id || pending.to
         if (chatId) {
-          useStore.getState().addMessage(chatId, {
+          // Build the message to add. For encrypted group messages, pendingMsg
+          // now carries encryption metadata (ciphertext, nonce, sender_key_version)
+          // set during the encryption step in Chat.tsx.
+          const msgToStore: any = {
             ...pending,
             id: data.msg_id,
             ts: data.ts || Date.now(),
-          })
+          }
+          useStore.getState().addMessage(chatId, msgToStore)
         }
         ;(window as any).__pendingMsg = null
       }

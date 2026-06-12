@@ -573,13 +573,20 @@ export default function Chat() {
                         const memberKeys = await get(`/api/users/${m.id}`)
                         ikPub = memberKeys?.ik_pub
                         kemPub = memberKeys?.kem_pub
-                      } catch {}
+                      } catch (fetchKeyErr) {
+                        console.warn(`[Chat] Failed to fetch public keys for member ${m.id}:`, fetchKeyErr)
+                      }
                     }
                     if (ikPub && keys) {
                       try {
-                        const dist = await distributeSenderKey(newKey, ikPub, kemPub)
+                        // Pass null for kemPub — kem_pub on server is an Ed25519 signing key,
+                        // NOT a valid Kyber KEM key. Passing it causes unnecessary Kyber encap
+                        // failures. Using null goes directly to pure ECDH (version 1).
+                        const dist = await distributeSenderKey(newKey, ikPub, null)
                         distributions.push({ to_id: m.id, encrypted_key: dist.encrypted_key, header: dist.header })
-                      } catch {}
+                      } catch (distMemberErr) {
+                        console.warn(`[Chat] distributeSenderKey failed for member ${m.id}:`, distMemberErr)
+                      }
                     }
                   }
                   if (distributions.length > 0) {
@@ -602,6 +609,12 @@ export default function Chat() {
             }
             if (sk && !sent) {
               const encrypted = await encryptWithSenderKey(content, sk.senderKey)
+              // Update pendingMsg with actual encryption metadata so the ack handler
+              // stores the message with correct encrypted fields (matching server data).
+              // This ensures consistency when messages are later loaded from server.
+              pendingMsg.ciphertext = encrypted.ciphertext
+              pendingMsg.nonce = encrypted.nonce
+              pendingMsg.sender_key_version = sk.keyVersion
               sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: encrypted.ciphertext, nonce: encrypted.nonce, sender_key_version: sk.keyVersion })
             }
           } catch (encErr) {

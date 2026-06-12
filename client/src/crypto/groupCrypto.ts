@@ -178,10 +178,20 @@ export async function distributeSenderKey(
   recipientIkPub: string,
   recipientKemPub: string | null | undefined
 ): Promise<{ encrypted_key: string; header: string }> {
-  const result = await encryptHybrid(recipientIkPub, recipientKemPub, senderKey)
-  return {
-    encrypted_key: result.ciphertext,
-    header: result.header,
+  try {
+    const result = await encryptHybrid(recipientIkPub, recipientKemPub, senderKey)
+    return {
+      encrypted_key: result.ciphertext,
+      header: result.header,
+    }
+  } catch (err) {
+    console.error('[groupCrypto] distributeSenderKey failed:', {
+      recipientIkPubLen: recipientIkPub?.length,
+      kemPubPresent: !!recipientKemPub,
+      senderKeyLen: senderKey?.length,
+      error: err,
+    })
+    throw err
   }
 }
 
@@ -201,5 +211,17 @@ export async function receiveSenderKey(
   myPrivKey: string,
   myKemPriv: string | null | undefined
 ): Promise<string> {
-  return await decryptHybrid(header, myPrivKey, myKemPriv, encryptedKey)
+  try {
+    const result = await decryptHybrid(header, myPrivKey, myKemPriv, encryptedKey)
+    return result
+  } catch (err) {
+    console.error('[groupCrypto] receiveSenderKey decryption failed:', {
+      encryptedKeyLen: encryptedKey?.length,
+      headerLen: header?.length,
+      myPrivKeyLen: myPrivKey?.length,
+      kemPrivPresent: !!myKemPriv,
+      error: err,
+    })
+    throw err
+  }
 }
