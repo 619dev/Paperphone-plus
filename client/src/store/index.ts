@@ -84,6 +84,8 @@ export interface ChatMessage {
   header?: string
   self_ciphertext?: string
   self_header?: string
+  nonce?: string
+  sender_key_version?: number
   ts: number
   read_at?: number
   offline?: boolean
@@ -160,6 +162,7 @@ interface AppStore {
   // Chat Messages (keyed by chatId)
   messages: Record<string, ChatMessage[]>
   addMessage: (chatId: string, msg: ChatMessage) => void
+  updateMessage: (chatId: string, msgId: string, patch: Partial<ChatMessage>) => void
   setMessages: (chatId: string, msgs: ChatMessage[]) => void
   prependMessages: (chatId: string, msgs: ChatMessage[]) => void
   markMessagesRead: (msgIds: string[], ts: number) => void
@@ -302,6 +305,17 @@ export const useStore = create<AppStore>((set, get) => ({
       ...s.messages,
       [chatId]: [...existing, msg],
     }
+    persistMessages(updated)
+    return { messages: updated }
+  }),
+  updateMessage: (chatId, msgId, patch) => set(s => {
+    const msgs = s.messages[chatId]
+    if (!msgs) return s
+    const idx = msgs.findIndex(m => m.id === msgId)
+    if (idx === -1) return s
+    const newMsgs = [...msgs]
+    newMsgs[idx] = { ...newMsgs[idx], ...patch }
+    const updated = { ...s.messages, [chatId]: newMsgs }
     persistMessages(updated)
     return { messages: updated }
   }),

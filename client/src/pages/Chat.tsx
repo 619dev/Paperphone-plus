@@ -410,12 +410,16 @@ export default function Chat() {
                       null
                     )
                     storeSenderKey(id!, k.from_id, senderKey, k.key_version || 1)
-                  } catch {}
+                  } catch (err) {
+                    console.warn(`[Chat] Failed to import sender key from ${k.from_id}:`, err)
+                  }
                 }
               }
             }
           }
-        } catch {}
+        } catch (err) {
+          console.warn('[Chat] Failed to fetch sender keys:', err)
+        }
       }
 
       const msgs = await get(path)
@@ -455,7 +459,10 @@ export default function Chat() {
                 const text = await decryptWithSenderKey(msg.ciphertext, msg.nonce, sk.senderKey)
                 return { ...msg, decrypted: text }
               }
-            } catch {}
+            } catch (err) {
+              console.warn(`[Chat] Failed to decrypt group msg ${msg.id} from ${msg.from}:`, err)
+            }
+            // Keep nonce in the message data so retry is possible later
             return { ...msg, decrypted: '\ud83d\udd12' }
           }
           return { ...msg, decrypted: msg.ciphertext }
@@ -515,11 +522,13 @@ export default function Chat() {
       if (msgType === 'text') setInput('')
 
       // Prepare pending message metadata for ack handler (real-time display)
+      // For encrypted groups, do NOT put plaintext in ciphertext field.
+      // The real ciphertext is on the server; ciphertext here is only for display fallback.
       const pendingMsg: any = {
         from: user.id,
         msg_type: msgType,
         decrypted: content,
-        ciphertext: content,
+        ciphertext: (isGroup && group?.encrypted) ? '' : content,
       }
       if (isGroup) {
         pendingMsg.group_id = id

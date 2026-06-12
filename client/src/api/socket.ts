@@ -1,11 +1,27 @@
 import { useStore } from '../store'
 
-type MessageHandler = (data: any) => void
+type MessageHandler = (data: any) => void | Promise<void>
 
 let ws: WebSocket | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 const handlers = new Map<string, Set<MessageHandler>>()
+
+/**
+ * Sequential async event queue.
+ *
+ * Critical WS events (sender_key_distribution, message) share a single queue
+ * so that a sender_key_distribution handler ALWAYS completes before any
+ * subsequent message handler runs. Without this, the async
+ * receiveSenderKey() inside the distribution handler yields at `await`,
+ * and the message handler fires before the key is stored → 🔒.
+ */
+const SEQUENCED_TYPES = new Set(['sender_key_distribution', 'message'])
+let _eventQueue: Promise<void> = Promise.resolve()
+
+function enqueueSequenced(fn: () => Promise<void>) {
+  _eventQueue = _eventQueue.then(fn, fn) // always chain, even on error
+}
 
 function getWsUrl(): string {
   const custom = import.meta.env.VITE_WS_URL
@@ -47,14 +63,33 @@ export function connectWs() {
     try {
       const data = JSON.parse(e.data)
       const type = data.type as string
-      const typeHandlers = handlers.get(type)
-      if (typeHandlers) {
-        typeHandlers.forEach(h => h(data))
+
+      const dispatch = async () => {
+        const typeHandlers = handlers.get(type)
+        if (typeHandlers) {
+          for (const h of typeHandlers) {
+            try { await h(data) } catch (err) {
+              console.error(`[WS] handler error for "${type}":`, err)
+            }
+          }
+        }
+        // Also fire '*' handlers
+        const allHandlers = handlers.get('*')
+        if (allHandlers) {
+          for (const h of allHandlers) {
+            try { await h(data) } catch (err) {
+              console.error('[WS] handler error for "*":', err)
+            }
+          }
+        }
       }
-      // Also fire '*' handlers
-      const allHandlers = handlers.get('*')
-      if (allHandlers) {
-        allHandlers.forEach(h => h(data))
+
+      if (SEQUENCED_TYPES.has(type)) {
+        // Queue: sender_key_distribution must finish before message runs
+        enqueueSequenced(dispatch)
+      } else {
+        // Non-critical events fire immediately (ack, typing, online, etc.)
+        dispatch()
       }
     } catch { /* ignore parse errors */ }
   }

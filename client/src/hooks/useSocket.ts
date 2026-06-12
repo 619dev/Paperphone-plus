@@ -9,6 +9,61 @@ import { getSenderKey, storeSenderKey, clearGroupSenderKeys, receiveSenderKey, r
 import { decryptWithSenderKey } from '../crypto/groupCrypto'
 import { get } from '../api/http'
 
+/**
+ * Try to fetch and store sender keys from the server for a given group.
+ * Returns true if at least one new key was imported.
+ */
+async function fetchAndStoreSenderKeys(groupId: string): Promise<boolean> {
+  const keys = getKeys()
+  if (!keys) return false
+  try {
+    const skData = await get(`/api/groups/${groupId}/sender-keys`)
+    if (!skData?.keys || !Array.isArray(skData.keys)) return false
+    let imported = false
+    for (const k of skData.keys) {
+      if (!getSenderKey(groupId, k.from_id)) {
+        try {
+          const senderKey = await receiveSenderKey(
+            k.encrypted_key, k.header, keys.ik_priv, null
+          )
+          storeSenderKey(groupId, k.from_id, senderKey, k.key_version || 1)
+          imported = true
+        } catch (err) {
+          console.warn(`[useSocket] Failed to decrypt sender key from ${k.from_id} for group ${groupId}:`, err)
+        }
+      }
+    }
+    return imported
+  } catch (err) {
+    console.warn(`[useSocket] Failed to fetch sender keys for group ${groupId}:`, err)
+    return false
+  }
+}
+
+/**
+ * Re-decrypt any 🔒 messages in the store for a given group+sender
+ * after their sender key becomes available.
+ */
+async function retryDecryptGroupMessages(groupId: string, senderId: string) {
+  const sk = getSenderKey(groupId, senderId)
+  if (!sk) return
+  const msgs = useStore.getState().messages[groupId] || []
+  for (const msg of msgs) {
+    if (msg.from === senderId && msg.decrypted === '🔒' && msg.id) {
+      // This message failed to decrypt before — retry now
+      const nonce = (msg as any).nonce
+      if (msg.ciphertext && nonce) {
+        try {
+          const text = await decryptWithSenderKey(msg.ciphertext, nonce, sk.senderKey)
+          useStore.getState().updateMessage(groupId, msg.id, { decrypted: text })
+        } catch (err) {
+          console.warn(`[useSocket] Retry decrypt failed for msg ${msg.id}:`, err)
+        }
+      }
+    }
+  }
+}
+
 export function useSocket() {
   const token = useStore(s => s.token)
 
@@ -65,35 +120,21 @@ export function useSocket() {
             try {
               let sk = getSenderKey(data.group_id, data.from)
               if (!sk) {
-                // Don't have sender key yet — try fetching from server
-                try {
-                  const keys = getKeys()
-                  if (keys) {
-                    const skData = await get(`/api/groups/${data.group_id}/sender-keys`)
-                    if (skData?.keys && Array.isArray(skData.keys)) {
-                      for (const k of skData.keys) {
-                        if (!getSenderKey(data.group_id, k.from_id)) {
-                          try {
-                            const senderKey = await receiveSenderKey(
-                              k.encrypted_key, k.header, keys.ik_priv, null
-                            )
-                            storeSenderKey(data.group_id, k.from_id, senderKey, k.key_version || 1)
-                          } catch {}
-                        }
-                      }
-                    }
-                    sk = getSenderKey(data.group_id, data.from)
-                  }
-                } catch {}
+                // Don't have sender key yet — fetch from server
+                console.log(`[useSocket] No sender key for ${data.from} in group ${data.group_id}, fetching from server...`)
+                await fetchAndStoreSenderKeys(data.group_id)
+                sk = getSenderKey(data.group_id, data.from)
               }
               if (sk) {
                 const text = await decryptWithSenderKey(data.ciphertext, data.nonce, sk.senderKey)
                 msgToAdd = { ...data, decrypted: text }
               } else {
-                // Still don't have sender key, show placeholder
+                // Still don't have sender key — store as 🔒 but keep nonce in data for retry
+                console.warn(`[useSocket] Still no sender key for ${data.from} in group ${data.group_id} after fetch. Message will show 🔒`)
                 msgToAdd = { ...data, decrypted: '🔒' }
               }
-            } catch {
+            } catch (err) {
+              console.warn(`[useSocket] Group message decrypt failed for msg from ${data.from}:`, err)
               msgToAdd = { ...data, decrypted: '🔒' }
             }
           } else {
@@ -137,7 +178,7 @@ export function useSocket() {
             preview = getMessagePreview(data.msg_type, getI18nT())
           } else {
             // For text: show decrypted if available, else ciphertext preview
-            const text = data.decrypted || data.ciphertext || ''
+            const text = msgToAdd.decrypted || data.ciphertext || ''
             preview = text.length > 50 ? text.substring(0, 50) + '...' : text
           }
 
@@ -232,9 +273,12 @@ export function useSocket() {
               null
             )
             storeSenderKey(data.group_id, data.from_id, senderKey, data.key_version || 1)
+            console.log(`[useSocket] Stored sender key from ${data.from_id} for group ${data.group_id}`)
+            // Re-decrypt any 🔒 messages from this sender that we couldn't decrypt before
+            await retryDecryptGroupMessages(data.group_id, data.from_id)
           }
-        } catch {
-          // Failed to decrypt sender key
+        } catch (err) {
+          console.error(`[useSocket] Failed to decrypt sender key distribution from ${data.from_id}:`, err)
         }
       }
     })
@@ -282,3 +326,4 @@ function getI18nT(): (key: string) => string {
     return (key: string) => key
   }
 }
+
