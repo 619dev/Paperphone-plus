@@ -349,7 +349,6 @@ export default function Chat() {
   const recChunksRef = useRef<Blob[]>([])
   const recStartRef = useRef<number>(0)
   const recIntervalRef = useRef<any>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordVoiceModeRef = useRef<'normal'|'slow'|'fast'>('normal')
   recordVoiceModeRef.current = recordVoiceMode
@@ -701,50 +700,78 @@ export default function Chat() {
   }
 
   // ── Voice recording ──
-  const applyVoiceEffect = (stream: MediaStream): MediaStream => {
-    try {
-      const audioCtx = new AudioContext()
-      audioCtxRef.current = audioCtx
-      const source = audioCtx.createMediaStreamSource(stream)
-      const destination = audioCtx.createMediaStreamDestination()
+  // 将离线渲染得到的 AudioBuffer 编码为 16-bit PCM WAV
+  const encodeWav = (buffer: AudioBuffer): Blob => {
+    const numChannels = buffer.numberOfChannels
+    const sampleRate = buffer.sampleRate
+    const numFrames = buffer.length
+    const bytesPerSample = 2
+    const blockAlign = numChannels * bytesPerSample
+    const dataSize = numFrames * blockAlign
+    const ab = new ArrayBuffer(44 + dataSize)
+    const view = new DataView(ab)
+    const writeStr = (offset: number, s: string) => {
+      for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i))
+    }
+    writeStr(0, 'RIFF')
+    view.setUint32(4, 36 + dataSize, true)
+    writeStr(8, 'WAVE')
+    writeStr(12, 'fmt ')
+    view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true) // PCM
+    view.setUint16(22, numChannels, true)
+    view.setUint32(24, sampleRate, true)
+    view.setUint32(28, sampleRate * blockAlign, true)
+    view.setUint16(32, blockAlign, true)
+    view.setUint16(34, 8 * bytesPerSample, true)
+    writeStr(36, 'data')
+    view.setUint32(40, dataSize, true)
 
-      const bufferSize = 4096
-      const processor = audioCtx.createScriptProcessor(bufferSize, 1, 1)
-      let outputPhase = 0
-      const rates = { slow: 0.8, normal: 1.0, fast: 1.2 }
-
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0)
-        const output = e.outputBuffer.getChannelData(0)
-        const rate = rates[recordVoiceModeRef.current]
-
-        for (let i = 0; i < output.length; i++) {
-          const readIndex = outputPhase
-          const intIndex = Math.floor(readIndex)
-          const frac = readIndex - intIndex
-
-          if (intIndex < input.length - 1) {
-            output[i] = input[intIndex] * (1 - frac) + input[intIndex + 1] * frac
-          } else if (intIndex < input.length) {
-            output[i] = input[intIndex]
-          } else {
-            output[i] = 0
-          }
-          outputPhase += rate
-        }
-        outputPhase = outputPhase % input.length
+    const channels: Float32Array[] = []
+    for (let c = 0; c < numChannels; c++) channels.push(buffer.getChannelData(c))
+    let offset = 44
+    for (let i = 0; i < numFrames; i++) {
+      for (let c = 0; c < numChannels; c++) {
+        const sample = Math.max(-1, Math.min(1, channels[c][i]))
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+        offset += 2
       }
+    }
+    return new Blob([ab], { type: 'audio/wav' })
+  }
 
-      source.connect(processor)
-      processor.connect(destination)
-
-      const processedStream = new MediaStream()
-      destination.stream.getAudioTracks().forEach(t => processedStream.addTrack(t))
-
-      return processedStream
+  // 录音结束后离线变速：normal 原样返回 webm，slow/fast 重采样为 WAV
+  const processVoiceBlob = async (
+    blob: Blob,
+    mode: 'slow' | 'normal' | 'fast',
+  ): Promise<{ blob: Blob; ext: string; mime: string; rateApplied: number }> => {
+    if (mode === 'normal') {
+      return { blob, ext: 'webm', mime: 'audio/webm', rateApplied: 1 }
+    }
+    const rate = mode === 'slow' ? 0.8 : 1.2
+    let audioCtx: AudioContext | null = null
+    try {
+      const arrayBuf = await blob.arrayBuffer()
+      audioCtx = new AudioContext()
+      const srcBuffer = await audioCtx.decodeAudioData(arrayBuf)
+      const offline = new OfflineAudioContext(
+        srcBuffer.numberOfChannels,
+        Math.ceil(srcBuffer.length / rate),
+        srcBuffer.sampleRate,
+      )
+      const source = offline.createBufferSource()
+      source.buffer = srcBuffer
+      source.playbackRate.value = rate
+      source.connect(offline.destination)
+      source.start()
+      const rendered = await offline.startRendering()
+      const wav = encodeWav(rendered)
+      return { blob: wav, ext: 'wav', mime: 'audio/wav', rateApplied: rate }
     } catch (err) {
-      console.warn('[Chat] Voice effect failed:', err)
-      return stream
+      console.warn('[Chat] Voice effect failed, sending original:', err)
+      return { blob, ext: 'webm', mime: 'audio/webm', rateApplied: 1 }
+    } finally {
+      if (audioCtx) audioCtx.close().catch(() => {})
     }
   }
 
@@ -752,8 +779,7 @@ export default function Chat() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaStreamRef.current = stream
-      const processedStream = applyVoiceEffect(stream)
-      const rec = new MediaRecorder(processedStream)
+      const rec = new MediaRecorder(stream)
       recChunksRef.current = []
       recStartRef.current = Date.now()
       setRecordDuration(0)
@@ -775,13 +801,17 @@ export default function Chat() {
     clearInterval(recIntervalRef.current)
     setIsRecording(false)
     const duration = Math.round((Date.now() - recStartRef.current) / 1000)
+    const mode = recordVoiceModeRef.current
     rec.stop()
     rec.onstop = async () => {
-      const blob = new Blob(recChunksRef.current, { type: 'audio/webm' })
-      const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' })
+      const raw = new Blob(recChunksRef.current, { type: 'audio/webm' })
       try {
+        const { blob, ext, mime, rateApplied } = await processVoiceBlob(raw, mode)
+        const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: mime })
+        // 变速会改变时长：实际时长 = 原时长 / rate
+        const finalDuration = Math.max(1, Math.round(duration / rateApplied))
         const { url } = await uploadWithProgress(file, t('chat.uploading_voice'))
-        sendMessage(url, 'voice', { url, duration })
+        sendMessage(url, 'voice', { url, duration: finalDuration })
       } catch {
         alert(t('chat.upload_failed'))
       }
@@ -790,10 +820,6 @@ export default function Chat() {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(t => t.stop())
       mediaStreamRef.current = null
-    }
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close().catch(() => {})
-      audioCtxRef.current = null
     }
     setRecordVoiceMode('normal')
   }
