@@ -173,6 +173,9 @@ docker compose logs -f server
 
 ### 第五步：构建前端静态文件
 
+> [!NOTE]
+> 目前 iOS、Android、Windows、Mac 客户端均已完成，无需在服务器上部署 Web 前端，此步骤可省略。
+
 有两种方式获取前端静态文件：
 
 **方式 A：本地构建（推荐）**

@@ -173,6 +173,9 @@ Confirm all services show `running` and `healthy` status. The server will automa
 
 ### Step 5: Build Frontend Static Files
 
+> [!NOTE]
+> Native clients for iOS, Android, Windows, and Mac are already available. There is no need to deploy the web frontend on the server, so this step can be skipped.
+
 There are two ways to obtain the frontend static files:
 
 **Option A: Build Locally (Recommended)**
