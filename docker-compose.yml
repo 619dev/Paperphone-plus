@@ -29,7 +29,7 @@ services:
       DB_NAME: ${DB_NAME:-paperphoneplus}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASS: ${REDIS_PASS:-}
+      REDIS_PASS: ${REDIS_PASS:?Set REDIS_PASS in your environment or .env file}
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
@@ -96,7 +96,7 @@ services:
           use_external_ip: true
         redis:
           address: redis:6379
-          password: ${REDIS_PASS:-}
+          password: ${REDIS_PASS:?Set REDIS_PASS in your environment or .env file}
         keys:
           ${LIVEKIT_API_KEY:-paperphone}: ${LIVEKIT_API_SECRET:-paperphone_change_this_secret}
     ports:
@@ -134,18 +134,15 @@ services:
   redis:
     container_name: paperphone-redis
     image: redis:7-alpine
-    command: >
-      sh -c "if [ -n '${REDIS_PASS:-}' ]; then
-        redis-server --requirepass '${REDIS_PASS}'
-      else
-        redis-server
-      fi"
+    command: ["redis-server", "--requirepass", "${REDIS_PASS:?Set REDIS_PASS in your environment or .env file}"]
+    environment:
+      REDIS_PASS: ${REDIS_PASS:?Set REDIS_PASS in your environment or .env file}
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASS\" ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
