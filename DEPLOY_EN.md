@@ -179,7 +179,7 @@ docker compose ps
 docker compose logs -f server
 ```
 
-Confirm all services show `running` and `healthy` status. The server will automatically create database tables on first startup — no manual SQL import is needed.
+Confirm all services show `running` and `healthy` status. The server automatically creates database tables on first startup, so no manual SQL import is needed. During an upgrade, it also inspects `users.username` and `users.nickname` and migrates incompatible character sets to `utf8mb4` when required, enabling Chinese username and nickname search. A MySQL backup is still recommended before a production upgrade.
 
 ### Step 5: Build Frontend Static Files
 
@@ -463,3 +463,5 @@ Nginx automatically routes API requests (`/api/*`) and WebSocket connections (`/
 - **Zeabur**: Redeploy the server service in the Dashboard
 - **Docker Compose**: Run `docker compose pull && docker compose up -d`
 - **Vercel Frontend**: Push to GitHub and Vercel will automatically trigger redeployment
+
+After upgrading, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.

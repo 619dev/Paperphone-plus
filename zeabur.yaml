@@ -30,6 +30,9 @@ spec:
     ## Features
     - 📹 **Video & Voice Calls** — WebRTC P2P (1:1) + LiveKit SFU meetings (up to 100 participants, host mute-all and lecture mode)
     - 🎙️ **Voice Changer** — real-time voice effects for voice messages, 1:1 calls & group calls with 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API
+    - 📱 **Session Persistence** — keeps the local login through transient failures and signs out only on an explicit server revocation
+    - 📴 **Offline Access** — account-isolated contacts, groups, chats, Moments, Timeline, and media cache with manual clearing
+    - 🔎 **Unicode Friend Search** — IME-safe, NFC-normalized Chinese username and nickname search
     - 👥 **Group Chat** — up to 2000 members, switchable "Encrypted" / "Unencrypted" modes (owner-only toggle, switching clears chat history). Encrypted mode uses Signal-style Sender Key protocol (XSalsa20-Poly1305 + ECDH key distribution) — only members can decrypt; bots disabled in encrypted mode. DND mode, member management
     - 🌐 **Moments** — social feed with text + up to 9 photos or 1 video (≤ 10 min), likes, comments, tag-based visibility
     - 👤 **User Profile** — contact profile page with Moments feed, bidirectional privacy controls (hide their / hide mine)
@@ -58,6 +61,8 @@ spec:
     5. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push, `FCM_*` for native Android (Capacitor), `APNS_*` for native iOS.
     6. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     7. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
+
+    MySQL is started with `utf8mb4` and `utf8mb4_unicode_ci`. The server also checks existing searchable user columns during startup and migrates incompatible character sets when needed.
 
     ## Group meetings on Zeabur
     This template deploys a LiveKit service with WebSocket/API (7880) and ICE/TCP
@@ -375,6 +380,10 @@ spec:
       spec:
         source:
           image: mysql:8.0
+          command:
+            - mysqld
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
         ports:
           - id: database
             port: 3306
@@ -652,6 +661,9 @@ localization:
       ## 功能亮点
       - 📹 **视频/语音通话** — WebRTC P2P（1:1）+ LiveKit SFU 会议（最多 100 人，支持主席全员静音和讲课模式）
       - 🎙️ **变声功能** — 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链
+      - 📱 **会话保持** — 临时网络或鉴权故障时保留本地登录状态，仅在服务端明确撤销会话时退出
+      - 📴 **离线访问** — 按账户隔离缓存联系人、群组、聊天记录、朋友圈、时间线和媒体，并支持手动清理
+      - 🔎 **Unicode 好友搜索** — 支持中文输入法组合状态、NFC 归一化和中文用户名/昵称搜索
       - 👥 **群聊** — 最多 2000 人群组，支持「加密」与「未加密」两种模式（群主可切换，切换清空历史消息）。加密模式采用 Signal 风格 Sender Key 协议（XSalsa20-Poly1305 对称加密 + ECDH 密钥分发），仅群成员可解密消息；加密模式下无法使用群机器人。免打扰模式，成员管理
       - 🌐 **朋友圈** — 文字 + 最多 9 张图或 1 个视频（≤10 分钟），点赞、评论、标签可见性控制
       - 👤 **个人资料** — 联系人资料页（朋友圈动态 +「不看此人朋友圈」与「不让他看我的朋友圈」双向隐私控制）
@@ -680,6 +692,8 @@ localization:
       5. （可选）设置 `VAPID_*` 变量启用浏览器推送通知，`FCM_*` 启用原生 Android 推送（Capacitor），`APNS_*` 启用 iOS 原生推送。
       6. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       7. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
+
+      MySQL 已使用 `utf8mb4` 和 `utf8mb4_unicode_ci` 启动；server 启动时也会检查现有用户搜索字段，并按需迁移不兼容字符集。
 
       ## Zeabur 群会议说明
       本模板会部署 LiveKit 的 WebSocket/API（7880）和 ICE/TCP 回退端口（7881）。

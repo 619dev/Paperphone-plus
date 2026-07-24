@@ -45,6 +45,9 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🗝️ Serveur à connaissance nulle | Le serveur ne stocke que le texte chiffré ; les clés privées ne quittent jamais l'appareil |
 | 📹 Réunions vidéo et audio | WebRTC P2P (1:1) + SFU LiveKit (jusqu’à 100 participants), mise en sourdine globale et mode cours |
 | 🎙️ Modificateur de voix | Effets vocaux en temps réel pour les messages vocaux, appels 1:1 et appels de groupe — 3 modes (0.8x grave / 1.0x normal / 1.2x aigu), basé sur Web Audio API |
+| 📱 Persistance de session | Conserve la connexion locale lors des coupures réseau, erreurs d’autorisation ordinaires et changements d’URL du serveur ; déconnexion uniquement après révocation explicite |
+| 📴 Accès hors ligne | Cache isolé par compte pour contacts, groupes, jusqu’à 2 000 messages par conversation, Moments, Timeline et médias ; nettoyage manuel depuis le profil |
+| 🔎 Recherche Unicode d’amis | Protection de composition IME, normalisation NFC et encodage UTF-8 pour une recherche fiable des noms d’utilisateur et pseudonymes chinois |
 | 👥 Chat de groupe | Jusqu'à 2000 membres, modes « Chiffré » / « Non chiffré » commutables (propriétaire uniquement, le changement efface l'historique). Le mode chiffré utilise le protocole Sender Key de type Signal (chiffrement symétrique XSalsa20-Poly1305 + distribution de clés ECDH) — seuls les membres du groupe peuvent déchiffrer les messages ; les bots sont désactivés en mode chiffré. Mode Ne pas déranger, gestion des membres |
 | 👫 Système d'amis | Les demandes d'amitié nécessitent une approbation avec jusqu'à 512 caractères de message ; surnoms personnalisés ; regroupement par étiquettes |
 | ⏱️ Suppression automatique des messages | 5 niveaux (jamais / 1 jour / 3 jours / 1 semaine / 1 mois), configurable par les deux parties en DM, uniquement par le propriétaire dans les groupes |

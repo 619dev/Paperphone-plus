@@ -1,3 +1,5 @@
+import { endSession, isExplicitLogoutSignal } from '../utils/session'
+
 function getBase(): string {
   return localStorage.getItem('serverUrl') || import.meta.env.VITE_API_URL || ''
 }
@@ -17,13 +19,6 @@ export async function api<T = any>(
 
   const res = await fetch(`${getBase()}${path}`, { ...opts, headers })
 
-  if (res.status === 401) {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    window.location.href = '/login'
-    throw new Error('Unauthorized')
-  }
-
   const text = await res.text()
   let data: any
   try {
@@ -31,6 +26,12 @@ export async function api<T = any>(
   } catch {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     return {} as T
+  }
+
+  // Keep local login state through ordinary authorization or transport
+  // failures. Only an explicit server instruction may end the session.
+  if (isExplicitLogoutSignal(data, res.headers)) {
+    endSession(String(data.code ?? data.type ?? data.action ?? 'session_revoked'))
   }
 
   if (!res.ok) {

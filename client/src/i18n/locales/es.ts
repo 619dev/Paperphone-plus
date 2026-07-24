@@ -104,6 +104,7 @@ export const es: Record<string, string> = {
 
   // Proxy
   'profile.network': 'Red',
+  'profile.clear_cache': 'Borrar caché local', 'profile.clear_cache_confirm': 'Se eliminará el contenido disponible sin conexión. ¿Continuar?', 'profile.cache_cleared': 'Caché local borrada',
   'proxy.title': 'Configuración de proxy',
   'proxy.enabled': 'Activar proxy',
   'proxy.type': 'Tipo de proxy',

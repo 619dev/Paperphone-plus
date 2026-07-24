@@ -106,9 +106,15 @@ export default function Contacts() {
   }, [tags, assignments])
 
   const searchUsers = async () => {
-    if (!searchQ.trim()) return
+    // Normalize user-entered Unicode so visually identical usernames (for
+    // example, characters entered through different IMEs) produce the same
+    // query. URLSearchParams also guarantees that the UTF-8 query is encoded
+    // exactly once.
+    const query = searchQ.trim().normalize('NFC')
+    if (!query) return
     try {
-      const res = await get(`/api/users/search?q=${encodeURIComponent(searchQ)}`)
+      const params = new URLSearchParams({ q: query })
+      const res = await get(`/api/users/search?${params.toString()}`)
       setSearchResults(res)
     } catch {}
   }
@@ -328,9 +334,20 @@ export default function Contacts() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               className="input" id="search-user-input"
+              type="search"
+              enterKeyHint="search"
+              autoComplete="off"
               placeholder={t('contacts.search_user')}
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && searchUsers()}
+              onKeyDown={e => {
+                // Android and desktop Chinese IMEs emit Enter while committing
+                // a candidate. Searching at that point uses the previous React
+                // state and makes Chinese usernames appear unsearchable.
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                  e.preventDefault()
+                  void searchUsers()
+                }
+              }}
               style={{ flex: 1 }}
             />
             <button className="btn btn-primary btn-sm" onClick={searchUsers}>{t('common.search')}</button>

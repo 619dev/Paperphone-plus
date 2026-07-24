@@ -1,5 +1,6 @@
 /* PaperPhonePlus Service Worker — push notifications + offline shell */
-const CACHE_NAME = 'paperphoneplus-v1'
+const CACHE_NAME = 'paperphoneplus-shell-v2'
+const MEDIA_CACHE_NAME = 'paperphone-media-v2'
 
 // Install: cache app shell
 self.addEventListener('install', (event) => {
@@ -10,7 +11,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => ![CACHE_NAME, MEDIA_CACHE_NAME].includes(k)).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   )
 })
@@ -60,8 +61,10 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
 
-  // Don't cache API/WS requests
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ws')) return
+  // API JSON is persisted by the app with account isolation. Media responses
+  // remain in Cache Storage so they are available while offline.
+  if (url.pathname.startsWith('/ws')) return
+  if (url.pathname.startsWith('/api') && !url.pathname.startsWith('/api/uploads') && !url.pathname.startsWith('/api/media')) return
 
   // For navigation and assets, try network first then cache
   if (event.request.mode === 'navigate') {
@@ -74,11 +77,12 @@ self.addEventListener('fetch', (event) => {
   // Static assets: cache-first
   if (event.request.method === 'GET') {
     event.respondWith(
-      caches.match(event.request).then(cached => {
+      caches.match(event.request, { ignoreVary: true }).then(cached => {
         const fetchPromise = fetch(event.request).then(response => {
           if (response && response.status === 200) {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+            const isMedia = response.headers.get('content-type')?.match(/^(image|video|audio)\//)
+            caches.open(isMedia ? MEDIA_CACHE_NAME : CACHE_NAME).then(cache => cache.put(event.request, clone))
           }
           return response
         }).catch(() => cached)

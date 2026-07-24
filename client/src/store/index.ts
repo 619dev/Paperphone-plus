@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { applyNativeProxy, clearNativeProxy } from '../api/proxy-bridge'
+import { cacheMediaIn, readOfflineData, writeOfflineData } from '../utils/offlineCache'
 
 // ── Message cache persistence helpers ──────────────────────────
 const MSG_CACHE_KEY = 'pp_msg_cache'
@@ -21,12 +22,13 @@ function persistMessages(messages: Record<string, ChatMessage[]>) {
   if (_saveMsgTimer) clearTimeout(_saveMsgTimer)
   _saveMsgTimer = setTimeout(() => {
     try {
-      // Keep only the last 200 messages per chat to avoid localStorage overflow
+      // Keep a deep offline history for every conversation.
       const trimmed: Record<string, ChatMessage[]> = { _v: MSG_CACHE_VERSION } as any
       for (const [chatId, msgs] of Object.entries(messages)) {
-        trimmed[chatId] = msgs.slice(-200)
+        trimmed[chatId] = msgs.slice(-2000)
       }
       localStorage.setItem(MSG_CACHE_KEY, JSON.stringify(trimmed))
+      void cacheMediaIn(trimmed)
     } catch {
       // localStorage full — try to evict oldest chats
       try {
@@ -181,6 +183,7 @@ interface AppStore {
   setBlockedUsers: (users: string[]) => void
   addBlockedUser: (userId: string) => void
   removeBlockedUser: (userId: string) => void
+  clearCachedContent: () => void
 }
 
 export const useStore = create<AppStore>((set, get) => ({
@@ -282,15 +285,23 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   // Friends
-  friends: [],
-  setFriends: (friends) => set({ friends }),
-  updateFriendOnline: (id, online) => set(s => ({
-    friends: s.friends.map(f => f.id === id ? { ...f, is_online: online } : f)
-  })),
+  friends: readOfflineData<Friend[]>('friends', []),
+  setFriends: (friends) => {
+    writeOfflineData('friends', friends)
+    set({ friends })
+  },
+  updateFriendOnline: (id, online) => set(s => {
+    const friends = s.friends.map(f => f.id === id ? { ...f, is_online: online } : f)
+    writeOfflineData('friends', friends)
+    return { friends }
+  }),
 
   // Groups
-  groups: [],
-  setGroups: (groups) => set({ groups }),
+  groups: readOfflineData<Group[]>('groups', []),
+  setGroups: (groups) => {
+    writeOfflineData('groups', groups)
+    set({ groups })
+  },
 
   // Messages (initialized from localStorage cache)
   messages: loadCachedMessages(),
@@ -342,6 +353,7 @@ export const useStore = create<AppStore>((set, get) => ({
         updated[chatId] = msgs.map(m => msgIds.includes(m.id) ? { ...m, read_at: ts } : m)
       }
     }
+    persistMessages(updated)
     return { messages: updated }
   }),
 
@@ -374,4 +386,5 @@ export const useStore = create<AppStore>((set, get) => ({
     localStorage.setItem('blockedUsers', JSON.stringify(list))
     set({ blockedUsers: list })
   },
+  clearCachedContent: () => set({ friends: [], groups: [], messages: {}, unread: {} }),
 }))

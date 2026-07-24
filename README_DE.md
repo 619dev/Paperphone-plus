@@ -45,6 +45,9 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🗝️ Zero-Knowledge-Server | Server speichert nur Chiffretext; private Schlüssel verlassen niemals das Gerät |
 | 📹 Video- & Audiokonferenzen | WebRTC P2P (1:1) + LiveKit-SFU (bis zu 100 Teilnehmer), Alle stummschalten und Vortragsmodus |
 | 🎙️ Stimmverzerrer | Echtzeit-Stimmeffekte für Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe — 3 Modi (0.8x tief / 1.0x normal / 1.2x hoch), basierend auf Web Audio API |
+| 📱 Sitzungspersistenz | Behält die lokale Anmeldung bei Netzwerkausfällen, gewöhnlichen Autorisierungsfehlern und Änderungen der Server-URL bei; Abmeldung nur nach ausdrücklichem Server-Widerruf |
+| 📴 Offline-Zugriff | Kontogetrennter Cache für Kontakte, Gruppen, bis zu 2.000 Nachrichten je Unterhaltung, Momente, Timeline und Medien; manuell im Profil löschbar |
+| 🔎 Unicode-Freundessuche | IME-Kompositionsschutz, NFC-Normalisierung und UTF-8-Abfragekodierung ermöglichen die zuverlässige Suche chinesischer Benutzernamen und Spitznamen |
 | 👥 Gruppenchat | Bis zu 2000 Mitglieder, umschaltbare Modi „Verschlüsselt" / „Unverschlüsselt" (nur Besitzer, Umschalten löscht den Chatverlauf). Verschlüsselter Modus verwendet das Signal-Sender-Key-Protokoll (XSalsa20-Poly1305 symmetrische Verschlüsselung + ECDH-Schlüsselverteilung) — nur Gruppenmitglieder können Nachrichten entschlüsseln; Bots sind im verschlüsselten Modus deaktiviert. Nicht-stören-Modus, Mitgliederverwaltung |
 | 👫 Freundesystem | Freundschaftsanfragen erfordern Genehmigung mit bis zu 512 Zeichen Nachricht; Spitznamen; Multi-Tag-Gruppierung |
 | ⏱️ Automatisches Löschen | 5 Stufen (nie / 1 Tag / 3 Tage / 1 Woche / 1 Monat), von beiden Seiten in DMs einstellbar, nur Besitzer in Gruppen |

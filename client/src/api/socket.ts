@@ -42,7 +42,7 @@ function getWsUrl(): string {
 
 export function connectWs() {
   const token = useStore.getState().token
-  if (!token || ws?.readyState === WebSocket.OPEN) return
+  if (!token || ws?.readyState === WebSocket.OPEN || ws?.readyState === WebSocket.CONNECTING) return
 
   ws = new WebSocket(getWsUrl())
 

@@ -45,6 +45,9 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🗝️ Zero-Knowledge Server | Server stores only ciphertext; private keys never leave the device |
 | 📹 Video & Voice Meetings | WebRTC P2P (1:1) + LiveKit SFU (up to 100 participants), host mute-all and lecture mode |
 | 🎙️ Voice Changer | Real-time voice effects for voice messages, 1:1 calls, and group calls — 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API |
+| 📱 Session Persistence | Keeps local login state through network loss, ordinary authorization failures, and server URL changes; signs out only after an explicit server revocation |
+| 📴 Offline Access | Account-isolated caching for contacts, groups, up to 2,000 messages per conversation, Moments, Timeline, and media, with manual cache clearing in Profile |
+| 🔎 Unicode Friend Search | IME composition protection, NFC normalization, and UTF-8 query encoding provide reliable Chinese username and nickname search |
 | 👥 Group Chat | Up to 2000 members, switchable "Encrypted" / "Unencrypted" modes (owner-only toggle, switching clears chat history). Encrypted mode uses Signal-style Sender Key protocol (XSalsa20-Poly1305 symmetric encryption + ECDH key distribution) — only group members can decrypt messages; bots are disabled in encrypted mode. Do Not Disturb mode, member management |
 | 👫 Friend System | Friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping |
 | ⏱️ Auto-Delete Messages | 5 tiers (never / 1 day / 3 days / 1 week / 1 month), settable by either party in DMs, owner-only in groups |

@@ -32,11 +32,22 @@ async fn search_users(
     _auth: AuthUser,
     Query(params): Query<SearchQuery>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    let pattern = format!("%{}%", params.q);
+    let query = params.q.trim();
+    if query.is_empty() {
+        return Ok(Json(serde_json::json!([])));
+    }
+
     let rows: Vec<(String, String, String, Option<String>, i8)> = sqlx::query_as(
-        "SELECT id, username, nickname, avatar, is_online FROM users WHERE username LIKE ? OR nickname LIKE ? LIMIT 20"
+        "SELECT id, username, nickname, avatar, is_online \
+         FROM users \
+         WHERE username LIKE CONCAT('%', ?, '%') \
+            OR nickname LIKE CONCAT('%', ?, '%') \
+         LIMIT 20"
     )
-    .bind(&pattern).bind(&pattern)
+    // Bind the original UTF-8 text rather than constructing a wildcard string
+    // in the application. This keeps the value and its connection encoding
+    // under MySQL/sqlx control.
+    .bind(query).bind(query)
     .fetch_all(&state.db).await
     .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 

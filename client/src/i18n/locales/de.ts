@@ -104,6 +104,7 @@ export const de: Record<string, string> = {
 
   // Proxy
   'profile.network': 'Netzwerk',
+  'profile.clear_cache': 'Lokalen Cache leeren', 'profile.clear_cache_confirm': 'Offline gespeicherte Inhalte werden entfernt. Fortfahren?', 'profile.cache_cleared': 'Lokaler Cache geleert',
   'proxy.title': 'Proxy-Einstellungen',
   'proxy.enabled': 'Proxy aktivieren',
   'proxy.type': 'Proxy-Typ',

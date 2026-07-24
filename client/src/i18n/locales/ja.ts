@@ -101,6 +101,7 @@ export const ja: Record<string, string> = {
 
   // Proxy
   'profile.network': 'ネットワーク',
+  'profile.clear_cache': 'ローカルキャッシュを消去', 'profile.clear_cache_confirm': 'オフラインコンテンツが削除されます。続行しますか？', 'profile.cache_cleared': 'ローカルキャッシュを消去しました',
   'proxy.title': 'プロキシ設定',
   'proxy.enabled': 'プロキシを有効にする',
   'proxy.type': 'プロキシタイプ',

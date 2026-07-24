@@ -373,6 +373,9 @@ export const en: Record<string, string> = {
 
   // Proxy
   'profile.network': 'Network',
+  'profile.clear_cache': 'Clear Local Cache',
+  'profile.clear_cache_confirm': 'Cached contacts, messages, moments and timeline posts will no longer be available offline. Continue?',
+  'profile.cache_cleared': 'Local cache cleared',
   'proxy.title': 'Proxy Settings',
   'proxy.enabled': 'Enable Proxy',
   'proxy.type': 'Proxy Type',

@@ -102,6 +102,7 @@ export const ko: Record<string, string> = {
 
   // Proxy
   'profile.network': '네트워크',
+  'profile.clear_cache': '로컬 캐시 지우기', 'profile.clear_cache_confirm': '오프라인 콘텐츠가 삭제됩니다. 계속할까요?', 'profile.cache_cleared': '로컬 캐시를 지웠습니다',
   'proxy.title': '프록시 설정',
   'proxy.enabled': '프록시 활성화',
   'proxy.type': '프록시 유형',

@@ -11,6 +11,7 @@ import { QRCodeCanvas } from '../components/QRCode'
 import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } from '../api/push'
 import { logoutOneSignal } from '../api/onesignal'
 import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle } from 'lucide-react'
+import { clearOfflineCache } from '../utils/offlineCache'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
 
@@ -26,6 +27,7 @@ export default function Profile() {
   const setLang = useStore(s => s.setLang)
 
   const [subView, setSubView] = useState<SubView>(null)
+  const [clearingCache, setClearingCache] = useState(false)
 
   // Push notifications state
   const [pushEnabled, setPushEnabled] = useState(false)
@@ -99,6 +101,18 @@ export default function Profile() {
     logoutOneSignal()
     logout()
     navigate('/login')
+  }
+
+  const handleClearCache = async () => {
+    if (!window.confirm(t('profile.clear_cache_confirm'))) return
+    setClearingCache(true)
+    try {
+      await clearOfflineCache()
+      useStore.getState().clearCachedContent()
+      alert(t('profile.cache_cleared'))
+    } finally {
+      setClearingCache(false)
+    }
   }
 
   // Delete account state
@@ -203,6 +217,10 @@ export default function Profile() {
         <div className="settings-item" onClick={() => setSubView('proxy')}>
           <span className="label"><Wifi size={16} /> {t('proxy.title')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
+        </div>
+        <div className="settings-item" onClick={handleClearCache} style={{ opacity: clearingCache ? 0.55 : 1 }}>
+          <span className="label"><Trash2 size={16} /> {t('profile.clear_cache')}</span>
+          <span className="value">{clearingCache ? t('common.loading') : ''}</span>
         </div>
 
         {/* Push notifications */}
@@ -1318,4 +1336,3 @@ function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => st
     </div>
   )
 }
-

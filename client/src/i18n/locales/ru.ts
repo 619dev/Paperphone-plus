@@ -104,6 +104,7 @@ export const ru: Record<string, string> = {
 
   // Proxy
   'profile.network': 'Сеть',
+  'profile.clear_cache': 'Очистить локальный кэш', 'profile.clear_cache_confirm': 'Офлайн-данные будут удалены. Продолжить?', 'profile.cache_cleared': 'Локальный кэш очищен',
   'proxy.title': 'Настройки прокси',
   'proxy.enabled': 'Включить прокси',
   'proxy.type': 'Тип прокси',

@@ -4,6 +4,7 @@ import { get, post, del, uploadFile as httpUploadFile, normalizeFileUrl } from '
 import { useStore, Friend } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { Camera, ChevronLeft, ChevronRight, Eye, EyeOff, Film, Heart, ImageIcon, MessageCircle, Plus, Tag, X, Check, Globe, Users, Flag } from 'lucide-react'
+import { readOfflineData, writeOfflineData } from '../utils/offlineCache'
 
 const MAX_IMAGES = 9
 const MAX_TEXT = 1024
@@ -42,7 +43,7 @@ export default function Moments() {
   const navigate = useNavigate()
   const user = useStore(s => s.user)
   const friends = useStore(s => s.friends)
-  const [moments, setMoments] = useState<any[]>([])
+  const [moments, setMoments] = useState<any[]>(() => readOfflineData('moments', []))
   const [loading, setLoading] = useState(true)
   const [showComposer, setShowComposer] = useState(false)
 
@@ -69,12 +70,12 @@ export default function Moments() {
   }
 
   useEffect(() => {
-    get('/api/moments').then(data => { setMoments(data); setLoading(false) }).catch(() => setLoading(false))
+    get('/api/moments').then(data => { setMoments(data); writeOfflineData('moments', data); setLoading(false) }).catch(() => setLoading(false))
     get<Friend[]>('/api/friends').then(f => useStore.getState().setFriends(f)).catch(() => {})
   }, [])
 
   const refresh = async () => {
-    try { const data = await get('/api/moments'); setMoments(data) } catch {}
+    try { const data = await get('/api/moments'); setMoments(data); writeOfflineData('moments', data) } catch {}
   }
 
   const toggleLike = async (id: number, liked: boolean) => {

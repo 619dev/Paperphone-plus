@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../store'
 import { connectWs, disconnectWs, onWs } from '../api/socket'
+import { endSession } from '../utils/session'
 import { useNotificationStore } from '../store/notificationStore'
 import { playMessageSound, showBrowserNotification, getMessagePreview } from '../utils/notification'
 import { getKeys } from '../crypto/keystore'
@@ -71,6 +72,11 @@ export function useSocket() {
     if (!token) return
 
     connectWs()
+
+    // Network loss, failed auth, and address changes only reconnect. The local
+    // login ends solely when the server sends an explicit termination event.
+    const logoutSignals = ['logout', 'force_logout', 'session_revoked', 'session_terminated']
+    const unsubLogoutSignals = logoutSignals.map(type => onWs(type, () => endSession(type)))
 
     // Listen for incoming messages and route to store
     const unsubMsg = onWs('message', async (data) => {
@@ -331,6 +337,7 @@ export function useSocket() {
       unsubSKDist()
       unsubSKRotate()
       unsubSKInvalid()
+      unsubLogoutSignals.forEach(unsubscribe => unsubscribe())
       disconnectWs()
     }
   }, [token])
@@ -357,4 +364,3 @@ function getI18nT(): (key: string) => string {
     return (key: string) => key
   }
 }
-

@@ -387,6 +387,9 @@ export const zh: Record<string, string> = {
 
   // Proxy
   'profile.network': '网络设置',
+  'profile.clear_cache': '清理本地缓存',
+  'profile.clear_cache_confirm': '清理后，断网时将无法查看已缓存的联系人、聊天记录、朋友圈和时间线。确定继续吗？',
+  'profile.cache_cleared': '本地缓存已清理',
   'proxy.title': '代理设置',
   'proxy.enabled': '启用代理',
   'proxy.type': '代理类型',
