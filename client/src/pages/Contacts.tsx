@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { get, post, del, put } from '../api/http'
 import { useStore, Friend, Group } from '../store'
@@ -30,6 +30,7 @@ export default function Contacts() {
   const [showAdd, setShowAdd] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const [requestMsg, setRequestMsg] = useState('')
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
@@ -105,12 +106,16 @@ export default function Contacts() {
     return map
   }, [tags, assignments])
 
-  const searchUsers = async () => {
+  const searchUsers = async (inputValue?: string) => {
     // Normalize user-entered Unicode so visually identical usernames (for
     // example, characters entered through different IMEs) produce the same
     // query. URLSearchParams also guarantees that the UTF-8 query is encoded
-    // exactly once.
-    const query = searchQ.trim().normalize('NFC')
+    // exactly once. Read the input element directly when an action triggers
+    // the search: Android IMEs can update the visible composing text before
+    // React has committed the corresponding state update.
+    const query = (inputValue ?? searchInputRef.current?.value ?? searchQ)
+      .trim()
+      .normalize('NFC')
     if (!query) return
     try {
       const params = new URLSearchParams({ q: query })
@@ -339,6 +344,7 @@ export default function Contacts() {
         <div style={{ padding: '8px 16px' }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
+              ref={searchInputRef}
               className="input" id="search-user-input"
               type="search"
               enterKeyHint="search"
@@ -351,12 +357,17 @@ export default function Contacts() {
                 // state and makes Chinese usernames appear unsearchable.
                 if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                   e.preventDefault()
-                  void searchUsers()
+                  void searchUsers(e.currentTarget.value)
                 }
               }}
               style={{ flex: 1 }}
             />
-            <button className="btn btn-primary btn-sm" onClick={searchUsers}>{t('common.search')}</button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => void searchUsers(searchInputRef.current?.value)}
+            >
+              {t('common.search')}
+            </button>
           </div>
           {searchResults.length > 0 && (
             <div style={{ marginTop: 8 }}>
