@@ -41,8 +41,8 @@ export function useCall(userId: string | undefined) {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const remoteStreamRef = useRef<MediaStream | null>(null)
-  const localVideoRef = useRef<HTMLVideoElement | null>(null)
-  const remoteVideoRef = useRef<HTMLVideoElement | null>(null)
+  const localVideoElementRef = useRef<HTMLVideoElement | null>(null)
+  const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null)
   const durationTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([])
   const callStateRef = useRef<CallState>('idle')
@@ -90,8 +90,8 @@ export function useCall(userId: string | undefined) {
       e.streams[0]?.getTracks().forEach(track => {
         remoteStream.addTrack(track)
       })
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream
+      if (remoteVideoElementRef.current) {
+        remoteVideoElementRef.current.srcObject = remoteStream
       }
     }
 
@@ -133,8 +133,8 @@ export function useCall(userId: string | undefined) {
         video: isVideo ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false,
       })
       localStreamRef.current = stream
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream
+      if (localVideoElementRef.current) {
+        localVideoElementRef.current.srcObject = stream
       }
       stream.getTracks().forEach(track => pc.addTrack(track, stream))
 
@@ -235,8 +235,8 @@ export function useCall(userId: string | undefined) {
     localStreamRef.current = null
     remoteStreamRef.current = null
 
-    if (localVideoRef.current) localVideoRef.current.srcObject = null
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null
+    if (localVideoElementRef.current) localVideoElementRef.current.srcObject = null
+    if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = null
 
     if (durationTimer.current) clearInterval(durationTimer.current)
     durationTimer.current = null
@@ -464,6 +464,19 @@ export function useCall(userId: string | undefined) {
   useEffect(() => {
     return () => { cleanup() }
   }, [cleanup])
+
+  // The local preview is only rendered after the call connects, while the
+  // camera stream is acquired earlier. Callback refs attach the existing
+  // streams whenever either video element mounts or is recreated.
+  const localVideoRef = useCallback((element: HTMLVideoElement | null) => {
+    localVideoElementRef.current = element
+    if (element) element.srcObject = localStreamRef.current
+  }, [])
+
+  const remoteVideoRef = useCallback((element: HTMLVideoElement | null) => {
+    remoteVideoElementRef.current = element
+    if (element) element.srcObject = remoteStreamRef.current
+  }, [])
 
   return {
     callState,
