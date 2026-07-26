@@ -163,7 +163,11 @@ interface AppStore {
 
   // Chat Messages (keyed by chatId)
   messages: Record<string, ChatMessage[]>
-  addMessage: (chatId: string, msg: ChatMessage) => void
+  /**
+   * Adds a message if its server ID is not already cached.
+   * Returns true only when the message was actually inserted.
+   */
+  addMessage: (chatId: string, msg: ChatMessage) => boolean
   updateMessage: (chatId: string, msgId: string, patch: Partial<ChatMessage>) => void
   setMessages: (chatId: string, msgs: ChatMessage[]) => void
   prependMessages: (chatId: string, msgs: ChatMessage[]) => void
@@ -305,19 +309,25 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // Messages (initialized from localStorage cache)
   messages: loadCachedMessages(),
-  addMessage: (chatId, msg) => set(s => {
-    const existing = s.messages[chatId] || []
-    // Deduplicate by message ID
-    if (msg.id && existing.some(m => m.id === msg.id)) {
-      return s // skip duplicate
-    }
-    const updated = {
-      ...s.messages,
-      [chatId]: [...existing, msg],
-    }
-    persistMessages(updated)
-    return { messages: updated }
-  }),
+  addMessage: (chatId, msg) => {
+    let inserted = false
+    set(s => {
+      const existing = s.messages[chatId] || []
+      // Offline messages are replayed after every reconnect. Keep insertion
+      // and its return value atomic so callers do not count a replay as new.
+      if (msg.id && existing.some(m => m.id === msg.id)) {
+        return s
+      }
+      const updated = {
+        ...s.messages,
+        [chatId]: [...existing, msg],
+      }
+      inserted = true
+      persistMessages(updated)
+      return { messages: updated }
+    })
+    return inserted
+  },
   updateMessage: (chatId, msgId, patch) => set(s => {
     const msgs = s.messages[chatId]
     if (!msgs) return s

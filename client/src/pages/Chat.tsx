@@ -310,6 +310,7 @@ export default function Chat() {
   const user = useStore(s => s.user)
   const messages = useStore(s => s.messages[id!] ?? EMPTY_MSGS)
   const setMessages = useStore(s => s.setMessages)
+  const clearUnread = useStore(s => s.clearUnread)
   const friends = useStore(s => s.friends)
   const groups = useStore(s => s.groups)
   const wsConnected = useStore(s => s.wsConnected)
@@ -385,6 +386,12 @@ export default function Chat() {
   }
 
   // ── Load history + decrypt + merge with cache ──
+  useEffect(() => {
+    // A chat can be opened from a push/toast or a deep link, bypassing the
+    // conversation-list click handler that also clears this counter.
+    if (id) clearUnread(id)
+  }, [id, clearUnread])
+
   useEffect(() => {
     if (!id) return
     const path = isGroup ? `/api/messages/group/${id}?limit=50000` : `/api/messages/private/${id}?limit=50000`

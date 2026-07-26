@@ -159,13 +159,13 @@ export function useSocket() {
           }
         }
 
-        useStore.getState().addMessage(chatId, msgToAdd)
+        const isNewMessage = useStore.getState().addMessage(chatId, msgToAdd)
 
         // If not on that chat page AND message is not from me, trigger notification
         const isFromMe = data.from === myId
         const isOnChat = window.location.pathname.includes(chatId)
 
-        if (!isFromMe && !isOnChat) {
+        if (isNewMessage && !isFromMe && !isOnChat) {
           useStore.getState().incrementUnread(chatId)
 
           // Skip all notifications for offline catch-up messages
@@ -221,7 +221,7 @@ export function useSocket() {
                 : `/chat/${chatId}`
             }
           )
-        } else if (!isFromMe && isOnChat) {
+        } else if (isNewMessage && !isFromMe && isOnChat) {
           // On the chat page but still play a subtle sound for new messages
           // (skip if it's a self message)
         }
