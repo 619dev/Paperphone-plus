@@ -43,6 +43,7 @@ export function useCall(userId: string | undefined) {
   const remoteStreamRef = useRef<MediaStream | null>(null)
   const localVideoElementRef = useRef<HTMLVideoElement | null>(null)
   const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null)
+  const remoteAudioElementRef = useRef<HTMLAudioElement | null>(null)
   const durationTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([])
   const callStateRef = useRef<CallState>('idle')
@@ -87,11 +88,17 @@ export function useCall(userId: string | undefined) {
     remoteStreamRef.current = remoteStream
 
     pc.ontrack = (e) => {
-      e.streams[0]?.getTracks().forEach(track => {
-        remoteStream.addTrack(track)
-      })
+      if (!remoteStream.getTracks().some(track => track.id === e.track.id)) {
+        remoteStream.addTrack(e.track)
+      }
       if (remoteVideoElementRef.current) {
         remoteVideoElementRef.current.srcObject = remoteStream
+      }
+      if (remoteAudioElementRef.current) {
+        remoteAudioElementRef.current.srcObject = remoteStream
+        remoteAudioElementRef.current.play().catch(err => {
+          console.warn('[Call] Remote audio autoplay failed:', err)
+        })
       }
     }
 
@@ -138,16 +145,6 @@ export function useCall(userId: string | undefined) {
       }
       stream.getTracks().forEach(track => pc.addTrack(track, stream))
 
-      // Apply voice effect processing chain
-      const processedStream = applyVoiceEffect(stream)
-      const senders = pc.getSenders()
-      processedStream.getAudioTracks().forEach(newTrack => {
-        const audioSender = senders.find(s => s.track?.kind === 'audio')
-        if (audioSender) {
-          audioSender.replaceTrack(newTrack).catch(() => {})
-        }
-      })
-
       return true
     } catch (err: any) {
       console.error('[Call] getUserMedia failed:', err)
@@ -163,10 +160,15 @@ export function useCall(userId: string | undefined) {
   }
 
   // ── Voice changer: process local audio through AudioContext ──
-  const applyVoiceEffect = (stream: MediaStream): MediaStream => {
+  const createVoiceEffectTrack = (stream: MediaStream): MediaStreamTrack | null => {
     try {
       const audioCtx = new AudioContext()
       audioCtxRef.current = audioCtx
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(err => {
+          console.warn('[Call] Voice effect audio context could not resume:', err)
+        })
+      }
       const source = audioCtx.createMediaStreamSource(stream)
       const destination = audioCtx.createMediaStreamDestination()
 
@@ -205,15 +207,10 @@ export function useCall(userId: string | undefined) {
       source.connect(processor)
       processor.connect(destination)
 
-      // Merge: replace audio tracks with processed audio, keep video tracks
-      const processedStream = new MediaStream()
-      destination.stream.getAudioTracks().forEach(t => processedStream.addTrack(t))
-      stream.getVideoTracks().forEach(t => processedStream.addTrack(t))
-
-      return processedStream
+      return destination.stream.getAudioTracks()[0] || null
     } catch (err) {
-      console.warn('[Call] Voice effect failed, using original stream:', err)
-      return stream
+      console.warn('[Call] Voice effect failed:', err)
+      return null
     }
   }
 
@@ -237,6 +234,7 @@ export function useCall(userId: string | undefined) {
 
     if (localVideoElementRef.current) localVideoElementRef.current.srcObject = null
     if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = null
+    if (remoteAudioElementRef.current) remoteAudioElementRef.current.srcObject = null
 
     if (durationTimer.current) clearInterval(durationTimer.current)
     durationTimer.current = null
@@ -366,11 +364,41 @@ export function useCall(userId: string | undefined) {
   }, [])
 
   const toggleVoiceMode = useCallback(() => {
-    setVoiceMode(m => {
-      const modes: VoiceMode[] = ['normal', 'slow', 'fast']
-      const idx = modes.indexOf(m)
-      return modes[(idx + 1) % modes.length]
-    })
+    const modes: VoiceMode[] = ['normal', 'slow', 'fast']
+    const nextMode = modes[(modes.indexOf(voiceModeRef.current) + 1) % modes.length]
+    const stream = localStreamRef.current
+    const audioSender = pcRef.current?.getSenders().find(s => s.track?.kind === 'audio')
+    const originalTrack = stream?.getAudioTracks()[0]
+
+    voiceModeRef.current = nextMode
+    setVoiceMode(nextMode)
+
+    if (!audioSender || !originalTrack) return
+
+    if (nextMode === 'normal') {
+      audioSender.replaceTrack(originalTrack).catch(err => {
+        console.warn('[Call] Failed to restore microphone track:', err)
+      })
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {})
+        audioCtxRef.current = null
+      }
+      return
+    }
+
+    // The existing processor reads voiceModeRef, so switching between slow
+    // and fast does not require rebuilding the audio graph.
+    if (audioCtxRef.current) return
+
+    const processedTrack = createVoiceEffectTrack(stream)
+    if (processedTrack) {
+      audioSender.replaceTrack(processedTrack).catch(err => {
+        console.warn('[Call] Failed to enable voice effect:', err)
+      })
+    } else {
+      voiceModeRef.current = 'normal'
+      setVoiceMode('normal')
+    }
   }, [])
 
   const startDurationTimer = () => {
@@ -478,6 +506,18 @@ export function useCall(userId: string | undefined) {
     if (element) element.srcObject = remoteStreamRef.current
   }, [])
 
+  const remoteAudioRef = useCallback((element: HTMLAudioElement | null) => {
+    remoteAudioElementRef.current = element
+    if (element) {
+      element.srcObject = remoteStreamRef.current
+      if (remoteStreamRef.current?.getAudioTracks().length) {
+        element.play().catch(err => {
+          console.warn('[Call] Remote audio playback failed:', err)
+        })
+      }
+    }
+  }, [])
+
   return {
     callState,
     callInfo,
@@ -488,6 +528,7 @@ export function useCall(userId: string | undefined) {
     voiceMode,
     localVideoRef,
     remoteVideoRef,
+    remoteAudioRef,
     startCall,
     acceptCall,
     rejectCall,

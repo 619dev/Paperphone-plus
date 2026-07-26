@@ -19,6 +19,8 @@ export default function CallOverlay() {
   // Find peer info
   const peer = friends.find(f => f.id === call.callInfo?.peerId)
   const peerName = peer?.nickname || peer?.username || call.callInfo?.peerId || '?'
+  const showCompactVideoInfo = !!call.callInfo?.isVideo
+    && (call.callState === 'connected' || call.callState === 'connecting')
 
   return (
     <div style={{
@@ -27,9 +29,14 @@ export default function CallOverlay() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       color: '#fff', animation: 'fade-in .3s ease',
     }}>
+      {/* Always render a dedicated player for the remote audio track. Voice
+          calls have no remote video element, and video is muted below to
+          ensure audio is played exactly once. */}
+      <audio ref={call.remoteAudioRef} autoPlay />
+
       {/* Remote video (full screen) */}
       {call.callInfo?.isVideo && (
-        <video ref={call.remoteVideoRef} autoPlay playsInline
+        <video ref={call.remoteVideoRef} autoPlay playsInline muted
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       )}
 
@@ -45,22 +52,44 @@ export default function CallOverlay() {
 
       {/* Call info */}
       <div style={{
-        position: 'relative', zIndex: 5, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: 12,
+        position: showCompactVideoInfo ? 'absolute' : 'relative',
+        ...(showCompactVideoInfo ? {
+          top: 'calc(var(--safe-top) + 12px)',
+          left: 'calc(var(--safe-left) + 16px)',
+          maxWidth: 'calc(100% - var(--safe-left) - var(--safe-right) - 180px)',
+          padding: '8px 12px',
+          borderRadius: 14,
+          background: 'rgba(0,0,0,0.38)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.55)',
+        } : {}),
+        zIndex: 5, display: 'flex', flexDirection: 'column',
+        alignItems: showCompactVideoInfo ? 'flex-start' : 'center',
+        gap: showCompactVideoInfo ? 2 : 12,
       }}>
         {/* Avatar */}
-        <div style={{
-          width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 40, fontWeight: 600, border: '3px solid rgba(255,255,255,0.2)',
-          backdropFilter: 'blur(10px)',
-        }}>
-          {peer?.avatar
-            ? <img src={peer.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-            : (peerName?.[0] || '?')}
-        </div>
+        {!showCompactVideoInfo && (
+          <div style={{
+            width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 40, fontWeight: 600, border: '3px solid rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(10px)',
+          }}>
+            {peer?.avatar
+              ? <img src={peer.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              : (peerName?.[0] || '?')}
+          </div>
+        )}
 
-        <div style={{ fontSize: 22, fontWeight: 600 }}>{peerName}</div>
+        <div style={{
+          fontSize: showCompactVideoInfo ? 16 : 22,
+          fontWeight: 600,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>{peerName}</div>
 
         {/* Status */}
         <div style={{ fontSize: 14, opacity: 0.8 }}>

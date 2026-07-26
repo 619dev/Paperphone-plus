@@ -354,6 +354,19 @@ export default function Chat() {
   const recordVoiceModeRef = useRef<'normal'|'slow'|'fast'>('normal')
   recordVoiceModeRef.current = recordVoiceMode
 
+  const resizeInput = useCallback((element?: HTMLTextAreaElement | null) => {
+    const textarea = element || inputRef.current
+    if (!textarea) return
+    textarea.style.height = 'auto'
+    const nextHeight = Math.min(textarea.scrollHeight, 132)
+    textarea.style.height = `${Math.max(40, nextHeight)}px`
+    textarea.style.overflowY = textarea.scrollHeight > 132 ? 'auto' : 'hidden'
+  }, [])
+
+  useEffect(() => {
+    resizeInput()
+  }, [input, resizeInput])
+
   const friend = friends.find(f => f.id === id)
   const group = groups.find(g => g.id === id)
   const chatName = isGroup ? (group?.name || id) : (friend?.nickname || id)
@@ -1233,7 +1246,7 @@ export default function Chat() {
       {/* ═══ Emoji / Sticker Panel ═══ */}
       {showEmojiPanel && (
         <div style={{
-          position: 'absolute', bottom: 56, left: 0, right: 0,
+          position: 'relative', flexShrink: 0,
           background: 'var(--bg-primary)', borderTop: '1px solid var(--border)',
           display: 'flex', flexDirection: 'column', height: 280, zIndex: 100,
           animation: 'slide-up .2s ease',
@@ -1336,34 +1349,34 @@ export default function Chat() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setShowAttachPanel(false)} />
           <div style={{
-            position: 'absolute', bottom: 56, left: 0, right: 0,
+            position: 'relative', flexShrink: 0,
             background: 'var(--bg-primary)', borderTop: '1px solid var(--border)',
             padding: 16, zIndex: 100, animation: 'slide-up .2s ease',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-around', gap: 12 }}>
+            <div className="chat-attachment-grid">
+              {/* Image */}
+              <button onClick={() => { setShowAttachPanel(false); imageInputRef.current?.click() }}
+                className="chat-attachment-item">
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #56ab2f, #a8e063)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 24, color: '#fff' }}><ImageIcon size={24} /></span>
+                </div>
+                <span>{t('chat.attach_image')}</span>
+              </button>
               {/* Video */}
               <button onClick={() => { setShowAttachPanel(false); videoInputRef.current?.click() }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: 8 }}>
+                className="chat-attachment-item">
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 24, color: '#fff' }}><Film size={24} /></span>
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{t('chat.attach_video')}</span>
+                <span>{t('chat.attach_video')}</span>
               </button>
               {/* File */}
               <button onClick={() => { setShowAttachPanel(false); fileInputRef.current?.click() }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: 8 }}>
+                className="chat-attachment-item">
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #11998e, #38ef7d)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 24, color: '#fff' }}><FileIcon size={24} /></span>
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{t('chat.attach_file')}</span>
-              </button>
-              {/* Voice */}
-              <button onClick={() => { setShowAttachPanel(false); startVoice() }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: 8 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #fc5c7d, #6a82fb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 24, color: '#fff' }}><Mic size={24} /></span>
-                </div>
-                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{t('chat.attach_voice')}</span>
+                <span>{t('chat.attach_file')}</span>
               </button>
             </div>
             <button onClick={() => setShowAttachPanel(false)} style={{
@@ -1377,28 +1390,31 @@ export default function Chat() {
 
       {/* ═══ Input Bar ═══ */}
       <div className="chat-input-bar">
-        <button className="icon-btn" title="Emoji"
-          onClick={() => { setShowEmojiPanel(!showEmojiPanel); setShowAttachPanel(false) }}
-          style={{ color: showEmojiPanel ? 'var(--accent)' : undefined }}><Smile size={20} /></button>
-        <textarea ref={inputRef} id="chat-input" rows={1}
-          placeholder={t('chat.placeholder')} value={input}
-          onChange={e => { setInput(e.target.value); handleTyping() }}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-          onFocus={() => { setShowEmojiPanel(false); setShowAttachPanel(false) }}
-        />
-        {/* Image quick button */}
-        <button className="icon-btn" title={t('chat.attach_image')}
-          onClick={() => imageInputRef.current?.click()}
-          style={{ fontSize: 18 }}><ImageIcon size={16} /></button>
-        {/* More attachments */}
-        <button className="icon-btn" title={t('chat.attach_more')}
-          onClick={() => { setShowAttachPanel(!showAttachPanel); setShowEmojiPanel(false) }}
-          style={{ fontSize: 18, color: showAttachPanel ? 'var(--accent)' : undefined }}><Plus size={16} /></button>
-        {/* Voice recording */}
+        {/* WeChat-style primary row: voice, expanding text, emoji, more/send. */}
         <button className="icon-btn" title={t('chat.attach_voice')}
           onClick={() => isRecording ? stopVoice() : startVoice()}
-          style={{ fontSize: 18, color: isRecording ? '#ef4444' : undefined }}><Mic size={18} /></button>
-        <button className="send-btn" id="send-btn" onClick={() => sendMessage()} disabled={sending}><SendHorizonal size={18} /></button>
+          style={{ color: isRecording ? '#ef4444' : undefined }}><Mic size={22} /></button>
+        <textarea ref={inputRef} id="chat-input" rows={1}
+          placeholder={t('chat.placeholder')} value={input}
+          onChange={e => { setInput(e.target.value); resizeInput(e.currentTarget); handleTyping() }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          onFocus={() => { setShowEmojiPanel(false); setShowAttachPanel(false) }}
+        />
+        <button className="icon-btn" title="Emoji"
+          onClick={() => { setShowEmojiPanel(!showEmojiPanel); setShowAttachPanel(false) }}
+          style={{ color: showEmojiPanel ? 'var(--accent)' : undefined }}><Smile size={22} /></button>
+        {input.trim() ? (
+          <button className="send-btn" id="send-btn" onClick={() => sendMessage()} disabled={sending}><SendHorizonal size={18} /></button>
+        ) : (
+          <button className="icon-btn" title={t('chat.attach_more')}
+            onClick={() => { setShowAttachPanel(!showAttachPanel); setShowEmojiPanel(false) }}
+            style={{ color: showAttachPanel ? 'var(--accent)' : undefined }}><Plus size={22} /></button>
+        )}
       </div>
     </div>
   )
