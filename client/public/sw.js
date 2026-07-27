@@ -1,6 +1,7 @@
 /* PaperPhonePlus Service Worker — push notifications + offline shell */
 const CACHE_NAME = 'paperphoneplus-shell-v2'
 const MEDIA_CACHE_NAME = 'paperphone-media-v2'
+const STICKER_CACHE_NAME = 'paperphone-stickers-v1'
 
 // Install: cache app shell
 self.addEventListener('install', (event) => {
@@ -11,7 +12,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => ![CACHE_NAME, MEDIA_CACHE_NAME].includes(k)).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => ![CACHE_NAME, MEDIA_CACHE_NAME, STICKER_CACHE_NAME].includes(k)).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   )
 })

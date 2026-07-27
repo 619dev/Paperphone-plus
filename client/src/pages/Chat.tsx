@@ -11,8 +11,10 @@ import { encryptHybrid, decryptHybrid } from '../crypto/ratchet'
 import { getMySenderKey, getSenderKey, generateSenderKey, encryptWithSenderKey, decryptWithSenderKey, distributeSenderKey, storeSenderKey, receiveSenderKey, isSenderKeyDistributed, markSenderKeyDistributed, removeSenderKey } from '../crypto/groupCrypto'
 import { Shield } from 'lucide-react'
 import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
-import TgsPlayer from '../components/TgsPlayer'
+import StickerMedia from '../components/StickerMedia'
 import { decodeMessagePayload, encodeMessagePayload, type ReplyReference } from '../utils/messagePayload'
+import { cacheSticker, cacheStickerPack } from '../utils/stickerCache'
+import { readOfflineData, writeOfflineData } from '../utils/offlineCache'
 
 // Auto-delete options (seconds)
 const AUTO_DELETE_OPTIONS = [
@@ -36,6 +38,8 @@ const EMOJI_CATEGORIES = [
 ]
 
 const RECENT_EMOJI_KEY = 'pp_recent_emoji'
+const STICKER_PACKS_CACHE_KEY = 'sticker-packs'
+const STICKER_PACK_CACHE_PREFIX = 'sticker-pack:'
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
@@ -331,9 +335,15 @@ export default function Chat() {
   const [messageMenu, setMessageMenu] = useState<{ reply: ReplyReference; x: number; y: number } | null>(null)
   const [emojiTab, setEmojiTab] = useState<'emoji' | 'sticker'>('emoji')
   const [emojiCat, setEmojiCat] = useState(-1)
-  const [stickerPacks, setStickerPacks] = useState<any[]>([])
+  const [stickerPacks, setStickerPacks] = useState<any[]>(() => readOfflineData(STICKER_PACKS_CACHE_KEY, []))
   const [currentPack, setCurrentPack] = useState(0)
-  const [stickerCache, setStickerCache] = useState<Record<string, any[]>>({})
+  const [stickerCache, setStickerCache] = useState<Record<string, any[]>>(() => {
+    const packs = readOfflineData<any[]>(STICKER_PACKS_CACHE_KEY, [])
+    return Object.fromEntries(packs.map(pack => [
+      pack.name,
+      readOfflineData<any[]>(`${STICKER_PACK_CACHE_PREFIX}${pack.name}`, []),
+    ]).filter(([, stickers]) => stickers.length > 0))
+  })
   const [loadingStickers, setLoadingStickers] = useState(false)
   // Upload progress
   const [uploadProgress, setUploadProgress] = useState(-1) // -1 = hidden
@@ -971,8 +981,12 @@ export default function Chat() {
     if (stickerPacks.length > 0) return
     try {
       const data = await get('/api/stickers/packs')
-      setStickerPacks(data.packs || [])
-    } catch { setStickerPacks([]) }
+      const packs = data.packs || []
+      setStickerPacks(packs)
+      writeOfflineData(STICKER_PACKS_CACHE_KEY, packs)
+    } catch {
+      // Keep the persisted list available offline and during server failures.
+    }
   }, [stickerPacks.length])
 
   const loadStickerPack = useCallback(async (packName: string) => {
@@ -980,9 +994,13 @@ export default function Chat() {
     setLoadingStickers(true)
     try {
       const data = await get(`/api/stickers/pack/${encodeURIComponent(packName)}`)
-      setStickerCache(prev => ({ ...prev, [packName]: data.stickers || [] }))
+      const stickers = data.stickers || []
+      setStickerCache(prev => ({ ...prev, [packName]: stickers }))
+      writeOfflineData(`${STICKER_PACK_CACHE_PREFIX}${packName}`, stickers)
+      void cacheStickerPack(stickers)
     } catch {
-      setStickerCache(prev => ({ ...prev, [packName]: [] }))
+      const persisted = readOfflineData<any[]>(`${STICKER_PACK_CACHE_PREFIX}${packName}`, [])
+      setStickerCache(prev => ({ ...prev, [packName]: persisted }))
     }
     setLoadingStickers(false)
   }, [stickerCache])
@@ -998,20 +1016,13 @@ export default function Chat() {
     }
   }, [stickerPacks, currentPack, emojiTab])
 
-  const sendSticker = (sticker: any) => {
+  const sendSticker = async (sticker: any) => {
     const stickerType = sticker.type || 'static'
-    if (stickerType === 'static') {
-      // Backward compatible: static stickers send plain URL
-      sendMessage(sticker.url, 'sticker', { url: sticker.url })
-    } else {
-      // Animated/video stickers send JSON with type and file_id for proxy
-      const payload = JSON.stringify({
-        url: sticker.url,
-        stickerType,
-        fileId: sticker.file_id || '',
-      })
-      sendMessage(payload, 'sticker', { url: sticker.url })
-    }
+    const fileId = sticker.file_id || ''
+    // Finish the local persistent write before the message leaves the device.
+    if (fileId) await cacheSticker(fileId).catch(() => undefined)
+    const payload = JSON.stringify({ url: sticker.url, stickerType, fileId })
+    sendMessage(payload, 'sticker', { url: sticker.url })
     setShowEmojiPanel(false)
   }
 
@@ -1055,19 +1066,8 @@ export default function Chat() {
         // Plain URL = static sticker (backward compatible)
       }
 
-      if (stickerType === 'animated' && fileId) {
-        return <TgsPlayer src={`/api/stickers/proxy/${fileId}`} width={160} height={160} alt="sticker" />
-      }
-      if (stickerType === 'video') {
-        return (
-          <video
-            src={normalizeFileUrl(stickerUrl)}
-            autoPlay loop muted playsInline
-            style={{ maxWidth: 160, maxHeight: 160, display: 'block', background: 'transparent' }}
-          />
-        )
-      }
-      return <img src={normalizeFileUrl(stickerUrl)} alt="sticker" style={{ maxWidth: 160, maxHeight: 160, display: 'block', background: 'transparent' }} loading="lazy" />
+      return <StickerMedia fileId={fileId} fallbackUrl={normalizeFileUrl(stickerUrl)}
+        type={stickerType} width={160} height={160} alt="sticker" />
     }
     if (msg.msg_type === 'voice') {
       return (
@@ -1441,17 +1441,8 @@ export default function Chat() {
                           style={{ width: 72, height: 72, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, transition: 'background .15s' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                          {sType === 'animated' ? (
-                            <TgsPlayer src={`/api/stickers/proxy/${sticker.file_id}`} width={64} height={64} alt={sticker.emoji || ''} hoverPlay />
-                          ) : sType === 'video' ? (
-                            <video src={sticker.url} autoPlay loop muted playsInline
-                              style={{ maxWidth: 64, maxHeight: 64, objectFit: 'contain' }}
-                              onError={e => { (e.target as HTMLVideoElement).style.display = 'none' }} />
-                          ) : (
-                            <img src={sticker.url} alt={sticker.emoji || ''} loading="lazy"
-                              style={{ maxWidth: 64, maxHeight: 64, objectFit: 'contain' }}
-                              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                          )}
+                          <StickerMedia fileId={sticker.file_id} fallbackUrl={sticker.url}
+                            type={sType} width={64} height={64} alt={sticker.emoji || ''} hoverPlay />
                         </div>
                       )
                     })

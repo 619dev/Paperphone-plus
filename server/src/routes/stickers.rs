@@ -91,35 +91,26 @@ async fn get_pack(
 
     let stickers = body.get("result").and_then(|r| r.get("stickers")).cloned().unwrap_or(serde_json::json!([]));
 
-    // Resolve file URLs
+    // Return stable application URLs. Resolving every sticker to Telegram's
+    // temporary download URL both leaks the bot token and makes old messages
+    // break when that URL expires.
     let mut resolved = Vec::new();
     if let Some(arr) = stickers.as_array() {
         for sticker in arr {
             let file_id = sticker.get("file_id").and_then(|v| v.as_str()).unwrap_or("");
             if file_id.is_empty() { continue; }
 
-            let file_resp = client
-                .get(format!("https://api.telegram.org/bot{}/getFile?file_id={}", token, file_id))
-                .send()
-                .await.ok();
-
-            if let Some(fr) = file_resp {
-                let file_body: serde_json::Value = fr.json().await.unwrap_or_default();
-                if let Some(path) = file_body.pointer("/result/file_path").and_then(|v| v.as_str()) {
-                    let url = format!("https://api.telegram.org/file/bot{}/{}", token, path);
-                    let is_animated = sticker.get("is_animated").and_then(|v| v.as_bool()).unwrap_or(false);
-                    let is_video = sticker.get("is_video").and_then(|v| v.as_bool()).unwrap_or(false);
-                    let sticker_type = if is_video { "video" } else if is_animated { "animated" } else { "static" };
-                    resolved.push(serde_json::json!({
-                        "file_id": file_id,
-                        "url": url,
-                        "emoji": sticker.get("emoji"),
-                        "is_animated": is_animated,
-                        "is_video": is_video,
-                        "type": sticker_type,
-                    }));
-                }
-            }
+            let is_animated = sticker.get("is_animated").and_then(|v| v.as_bool()).unwrap_or(false);
+            let is_video = sticker.get("is_video").and_then(|v| v.as_bool()).unwrap_or(false);
+            let sticker_type = if is_video { "video" } else if is_animated { "animated" } else { "static" };
+            resolved.push(serde_json::json!({
+                "file_id": file_id,
+                "url": format!("/api/stickers/proxy/{}", file_id),
+                "emoji": sticker.get("emoji"),
+                "is_animated": is_animated,
+                "is_video": is_video,
+                "type": sticker_type,
+            }));
         }
     }
 
@@ -177,10 +168,11 @@ async fn proxy_file(
         axum::http::StatusCode::OK,
         [
             (axum::http::header::CONTENT_TYPE, content_type),
-            (axum::http::header::CACHE_CONTROL, "public, max-age=86400".to_string()),
+            // Telegram file_id values are stable. Clients persist this response
+            // indefinitely and no longer depend on Telegram's temporary file URL.
+            (axum::http::header::CACHE_CONTROL, "private, max-age=31536000, immutable".to_string()),
             (axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*".to_string()),
         ],
         bytes,
     ))
 }
-

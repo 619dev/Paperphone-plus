@@ -1,5 +1,6 @@
 const DATA_PREFIX = 'pp_offline_data:'
 export const MEDIA_CACHE_NAME = 'paperphone-media-v2'
+const STICKER_CACHE_NAME = 'paperphone-stickers-v1'
 
 function accountId(): string {
   try {
@@ -74,6 +75,6 @@ export async function clearOfflineCache(): Promise<void> {
 
   if ('caches' in window) {
     const names = await caches.keys()
-    await Promise.all(names.filter(name => name === MEDIA_CACHE_NAME).map(name => caches.delete(name)))
+    await Promise.all(names.filter(name => name === MEDIA_CACHE_NAME || name === STICKER_CACHE_NAME).map(name => caches.delete(name)))
   }
 }
