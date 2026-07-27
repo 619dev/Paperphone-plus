@@ -45,6 +45,8 @@ export const zh: Record<string, string> = {
   // Chat
   'chat.typing': '正在输入...',
   'chat.placeholder': '输入消息...',
+  'chat.reply': '引用',
+  'chat.replying_to': '回复',
   'chat.send': '发送',
   'chat.encrypted': '消息已端到端加密',
   'chat.no_recent_emoji': '没有最近使用的表情',

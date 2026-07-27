@@ -2,7 +2,7 @@
 
 WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Poly1305 메시지별 암호화, 실시간 영상 통화, Cloudflare R2 파일 저장, 다국어 지원 및 iOS PWA 배포 지원.
 
-[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20%2B%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
@@ -43,7 +43,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 |------|------|
 | 🔐 종단간 암호화 | 무상태 ECDH + XSalsa20-Poly1305 — 메시지별 임시 키 생성, 순방향 비밀성, Signal 방식 안전 번호 검증 |
 | 🗝️ 제로 지식 서버 | 서버에는 암호문만 저장됩니다. 개인 키는 절대 기기 밖으로 유출되지 않습니다 |
-| 📹 영상 및 음성 회의 | WebRTC P2P (1:1) + LiveKit SFU (최대 100명), 전체 음소거 및 강의 모드 |
+| 📹 영상 및 음성 통화 | 1:1 통화와 회의 모두 LiveKit SFU 사용 (최대 100명), 전체 음소거 및 강의 모드 |
 | 🎙️ 음성 변조 | 음성 메시지, 1:1 통화, 그룹 통화에서 실시간 음성 효과 — 3가지 모드 (0.8x 저음 / 1.0x 일반 / 1.2x 고음), Web Audio API 기반 |
 | 📱 세션 유지 | 네트워크 끊김, 일반 인증 오류, 서버 URL 변경 시에도 로컬 로그인 상태를 유지하며 서버가 명시적으로 세션을 취소할 때만 로그아웃 |
 | 📴 오프라인 접근 | 계정별로 연락처, 그룹, 대화당 최대 2,000개 메시지, 모먼트, 타임라인 및 미디어를 캐시하며 프로필에서 직접 삭제 가능 |
@@ -104,7 +104,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 ### 옵션 0: Zeabur 원클릭 클라우드 배포
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-> **Zeabur 회의 네트워크 제한:** 템플릿은 WebSocket/API 7880과 ICE/TCP 7881로 LiveKit을 배포합니다. 현재 Zeabur는 UDP 서비스 포트를 노출하지 않으므로 회의는 TCP 폴백을 사용하며 약한 네트워크에서 지연이나 품질 저하가 발생할 수 있습니다. UDP 7882 설정은 미리 준비되어 있습니다. 현재 프로덕션 100인 회의에는 LiveKit Cloud 또는 UDP를 지원하는 VM을 사용하십시오.
+> **Zeabur 통화 네트워크 제한:** 템플릿은 WebSocket/API 7880과 ICE/TCP 7881로 LiveKit을 배포합니다. 현재 Zeabur는 UDP 서비스 포트를 노출하지 않으므로 1:1 통화와 회의는 TCP 폴백을 사용합니다. 프로덕션 통화에는 LiveKit Cloud 또는 UDP를 지원하는 VM을 사용하십시오.
 
 #### 서버 Nginx 구성
 
@@ -120,7 +120,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 ```bash
 git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
-# 편집: DB_PASS / JWT_SECRET / CF_CALLS_APP_ID 등
+# 편집: DB_PASS / JWT_SECRET / LIVEKIT_URL 등
 docker compose up -d
 open http://localhost
 ```
@@ -159,7 +159,7 @@ cd client && npm install && npm run dev
 **작동 원리**: Web Audio API를 사용하여 오디오 처리 체인 (AudioContext → MediaStreamSource → ScriptProcessorNode → MediaStreamDestination)을 구축하고 마이크 입력의 피치/속도를 실시간으로 조정합니다.
 
 - **음성 메시지**: 녹음 중 음성 모드를 선택합니다. 내보내진 `.webm` 파일에는 이미 음성 효과가 포함되어 있어 수신자가 원래 음성을 복원할 수 없으며, 진정한 익명 메시지가 가능합니다
-- **1:1 / 그룹 통화**: 통화 중 음성 변조 버튼을 탭하여 모드를 순환합니다. 처리된 오디오 트랙이 `RTCRtpSender.replaceTrack()`을 통해 원래 트랙을 대체합니다
+- **1:1 / 그룹 통화**: 통화 중 음성 변조 버튼을 탭하여 모드를 순환합니다. 처리된 오디오 트랙이 `LiveKit LocalAudioTrack.replaceTrack()`을 통해 원래 트랙을 대체합니다
 
 > 서버 측 설정이 필요 없습니다. 음성 변조는 전적으로 클라이언트 측에서 실행됩니다.
 
@@ -177,9 +177,9 @@ cd client && npm install && npm run dev
 | `R2_SECRET_ACCESS_KEY` | R2 API 토큰 시크릿 키 | — |
 | `R2_BUCKET` | R2 버킷 이름 | — |
 | `R2_PUBLIC_URL` | R2 공개 기본 URL (선택 사항) | — |
-| `CF_CALLS_APP_ID` | Cloudflare Calls App ID (선택 사항) | — |
-| `CF_CALLS_APP_SECRET` | Cloudflare Calls App Secret (선택 사항) | — |
-| `METERED_TURN_API_KEY` | Metered.ca TURN API Key (선택 사항, 무료 대안) | — |
+| `LIVEKIT_URL` | 모든 통화에 사용하는 공개 LiveKit WebSocket URL | — |
+| `LIVEKIT_API_KEY` | 서버와 LiveKit이 공유하는 API Key | — |
+| `LIVEKIT_API_SECRET` | 서버와 LiveKit이 공유하는 API Secret | — |
 | `VAPID_PUBLIC_KEY` | Web Push VAPID 공개 키 (선택 사항) | — |
 | `VAPID_PRIVATE_KEY` | Web Push VAPID 개인 키 (선택 사항) | — |
 | `VAPID_SUBJECT` | VAPID 연락처 이메일 (선택 사항) | `mailto:admin@paperphoneplus.app` |

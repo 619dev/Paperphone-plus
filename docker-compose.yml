@@ -35,8 +35,6 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_BUCKET: ${R2_BUCKET:-}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
-      CF_CALLS_APP_ID: ${CF_CALLS_APP_ID:-}
-      CF_CALLS_APP_SECRET: ${CF_CALLS_APP_SECRET:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
@@ -51,8 +49,7 @@ services:
       ONESIGNAL_RELAY_SECRET: ${ONESIGNAL_RELAY_SECRET:-}
       ONESIGNAL_RELAY_URL: ${ONESIGNAL_RELAY_URL:-}
       ONESIGNAL_RELAY_KEY: ${ONESIGNAL_RELAY_KEY:-}
-      METERED_TURN_API_KEY: ${METERED_TURN_API_KEY:-}
-      # Must be reachable by browsers; set wss://meeting.example.com in production.
+      # Required for all direct calls and group meetings. Must be reachable by clients.
       LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-paperphone}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-paperphone_change_this_secret}
@@ -83,7 +80,7 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # SFU media server: one WebRTC connection per device, suitable for 100-person meetings.
+  # SFU media server for all direct calls and group meetings.
   livekit:
     container_name: paperphone-livekit
     image: livekit/livekit-server:v1.9.6

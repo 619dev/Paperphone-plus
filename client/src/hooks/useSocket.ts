@@ -9,6 +9,7 @@ import { decryptHybrid } from '../crypto/ratchet'
 import { getSenderKey, storeSenderKey, clearGroupSenderKeys, clearAllSenderKeys, receiveSenderKey, removeSenderKey } from '../crypto/groupCrypto'
 import { decryptWithSenderKey } from '../crypto/groupCrypto'
 import { get } from '../api/http'
+import { decodeMessagePayload } from '../utils/messagePayload'
 
 /**
  * Try to fetch and store sender keys from the server for a given group.
@@ -194,7 +195,7 @@ export function useSocket() {
             preview = getMessagePreview(data.msg_type, getI18nT())
           } else {
             // For text: show decrypted if available, else ciphertext preview
-            const text = msgToAdd.decrypted || data.ciphertext || ''
+            const text = decodeMessagePayload(msgToAdd.decrypted || data.ciphertext || '').body
             preview = text.length > 50 ? text.substring(0, 50) + '...' : text
           }
 

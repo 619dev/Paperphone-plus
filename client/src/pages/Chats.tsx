@@ -4,6 +4,7 @@ import { get } from '../api/http'
 import { useStore, Friend, Group } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { MessageCircle, Users } from 'lucide-react'
+import { decodeMessagePayload } from '../utils/messagePayload'
 
 export default function Chats() {
   const { t } = useI18n()
@@ -69,7 +70,7 @@ export default function Chats() {
       case 'voice': return t('chats.voice')
       case 'video': return t('chats.video')
       case 'sticker': return t('chats.sticker')
-      default: return msg.decrypted || msg.ciphertext?.substring(0, 30) || ''
+      default: return decodeMessagePayload(msg.decrypted || msg.ciphertext || '').body.substring(0, 30)
     }
   }
 

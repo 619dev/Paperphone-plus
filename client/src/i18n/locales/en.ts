@@ -41,6 +41,8 @@ export const en: Record<string, string> = {
 
   'chat.typing': 'typing...',
   'chat.placeholder': 'Type a message...',
+  'chat.reply': 'Reply',
+  'chat.replying_to': 'Replying to',
   'chat.send': 'Send',
   'chat.encrypted': 'Messages are end-to-end encrypted',
   'chat.no_recent_emoji': 'No recent emojis',

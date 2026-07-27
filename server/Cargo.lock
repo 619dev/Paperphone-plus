@@ -3010,7 +3010,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "paperphoneplus-server"
+name = "paperphone-plus-server"
 version = "1.0.0"
 dependencies = [
  "argon2",

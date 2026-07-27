@@ -329,7 +329,9 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
         }
 
         // ── CALL SIGNALING ───────────────────────────────────────
-        let call_types = ["call_offer", "call_answer", "call_reject", "call_cancel", "call_end", "ice_candidate", "call_invite"];
+        // Direct-call WebSocket messages only control ringing and lifecycle.
+        // LiveKit handles media transport and ICE negotiation.
+        let call_types = ["call_offer", "call_answer", "call_reject", "call_cancel", "call_end", "call_invite"];
         if call_types.contains(&msg_type) {
             let mut envelope = parsed.clone();
             envelope["from"] = serde_json::json!(uid);
@@ -377,6 +379,16 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                     let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
                         .arg(format!("pending_call:{}", uid))
                         .query_async(&mut *conn).await;
+                }
+            }
+            // Once the callee answers, its stored offer must not be replayed
+            // if the app reconnects during the same call.
+            if msg_type == "call_answer" {
+                if let Ok(mut conn) = state.redis.get().await {
+                    let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
+                        .arg(format!("pending_call:{}", uid))
+                        .query_async(&mut *conn)
+                        .await;
                 }
             }
 

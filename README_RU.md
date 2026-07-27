@@ -2,7 +2,7 @@
 
 Мессенджер со сквозным шифрованием в стиле WeChat. Бессостоянный ECDH + XSalsa20-Poly1305 шифрование для каждого сообщения, видеозвонки в реальном времени, хранение файлов Cloudflare R2, поддержка нескольких языков и развёртывание iOS PWA.
 
-[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20%2B%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
@@ -43,7 +43,7 @@
 |---------|----------|
 | 🔐 Сквозное шифрование | Бессостоянный ECDH + XSalsa20-Poly1305 — эфемерные ключи для каждого сообщения, прямая секретность, верификация номера безопасности в стиле Signal |
 | 🗝️ Сервер с нулевым знанием | Сервер хранит только зашифрованный текст; приватные ключи никогда не покидают устройство |
-| 📹 Видео- и аудиоконференции | WebRTC P2P (1:1) + LiveKit SFU (до 100 участников), отключение микрофонов и режим лекции |
+| 📹 Видео- и аудиозвонки | LiveKit SFU для звонков 1:1 и конференций (до 100 участников), отключение микрофонов и режим лекции |
 | 🎙️ Изменение голоса | Эффекты голоса в реальном времени для голосовых сообщений, звонков 1:1 и групповых звонков — 3 режима (0.8x низкий / 1.0x обычный / 1.2x высокий), на основе Web Audio API |
 | 📱 Сохранение сеанса | Сохраняет локальный вход при потере сети, обычных ошибках авторизации и изменении URL сервера; выход выполняется только после явного отзыва сеанса сервером |
 | 📴 Офлайн-доступ | Изолированный по аккаунтам кэш контактов, групп, до 2 000 сообщений на диалог, Моментов, Ленты и медиа; ручная очистка доступна в профиле |
@@ -104,7 +104,7 @@
 ### Вариант 0: Zeabur — облачное развёртывание в один клик
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-> **Сетевое ограничение Zeabur:** шаблон развёртывает LiveKit через WebSocket/API 7880 и ICE/TCP 7881. Сейчас Zeabur не предоставляет UDP-порты сервисов, поэтому конференции используют TCP и могут иметь большую задержку в слабых сетях. UDP 7882 уже предусмотрен в конфигурации. Для производственных конференций на 100 участников используйте LiveKit Cloud или виртуальную машину с поддержкой UDP.
+> **Сетевое ограничение Zeabur:** шаблон развёртывает LiveKit через WebSocket/API 7880 и ICE/TCP 7881. Сейчас Zeabur не предоставляет UDP-порты сервисов, поэтому звонки 1:1 и конференции используют TCP. Для производственных звонков используйте LiveKit Cloud или виртуальную машину с поддержкой UDP.
 
 #### Настройка Nginx на сервере
 
@@ -120,7 +120,7 @@
 ```bash
 git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
-# Отредактируйте: DB_PASS / JWT_SECRET / CF_CALLS_APP_ID и т.д.
+# Отредактируйте: DB_PASS / JWT_SECRET / LIVEKIT_URL и т.д.
 docker compose up -d
 open http://localhost
 ```
@@ -159,7 +159,7 @@ cd client && npm install && npm run dev
 **Как это работает**: Используется Web Audio API для построения цепочки обработки звука (AudioContext → MediaStreamSource → ScriptProcessorNode → MediaStreamDestination), которая регулирует высоту тона/скорость микрофонного ввода в реальном времени.
 
 - **Голосовые сообщения**: Выберите режим голоса во время записи. Экспортированный файл `.webm` уже содержит голосовой эффект — получатели не могут восстановить оригинальный голос, что обеспечивает настоящую анонимную переписку
-- **Звонки 1:1 / групповые**: Нажмите кнопку изменения голоса во время звонка для переключения между режимами. Обработанная аудиодорожка заменяет оригинальную через `RTCRtpSender.replaceTrack()`
+- **Звонки 1:1 / групповые**: Нажмите кнопку изменения голоса во время звонка для переключения между режимами. Обработанная аудиодорожка заменяет оригинальную через `LiveKit LocalAudioTrack.replaceTrack()`
 
 > Серверная настройка не требуется. Изменение голоса работает полностью на стороне клиента.
 
@@ -177,9 +177,9 @@ cd client && npm install && npm run dev
 | `R2_SECRET_ACCESS_KEY` | Секретный ключ API-токена R2 | — |
 | `R2_BUCKET` | Название бакета R2 | — |
 | `R2_PUBLIC_URL` | Публичный базовый URL R2 (опционально) | — |
-| `CF_CALLS_APP_ID` | Cloudflare Calls App ID (опционально) | — |
-| `CF_CALLS_APP_SECRET` | Cloudflare Calls App Secret (опционально) | — |
-| `METERED_TURN_API_KEY` | API-ключ Metered.ca TURN (опционально, бесплатная альтернатива) | — |
+| `LIVEKIT_URL` | Публичный WebSocket URL LiveKit для всех звонков | — |
+| `LIVEKIT_API_KEY` | API Key, общий для сервера и LiveKit | — |
+| `LIVEKIT_API_SECRET` | API Secret, общий для сервера и LiveKit | — |
 | `VAPID_PUBLIC_KEY` | Публичный ключ Web Push VAPID (опционально) | — |
 | `VAPID_PRIVATE_KEY` | Приватный ключ Web Push VAPID (опционально) | — |
 | `VAPID_SUBJECT` | Контактный email VAPID (опционально) | `mailto:admin@paperphoneplus.app` |

@@ -8,7 +8,7 @@ spec:
   description: >-
     A WeChat-style, end-to-end encrypted IM app built with React + Rust (Axum),
     featuring stateless ECDH E2EE, group E2E encryption (Signal-style Sender Keys),
-    WebRTC 1:1 calls and LiveKit SFU meetings for up to 100 participants, real-time voice changer,
+    LiveKit SFU voice/video calls (1:1 and meetings up to 100 participants), real-time voice changer,
     SOCKS5/HTTP/HTTPS proxy support, Cloudflare R2 file storage, 8-language i18n, and iOS PWA support — fully self-hostable.
   icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
   tags:
@@ -28,7 +28,7 @@ spec:
     - **Four-tier key persistence** — memory → localStorage → sessionStorage → IndexedDB, survives WebView restarts
 
     ## Features
-    - 📹 **Video & Voice Calls** — WebRTC P2P (1:1) + LiveKit SFU meetings (up to 100 participants, host mute-all and lecture mode)
+    - 📹 **Video & Voice Calls** — LiveKit SFU for both 1:1 calls and meetings (up to 100 participants, host mute-all and lecture mode)
     - 🎙️ **Voice Changer** — real-time voice effects for voice messages, 1:1 calls & group calls with 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API
     - 📱 **Session Persistence** — keeps the local login through transient failures and signs out only on an explicit server revocation
     - 📴 **Offline Access** — account-isolated contacts, groups, chats, Moments, Timeline, and media cache with manual clearing
@@ -57,16 +57,15 @@ spec:
     1. Open the domain assigned to the **client** service.
     2. Register an account — cryptographic keys are generated locally on your device.
     3. (Optional) Configure Cloudflare R2 for image/voice/video uploads — set `R2_*` variables on the **server** service.
-    4. (Optional) Configure Cloudflare TURN for cross-network video calls — set `CF_CALLS_APP_ID` and `CF_CALLS_APP_SECRET`.
-    5. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push, `FCM_*` for native Android (Capacitor), `APNS_*` for native iOS.
-    6. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
-    7. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
+    4. (Optional) Enable push notifications — set `VAPID_*` variables for Web Push, `FCM_*` for native Android (Capacitor), `APNS_*` for native iOS.
+    5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
+    6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
 
     MySQL is started with `utf8mb4` and `utf8mb4_unicode_ci`. The server also checks existing searchable user columns during startup and migrates incompatible character sets when needed.
 
-    ## Group meetings on Zeabur
+    ## LiveKit calls on Zeabur
     This template deploys a LiveKit service with WebSocket/API (7880) and ICE/TCP
-    fallback (7881). Zeabur currently does not expose UDP service ports, so meetings
+    fallback (7881). Zeabur currently does not expose UDP service ports, so calls
     can connect over TCP but may have higher latency or reduced quality on weak networks.
     The template keeps the LiveKit configuration ready for UDP 7882; expose it when
     Zeabur adds UDP support. For production-quality 100-person meetings today, use
@@ -144,21 +143,6 @@ spec:
       type: STRING
       name: Redis Password
       description: A strong password shared by Redis, PaperPhone server, and LiveKit.
-
-    - key: CF_CALLS_APP_ID
-      type: STRING
-      name: Cloudflare Calls App ID (optional)
-      description: >-
-        Required only for cross-network WebRTC video/voice calls. Obtain from
-        Cloudflare Dashboard → Calls → your App. Leave blank to use STUN only
-        (LAN calls work without this).
-
-    - key: CF_CALLS_APP_SECRET
-      type: STRING
-      name: Cloudflare Calls App Secret (optional)
-      description: >-
-        The Bearer token / App Secret paired with CF_CALLS_APP_ID above.
-        Leave blank if you are not using Cloudflare TURN.
 
     - key: VAPID_PUBLIC_KEY
       type: STRING
@@ -273,14 +257,6 @@ spec:
       description: >-
         For self-hosted servers only. The shared secret to authenticate
         with the push relay. Must match the relay server's FCM_RELAY_SECRET.
-
-    - key: METERED_TURN_API_KEY
-      type: STRING
-      name: Metered.ca TURN API Key (optional)
-      description: >-
-        API key for Metered.ca TURN service (free tier). Alternative to
-        Cloudflare TURN for NAT traversal in video/voice calls.
-        Leave blank to skip Metered.ca (falls back to STUN only).
 
     - key: NTFY_BASE_URL
       type: STRING
@@ -468,7 +444,7 @@ spec:
           - title: Redis Connection String
             content: redis://:${REDIS_PASS}@${PORT_FORWARDED_HOSTNAME}:${DATABASE_PORT_FORWARDED_PORT}
 
-    # LiveKit SFU. Zeabur currently exposes TCP only. rtc.udp_port remains configured
+    # LiveKit SFU for direct calls and meetings. Zeabur currently exposes TCP only. rtc.udp_port remains configured
     # so a future template revision can add an UDP 7882 port without changing clients.
     - name: LiveKit
       icon: https://raw.githubusercontent.com/livekit/livekit/master/favicon.svg
@@ -551,10 +527,6 @@ spec:
             default: ${R2_BUCKET}
           R2_PUBLIC_URL:
             default: ${R2_PUBLIC_URL}
-          CF_CALLS_APP_ID:
-            default: ${CF_CALLS_APP_ID}
-          CF_CALLS_APP_SECRET:
-            default: ${CF_CALLS_APP_SECRET}
           VAPID_PUBLIC_KEY:
             default: ${VAPID_PUBLIC_KEY}
           VAPID_PRIVATE_KEY:
@@ -583,8 +555,6 @@ spec:
             default: ${FCM_RELAY_URL}
           FCM_RELAY_KEY:
             default: ${FCM_RELAY_KEY}
-          METERED_TURN_API_KEY:
-            default: ${METERED_TURN_API_KEY}
           LIVEKIT_URL:
             default: wss://${LIVEKIT_DOMAIN}
           LIVEKIT_API_KEY:
@@ -645,7 +615,7 @@ localization:
   zh-CN:
     description: >-
       微信风格的端对端加密即时通讯 App（React + Rust），支持无状态 ECDH 加密、群聊 Sender Key 端到端加密、
-      WebRTC 单聊与 LiveKit SFU 百人会议、实时变声、SOCKS5/HTTP/HTTPS 代理、Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
+      LiveKit SFU 单聊与百人会议、实时变声、SOCKS5/HTTP/HTTPS 代理、Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
     readme: |-
       # PaperPhonePlus
 
@@ -659,7 +629,7 @@ localization:
       - **四层密钥持久化** — 内存 → localStorage → sessionStorage → IndexedDB，Android WebView 重启后仍可恢复
 
       ## 功能亮点
-      - 📹 **视频/语音通话** — WebRTC P2P（1:1）+ LiveKit SFU 会议（最多 100 人，支持主席全员静音和讲课模式）
+      - 📹 **视频/语音通话** — 1:1 私聊和群会议统一使用 LiveKit SFU（最多 100 人，支持主席全员静音和讲课模式）
       - 🎙️ **变声功能** — 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链
       - 📱 **会话保持** — 临时网络或鉴权故障时保留本地登录状态，仅在服务端明确撤销会话时退出
       - 📴 **离线访问** — 按账户隔离缓存联系人、群组、聊天记录、朋友圈、时间线和媒体，并支持手动清理
@@ -688,16 +658,15 @@ localization:
       1. 打开分配给 **client** 服务的域名。
       2. 注册账号 — 密钥在本地设备生成。
       3. （可选）在 **server** 服务设置 `R2_*` 变量，启用图片/语音/视频上传功能。
-      4. （可选）配置 Cloudflare TURN 以支持跨公网视频通话。
-      5. （可选）设置 `VAPID_*` 变量启用浏览器推送通知，`FCM_*` 启用原生 Android 推送（Capacitor），`APNS_*` 启用 iOS 原生推送。
-      6. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
-      7. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
+      4. （可选）设置 `VAPID_*` 变量启用浏览器推送通知，`FCM_*` 启用原生 Android 推送（Capacitor），`APNS_*` 启用 iOS 原生推送。
+      5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
+      6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
 
       MySQL 已使用 `utf8mb4` 和 `utf8mb4_unicode_ci` 启动；server 启动时也会检查现有用户搜索字段，并按需迁移不兼容字符集。
 
-      ## Zeabur 群会议说明
+      ## Zeabur LiveKit 通话说明
       本模板会部署 LiveKit 的 WebSocket/API（7880）和 ICE/TCP 回退端口（7881）。
-      Zeabur 当前不支持对外暴露 UDP 服务端口，因此会议可以通过 TCP 连接，但弱网下延迟和画质可能不如 UDP。
+      Zeabur 当前不支持对外暴露 UDP 服务端口，因此私聊和群会议可以通过 TCP 连接，但弱网下延迟和画质可能不如 UDP。
       模板已保留 UDP 7882 配置，待 Zeabur 支持 UDP 后即可开放。当前如需生产级百人会议，建议使用
       LiveKit Cloud，或把 LiveKit 部署到可开放 UDP 7882 的云主机，再修改 server 的 `LIVEKIT_URL`。
 

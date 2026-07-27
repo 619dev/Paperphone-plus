@@ -12,6 +12,7 @@ import { getMySenderKey, getSenderKey, generateSenderKey, encryptWithSenderKey, 
 import { Shield } from 'lucide-react'
 import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
 import TgsPlayer from '../components/TgsPlayer'
+import { decodeMessagePayload, encodeMessagePayload, type ReplyReference } from '../utils/messagePayload'
 
 // Auto-delete options (seconds)
 const AUTO_DELETE_OPTIONS = [
@@ -326,6 +327,8 @@ export default function Chat() {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false)
   const [viewingImage, setViewingImage] = useState<string | null>(null)
   const [showAttachPanel, setShowAttachPanel] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<ReplyReference | null>(null)
+  const [messageMenu, setMessageMenu] = useState<{ reply: ReplyReference; x: number; y: number } | null>(null)
   const [emojiTab, setEmojiTab] = useState<'emoji' | 'sticker'>('emoji')
   const [emojiCat, setEmojiCat] = useState(-1)
   const [stickerPacks, setStickerPacks] = useState<any[]>([])
@@ -352,6 +355,9 @@ export default function Chat() {
   const recIntervalRef = useRef<any>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordVoiceModeRef = useRef<'normal'|'slow'|'fast'>('normal')
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressOriginRef = useRef<{ x: number; y: number } | null>(null)
+  const suppressMessageClickRef = useRef(false)
   recordVoiceModeRef.current = recordVoiceMode
 
   const resizeInput = useCallback((element?: HTMLTextAreaElement | null) => {
@@ -372,6 +378,84 @@ export default function Chat() {
   const chatName = isGroup ? (group?.name || id) : (friend?.nickname || id)
   const isOwner = isGroup && group?.owner_id === user?.id
   const currentAutoDelete = isGroup ? (group?.auto_delete ?? 0) : (friend?.auto_delete ?? 0)
+
+  const messagePreview = useCallback((msgType: string, body: string) => {
+    if (msgType === 'text') return body.replace(/\s+/g, ' ').trim().slice(0, 100)
+    const keys: Record<string, string> = {
+      image: 'notification.image',
+      voice: 'notification.voice',
+      file: 'notification.file',
+      video: 'notification.video',
+      sticker: 'notification.sticker',
+    }
+    return keys[msgType] ? t(keys[msgType]) : `[${msgType}]`
+  }, [t])
+
+  const buildReplyReference = useCallback((msg: any, displayText: string): ReplyReference => {
+    const payload = decodeMessagePayload(displayText)
+    const isMe = msg.from === user?.id
+    const senderName = isMe
+      ? (user?.nickname || user?.username || t('common.me'))
+      : (msg.from_nickname || friend?.nickname || friend?.username || msg.from)
+    return {
+      id: msg.id,
+      senderId: msg.from,
+      senderName,
+      msgType: msg.msg_type || 'text',
+      preview: messagePreview(msg.msg_type || 'text', payload.body),
+    }
+  }, [friend, messagePreview, t, user])
+
+  const openMessageMenu = useCallback((reply: ReplyReference, x: number, y: number) => {
+    const menuWidth = 132
+    const menuHeight = 52
+    setMessageMenu({
+      reply,
+      x: Math.max(12, Math.min(x, window.innerWidth - menuWidth - 12)),
+      y: Math.max(12, Math.min(y, window.innerHeight - menuHeight - 12)),
+    })
+  }, [])
+
+  const startMessageLongPress = useCallback((event: React.TouchEvent, reply: ReplyReference) => {
+    const touch = event.touches[0]
+    if (!touch) return
+    longPressOriginRef.current = { x: touch.clientX, y: touch.clientY }
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+    longPressTimerRef.current = setTimeout(() => {
+      suppressMessageClickRef.current = true
+      openMessageMenu(reply, touch.clientX, touch.clientY)
+      if (navigator.vibrate) navigator.vibrate(20)
+      setTimeout(() => { suppressMessageClickRef.current = false }, 700)
+    }, 500)
+  }, [openMessageMenu])
+
+  const cancelMessageLongPress = useCallback(() => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+    longPressTimerRef.current = null
+    longPressOriginRef.current = null
+  }, [])
+
+  const moveMessageLongPress = useCallback((event: React.TouchEvent) => {
+    const touch = event.touches[0]
+    const origin = longPressOriginRef.current
+    if (!touch || !origin) return
+    if (Math.hypot(touch.clientX - origin.x, touch.clientY - origin.y) > 10) {
+      cancelMessageLongPress()
+    }
+  }, [cancelMessageLongPress])
+
+  useEffect(() => {
+    setReplyingTo(null)
+    setMessageMenu(null)
+    return cancelMessageLongPress
+  }, [cancelMessageLongPress, id])
+
+  const scrollToQuotedMessage = useCallback((messageId: string) => {
+    document.getElementById(`message-${messageId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }, [])
 
   // ── Recent emoji helpers ──
   const getRecentEmojis = (): string[] => {
@@ -537,6 +621,8 @@ export default function Chat() {
     const content = text || input.trim()
     if (msgType === 'text' && !content) return
     if (!id || !user || sending) return
+    const reply = replyingTo
+    const wireContent = encodeMessagePayload(content, reply)
     setSending(true)
     try {
       if (msgType === 'text') setInput('')
@@ -547,8 +633,8 @@ export default function Chat() {
       const pendingMsg: any = {
         from: user.id,
         msg_type: msgType,
-        decrypted: content,
-        ciphertext: (isGroup && group?.encrypted) ? '' : content,
+        decrypted: wireContent,
+        ciphertext: (isGroup && group?.encrypted) ? '' : wireContent,
       }
       if (isGroup) {
         pendingMsg.group_id = id
@@ -624,11 +710,11 @@ export default function Chat() {
               } else {
                 // Distribution failed — send unencrypted as fallback
                 console.warn('[Chat] Sender key distribution failed, sending unencrypted')
-                sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: content })
+                sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: wireContent })
               }
             }
             if (sk && !sent) {
-              const encrypted = await encryptWithSenderKey(content, sk.senderKey)
+              const encrypted = await encryptWithSenderKey(wireContent, sk.senderKey)
               // Update pendingMsg with actual encryption metadata so the ack handler
               // stores the message with correct encrypted fields (matching server data).
               // This ensures consistency when messages are later loaded from server.
@@ -639,21 +725,21 @@ export default function Chat() {
             }
           } catch (encErr) {
             console.warn('[Chat] Group encryption failed:', encErr)
-            sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: content })
+            sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: wireContent })
           }
         } else {
-          sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: content })
+          sent = sendWs({ type: 'message', msg_type: msgType, group_id: id, ciphertext: wireContent })
         }
       } else {
         const keys = getKeys()
         const recipientPub = friend?.ik_pub
         const recipientKem = friend?.kem_pub
         if (!recipientPub || !keys) {
-          sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: content })
+          sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: wireContent })
         } else {
           try {
-            const forRecipient = await encryptHybrid(recipientPub, recipientKem, content)
-            const forSelf = await encryptHybrid(keys.ik_pub, null, content)
+            const forRecipient = await encryptHybrid(recipientPub, recipientKem, wireContent)
+            const forSelf = await encryptHybrid(keys.ik_pub, null, wireContent)
             sent = sendWs({
               type: 'message', msg_type: msgType, to: id,
               ciphertext: forRecipient.ciphertext, header: forRecipient.header,
@@ -661,7 +747,7 @@ export default function Chat() {
             })
           } catch (encErr) {
             console.warn('[Chat] Encryption failed, sending unencrypted:', encErr)
-            sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: content })
+            sent = sendWs({ type: 'message', msg_type: msgType, to: id, ciphertext: wireContent })
           }
         }
       }
@@ -670,6 +756,8 @@ export default function Chat() {
         ;(window as any).__pendingMsg = null
         if (msgType === 'text' && content) setInput(content)
         alert(t('chat.ws_disconnected') || 'Connection lost. Please check your network and try again.')
+      } else {
+        setReplyingTo(null)
       }
     } catch (err) {
       console.error('[Chat] sendMessage error:', err)
@@ -1203,11 +1291,35 @@ export default function Chat() {
       <div className="chat-messages">
         {messages.map((msg, i) => {
           const isMe = msg.from === user?.id
-          const displayText = msg.decrypted || msg.ciphertext
+          const rawDisplayText = msg.decrypted || msg.ciphertext
+          const payload = decodeMessagePayload(rawDisplayText)
+          const displayText = payload.body
           const isEncFailed = !isGroup && !msg.decrypted && msg.header
           const isSticker = msg.msg_type === 'sticker'
+          const replyReference = isEncFailed
+            ? { ...buildReplyReference(msg, rawDisplayText), preview: t('chat.decrypt_failed') }
+            : buildReplyReference(msg, rawDisplayText)
           return (
-            <div key={msg.id || i} className={`msg-row ${isMe ? 'outgoing' : ''}`}>
+            <div
+              key={msg.id || i}
+              id={msg.id ? `message-${msg.id}` : undefined}
+              className={`msg-row ${isMe ? 'outgoing' : ''}`}
+              style={{ WebkitTouchCallout: 'none' }}
+              onTouchStart={event => startMessageLongPress(event, replyReference)}
+              onTouchMove={moveMessageLongPress}
+              onTouchEnd={cancelMessageLongPress}
+              onTouchCancel={cancelMessageLongPress}
+              onContextMenu={event => {
+                event.preventDefault()
+                openMessageMenu(replyReference, event.clientX, event.clientY)
+              }}
+              onClickCapture={event => {
+                if (suppressMessageClickRef.current) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }
+              }}
+            >
               {!isMe && isGroup && (
                 <div className="avatar avatar-sm">
                   {msg.from_avatar ? <img src={msg.from_avatar} alt="" /> : (msg.from_nickname?.[0] || '?')}
@@ -1217,7 +1329,30 @@ export default function Chat() {
                 {!isMe && isGroup && (
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>{msg.from_nickname || msg.from}</div>
                 )}
-                <div className="msg-bubble" style={isSticker ? { background: 'transparent', boxShadow: 'none', padding: 0 } : undefined}>
+                <div className="msg-bubble" style={isSticker && !payload.reply ? { background: 'transparent', boxShadow: 'none', padding: 0 } : undefined}>
+                  {payload.reply && (
+                    <button
+                      type="button"
+                      onClick={() => scrollToQuotedMessage(payload.reply!.id)}
+                      style={{
+                        display: 'block', width: '100%', minWidth: 150, maxWidth: 260,
+                        margin: '0 0 7px', padding: '6px 8px', border: 'none',
+                        borderLeft: '3px solid var(--accent)', borderRadius: 4,
+                        background: 'rgba(0,0,0,0.08)', color: 'inherit',
+                        textAlign: 'left', cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 650, marginBottom: 2 }}>
+                        {payload.reply.senderName}
+                      </div>
+                      <div style={{
+                        fontSize: 12, opacity: 0.72, overflow: 'hidden',
+                        textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {payload.reply.preview}
+                      </div>
+                    </button>
+                  )}
                   {renderBubble(msg, displayText, !!isEncFailed)}
                 </div>
                 <div className="msg-time">
@@ -1388,7 +1523,70 @@ export default function Chat() {
         </>
       )}
 
+      {messageMenu && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 10020 }}
+            onClick={() => setMessageMenu(null)}
+          />
+          <div style={{
+            position: 'fixed', zIndex: 10021,
+            left: messageMenu.x, top: messageMenu.y,
+            width: 132, padding: 6,
+            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.24)',
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                setReplyingTo(messageMenu.reply)
+                setMessageMenu(null)
+                setShowEmojiPanel(false)
+                setShowAttachPanel(false)
+                requestAnimationFrame(() => inputRef.current?.focus())
+              }}
+              style={{
+                width: '100%', border: 'none', borderRadius: 8,
+                padding: '10px 12px', background: 'transparent',
+                color: 'var(--text-primary)', textAlign: 'left',
+                fontSize: 14, cursor: 'pointer',
+              }}
+            >
+              {t('chat.reply')}
+            </button>
+          </div>
+        </>
+      )}
+
       {/* ═══ Input Bar ═══ */}
+      {replyingTo && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 12px', flexShrink: 0,
+          background: 'var(--bg-primary)', borderTop: '1px solid var(--border)',
+        }}>
+          <div style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, background: 'var(--accent)' }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 650 }}>
+              {t('chat.replying_to')} {replyingTo.senderName}
+            </div>
+            <div style={{
+              color: 'var(--text-muted)', fontSize: 12,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {replyingTo.preview}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setReplyingTo(null)}
+            aria-label={t('common.cancel')}
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
       <div className="chat-input-bar">
         {/* WeChat-style primary row: voice, expanding text, emoji, more/send. */}
         <button className="icon-btn" title={t('chat.attach_voice')}

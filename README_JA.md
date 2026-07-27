@@ -2,7 +2,7 @@
 
 WeChat スタイルのエンドツーエンド暗号化メッセンジャー。ステートレス ECDH + XSalsa20-Poly1305 によるメッセージごとの暗号化、リアルタイムビデオ通話、Cloudflare R2 ファイルストレージ、多言語サポート、iOS PWA デプロイに対応。
 
-[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20%2B%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
@@ -43,7 +43,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 |------|------|
 | 🔐 エンドツーエンド暗号化 | ステートレス ECDH + XSalsa20-Poly1305 — メッセージごとの一時鍵、Forward Secrecy、Signal スタイルの安全番号検証 |
 | 🗝️ ゼロ知識サーバー | サーバーは暗号文のみ保存、秘密鍵はデバイスから外に出ることなし |
-| 📹 ビデオ・音声会議 | WebRTC P2P（1:1）+ LiveKit SFU（最大100人）、全員ミュートと講義モード |
+| 📹 ビデオ・音声通話 | 1:1通話と会議の両方に LiveKit SFU（最大100人）、全員ミュートと講義モード |
 | 🎙️ ボイスチェンジャー | 音声メッセージ、1:1 通話、グループ通話でリアルタイム変声 — 3 モード（0.8x 低音 / 1.0x 通常 / 1.2x 高音）、Web Audio API ベース |
 | 📱 セッション維持 | ネットワーク切断、通常の認証エラー、サーバー URL 変更時もローカルのログイン状態を保持し、サーバーから明示的に失効された場合のみログアウト |
 | 📴 オフラインアクセス | アカウント別に連絡先、グループ、会話ごと最大 2,000 件のメッセージ、モーメンツ、タイムライン、メディアをキャッシュ。プロフィールから手動消去可能 |
@@ -104,7 +104,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 ### オプション 0: Zeabur ワンクリッククラウドデプロイ
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-> **Zeabur の会議ネットワーク制限：** テンプレートは WebSocket/API 7880 と ICE/TCP 7881 で LiveKit をデプロイします。現在 Zeabur は UDP サービスポートを公開できないため、会議は TCP フォールバックを使用し、弱いネットワークでは遅延や品質低下が発生する場合があります。UDP 7882 の設定は準備済みです。本番の100人会議には LiveKit Cloud または UDP 対応 VM を使用してください。
+> **Zeabur の通話ネットワーク制限：** テンプレートは WebSocket/API 7880 と ICE/TCP 7881 で LiveKit をデプロイします。現在 Zeabur は UDP サービスポートを公開できないため、1:1通話と会議は TCP フォールバックを使用します。本番通話には LiveKit Cloud または UDP 対応 VM を使用してください。
 
 #### サーバー側 Nginx 設定
 
@@ -120,7 +120,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 ```bash
 git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
-# 編集: DB_PASS / JWT_SECRET / CF_CALLS_APP_ID など
+# 編集: DB_PASS / JWT_SECRET / LIVEKIT_URL など
 docker compose up -d
 open http://localhost
 ```
@@ -159,7 +159,7 @@ cd client && npm install && npm run dev
 **仕組み**: Web Audio API を使用してオーディオ処理チェーン（AudioContext → MediaStreamSource → ScriptProcessorNode → MediaStreamDestination）を構築し、マイク入力のピッチ/速度をリアルタイムで調整します。
 
 - **音声メッセージ**: 録音中にボイスモードを選択。エクスポートされた `.webm` ファイルには既に変声効果が含まれており、受信者は元の声を復元できません。これにより真の匿名メッセージングが可能に
-- **1:1 / グループ通話**: 通話中にボイスチェンジャーボタンをタップしてモードを切り替え。処理済みオーディオトラックが `RTCRtpSender.replaceTrack()` を通じてオリジナルを置き換えます
+- **1:1 / グループ通話**: 通話中にボイスチェンジャーボタンをタップしてモードを切り替え。処理済みオーディオトラックが `LiveKit LocalAudioTrack.replaceTrack()` を通じてオリジナルを置き換えます
 
 > サーバー側の設定は不要です。ボイスチェンジャーは完全にクライアント側で動作します。
 
@@ -177,9 +177,9 @@ cd client && npm install && npm run dev
 | `R2_SECRET_ACCESS_KEY` | R2 API トークンの Secret Key | — |
 | `R2_BUCKET` | R2 バケット名 | — |
 | `R2_PUBLIC_URL` | R2 公開ベース URL（オプション） | — |
-| `CF_CALLS_APP_ID` | Cloudflare Calls App ID（オプション） | — |
-| `CF_CALLS_APP_SECRET` | Cloudflare Calls App Secret（オプション） | — |
-| `METERED_TURN_API_KEY` | Metered.ca TURN API Key（オプション、無料代替案） | — |
+| `LIVEKIT_URL` | すべての通話で使用する公開 LiveKit WebSocket URL | — |
+| `LIVEKIT_API_KEY` | サーバーと LiveKit で共有する API Key | — |
+| `LIVEKIT_API_SECRET` | サーバーと LiveKit で共有する API Secret | — |
 | `VAPID_PUBLIC_KEY` | Web Push VAPID 公開鍵（オプション） | — |
 | `VAPID_PRIVATE_KEY` | Web Push VAPID 秘密鍵（オプション） | — |
 | `VAPID_SUBJECT` | VAPID 連絡先メール（オプション） | `mailto:admin@paperphoneplus.app` |

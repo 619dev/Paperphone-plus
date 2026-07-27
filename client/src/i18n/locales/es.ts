@@ -16,7 +16,7 @@ export const es: Record<string, string> = {
   'chats.empty_hint': 'Agrega amigos para empezar', 'chats.image': '[Imagen]',
   'chats.file': '[Archivo]', 'chats.voice': '[Voz]', 'chats.video': '[Video]', 'chats.sticker': '[Sticker]',
 
-  'chat.typing': 'escribiendo...', 'chat.placeholder': 'Escribe un mensaje...', 'chat.send': 'Enviar',
+  'chat.typing': 'escribiendo...', 'chat.placeholder': 'Escribe un mensaje...', 'chat.send': 'Enviar', 'chat.reply': 'Responder', 'chat.replying_to': 'Respondiendo a',
   'chat.encrypted': 'Los mensajes están cifrados de extremo a extremo',
   'chat.no_recent_emoji': 'Sin emojis recientes', 'chat.loading_stickers': 'Cargando...', 'chat.no_stickers': 'No hay stickers en este paquete',
   'chat.uploading_image': 'Subiendo imagen...', 'chat.uploading_video': 'Subiendo vídeo...', 'chat.uploading_file': 'Subiendo archivo...', 'chat.uploading_voice': 'Subiendo nota de voz...', 'chat.upload_failed': 'Error al subir',

@@ -1,15 +1,15 @@
 /**
- * WebRTC 1:1 Call Hook
- *
- * Handles voice/video calls between two users:
- *   1. Fetch TURN credentials from server
- *   2. Create RTCPeerConnection
- *   3. Exchange offer/answer/ICE candidates via WebSocket signaling
- *   4. Manage local/remote media streams
+ * One-to-one voice/video calls backed by the same LiveKit SFU as group meetings.
+ * WebSocket messages only handle ringing and call lifecycle; LiveKit owns media,
+ * ICE negotiation, reconnection, and track subscription.
  */
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ConnectionState, LocalAudioTrack, Room, RoomEvent, Track,
+  type RemoteParticipant, type RemoteTrack, type RemoteTrackPublication,
+} from 'livekit-client'
+import { post } from '../api/http'
 import { sendWs, onWs } from '../api/socket'
-import { get } from '../api/http'
 import { playCallRingtone, stopRingtone, showBrowserNotification } from '../utils/notification'
 
 export type CallState = 'idle' | 'outgoing' | 'incoming' | 'connecting' | 'connected' | 'error'
@@ -20,14 +20,10 @@ const VOICE_RATES: Record<VoiceMode, number> = { slow: 0.8, normal: 1.0, fast: 1
 interface CallInfo {
   peerId: string
   isVideo: boolean
-  sdp?: string
-  sdp_type?: RTCSdpType
+  callId: string
 }
 
-const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun.cloudflare.com:3478' },
-]
+type DirectTokenResponse = { url: string; token: string; room: string }
 
 export function useCall(userId: string | undefined) {
   const [callState, setCallState] = useState<CallState>('idle')
@@ -35,213 +31,78 @@ export function useCall(userId: string | undefined) {
   const [callDuration, setCallDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOff, setIsCameraOff] = useState(false)
-  const [callError, setCallError] = useState<string>('')
+  const [callError, setCallError] = useState('')
   const [voiceMode, setVoiceMode] = useState<VoiceMode>('normal')
 
-  const pcRef = useRef<RTCPeerConnection | null>(null)
+  const roomRef = useRef<Room | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const remoteStreamRef = useRef<MediaStream | null>(null)
+  const originalAudioTrackRef = useRef<MediaStreamTrack | null>(null)
   const localVideoElementRef = useRef<HTMLVideoElement | null>(null)
   const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null)
   const remoteAudioElementRef = useRef<HTMLAudioElement | null>(null)
   const durationTimer = useRef<ReturnType<typeof setInterval> | null>(null)
-  const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([])
   const callStateRef = useRef<CallState>('idle')
+  const callInfoRef = useRef<CallInfo | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const voiceModeRef = useRef<VoiceMode>('normal')
   callStateRef.current = callState
+  callInfoRef.current = callInfo
   voiceModeRef.current = voiceMode
+  const getCallState = () => callStateRef.current
 
-  // ── Fetch & normalize TURN credentials ──
-  const getIceServers = async (): Promise<RTCIceServer[]> => {
-    try {
-      const res = await get<{ iceServers: any }>('/api/calls/turn-credentials')
-      const raw = res.iceServers
-      if (Array.isArray(raw) && raw.length > 0) {
-        const servers = raw.map((s: any) => ({
-          urls: s.urls || s.url || '',
-          ...(s.username ? { username: s.username } : {}),
-          ...(s.credential ? { credential: s.credential } : {}),
-        })).filter((s: any) => s.urls)
-        if (servers.length > 0) {
-          console.log('[Call] Using TURN/STUN servers:', servers.length)
-          return servers
-        }
-      }
-      console.warn('[Call] Using default STUN servers')
-      return DEFAULT_ICE_SERVERS
-    } catch (err) {
-      console.warn('[Call] TURN fetch failed, using defaults:', err)
-      return DEFAULT_ICE_SERVERS
-    }
-  }
+  const startDurationTimer = useCallback(() => {
+    if (durationTimer.current) clearInterval(durationTimer.current)
+    setCallDuration(0)
+    durationTimer.current = setInterval(() => setCallDuration(d => d + 1), 1000)
+  }, [])
 
-  // ── Create peer connection ──
-  const createPeerConnection = async (peerId: string, isVideo: boolean) => {
-    const iceServers = await getIceServers()
-
-    const pc = new RTCPeerConnection({ iceServers })
-    pcRef.current = pc
-
-    // Remote stream
-    const remoteStream = new MediaStream()
-    remoteStreamRef.current = remoteStream
-
-    pc.ontrack = (e) => {
-      if (!remoteStream.getTracks().some(track => track.id === e.track.id)) {
-        remoteStream.addTrack(e.track)
-      }
-      if (remoteVideoElementRef.current) {
-        remoteVideoElementRef.current.srcObject = remoteStream
-      }
-      if (remoteAudioElementRef.current) {
-        remoteAudioElementRef.current.srcObject = remoteStream
-        remoteAudioElementRef.current.play().catch(err => {
-          console.warn('[Call] Remote audio autoplay failed:', err)
-        })
-      }
-    }
-
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        sendWs({
-          type: 'ice_candidate',
-          to: peerId,
-          candidate: e.candidate.toJSON(),
-        })
-      }
-    }
-
-    pc.onconnectionstatechange = () => {
-      console.log('[Call] Connection state:', pc.connectionState)
-      if (pc.connectionState === 'connected') {
-        setCallState('connected')
-        startDurationTimer()
-      } else if (pc.connectionState === 'failed') {
-        setCallError('Connection failed')
-        setCallState('error')
-        // Auto-close after 3 seconds
-        setTimeout(() => cleanup(), 3000)
-      }
-    }
-
-    pc.oniceconnectionstatechange = () => {
-      console.log('[Call] ICE state:', pc.iceConnectionState)
-    }
-
-    return pc
-  }
-
-  // ── Get local media ──
-  const getLocalMedia = async (pc: RTCPeerConnection, isVideo: boolean) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: isVideo ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false,
+  const attachRemoteStream = useCallback((room: Room) => {
+    const tracks: MediaStreamTrack[] = []
+    room.remoteParticipants.forEach(participant => {
+      participant.trackPublications.forEach(publication => {
+        if (publication.track?.mediaStreamTrack) tracks.push(publication.track.mediaStreamTrack)
       })
-      localStreamRef.current = stream
-      if (localVideoElementRef.current) {
-        localVideoElementRef.current.srcObject = stream
-      }
-      stream.getTracks().forEach(track => pc.addTrack(track, stream))
-
-      return true
-    } catch (err: any) {
-      console.error('[Call] getUserMedia failed:', err)
-      if (err?.name === 'NotAllowedError') {
-        setCallError('Microphone/camera access denied')
-      } else if (err?.name === 'NotFoundError') {
-        setCallError('No microphone/camera found')
-      } else {
-        setCallError('Failed to access media devices')
-      }
-      return false
-    }
-  }
-
-  // ── Voice changer: process local audio through AudioContext ──
-  const createVoiceEffectTrack = (stream: MediaStream): MediaStreamTrack | null => {
-    try {
-      const audioCtx = new AudioContext()
-      audioCtxRef.current = audioCtx
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(err => {
-          console.warn('[Call] Voice effect audio context could not resume:', err)
+    })
+    const stream = tracks.length ? new MediaStream(tracks) : new MediaStream()
+    remoteStreamRef.current = stream
+    if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = stream
+    if (remoteAudioElementRef.current) {
+      remoteAudioElementRef.current.srcObject = stream
+      if (stream.getAudioTracks().length) {
+        remoteAudioElementRef.current.play().catch(err => {
+          console.warn('[Call] Remote audio playback failed:', err)
         })
       }
-      const source = audioCtx.createMediaStreamSource(stream)
-      const destination = audioCtx.createMediaStreamDestination()
-
-      // Use a BiquadFilter to shift pitch characteristics
-      // Combined with a playback rate ScriptProcessor for real-time pitch shifting
-      const bufferSize = 4096
-      const processor = audioCtx.createScriptProcessor(bufferSize, 1, 1)
-      let inputBuffer: Float32Array[] = []
-      let outputPhase = 0
-
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0)
-        const output = e.outputBuffer.getChannelData(0)
-        const rate = VOICE_RATES[voiceModeRef.current]
-
-        // Simple resampling for pitch shift
-        for (let i = 0; i < output.length; i++) {
-          const readIndex = outputPhase
-          const intIndex = Math.floor(readIndex)
-          const frac = readIndex - intIndex
-
-          // Linear interpolation from input buffer
-          if (intIndex < input.length - 1) {
-            output[i] = input[intIndex] * (1 - frac) + input[intIndex + 1] * frac
-          } else if (intIndex < input.length) {
-            output[i] = input[intIndex]
-          } else {
-            output[i] = 0
-          }
-          outputPhase += rate
-        }
-        // Reset phase relative to processed samples
-        outputPhase = outputPhase % input.length
-      }
-
-      source.connect(processor)
-      processor.connect(destination)
-
-      return destination.stream.getAudioTracks()[0] || null
-    } catch (err) {
-      console.warn('[Call] Voice effect failed:', err)
-      return null
     }
-  }
+  }, [])
 
-  // ── Internal cleanup ──
   const cleanup = useCallback(() => {
-    // Stop ringtone
     stopRingtone()
+    if (durationTimer.current) clearInterval(durationTimer.current)
+    durationTimer.current = null
 
-    pcRef.current?.close()
-    pcRef.current = null
+    const room = roomRef.current
+    roomRef.current = null
+    if (room) room.disconnect()
 
-    // Close AudioContext for voice effect
     if (audioCtxRef.current) {
       audioCtxRef.current.close().catch(() => {})
       audioCtxRef.current = null
     }
-
-    localStreamRef.current?.getTracks().forEach(t => t.stop())
+    localStreamRef.current?.getTracks().forEach(track => track.stop())
+    originalAudioTrackRef.current?.stop()
     localStreamRef.current = null
     remoteStreamRef.current = null
-
+    originalAudioTrackRef.current = null
     if (localVideoElementRef.current) localVideoElementRef.current.srcObject = null
     if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = null
     if (remoteAudioElementRef.current) remoteAudioElementRef.current.srcObject = null
 
-    if (durationTimer.current) clearInterval(durationTimer.current)
-    durationTimer.current = null
-
-    iceCandidateQueue.current = []
     setCallState('idle')
     setCallInfo(null)
+    callStateRef.current = 'idle'
+    callInfoRef.current = null
     setCallDuration(0)
     setIsMuted(false)
     setIsCameraOff(false)
@@ -249,295 +110,307 @@ export function useCall(userId: string | undefined) {
     setVoiceMode('normal')
   }, [])
 
-  // ── Start outgoing call ──
+  const failCall = useCallback((error: unknown) => {
+    console.error('[Call] LiveKit call failed:', error)
+    setCallError(error instanceof Error ? error.message : 'Connection failed')
+    callStateRef.current = 'error'
+    setCallState('error')
+    setTimeout(() => cleanup(), 3000)
+  }, [cleanup])
+
+  const connectToCall = useCallback(async (info: CallInfo) => {
+    const auth = await post<DirectTokenResponse>('/api/calls/direct-token', {
+      peer_id: info.peerId,
+      call_id: info.callId,
+    })
+    const room = new Room({
+      adaptiveStream: true,
+      dynacast: true,
+      disconnectOnPageLeave: true,
+    })
+    roomRef.current = room
+
+    const refreshRemote = () => attachRemoteStream(room)
+    room.on(RoomEvent.TrackSubscribed, (
+      _track: RemoteTrack,
+      _publication: RemoteTrackPublication,
+      _participant: RemoteParticipant,
+    ) => refreshRemote())
+    room.on(RoomEvent.TrackUnsubscribed, refreshRemote)
+    room.on(RoomEvent.TrackMuted, refreshRemote)
+    room.on(RoomEvent.TrackUnmuted, refreshRemote)
+    room.on(RoomEvent.ParticipantConnected, () => {
+      refreshRemote()
+      if (callStateRef.current !== 'connected') {
+        callStateRef.current = 'connected'
+        setCallState('connected')
+        startDurationTimer()
+      }
+    })
+    room.on(RoomEvent.ParticipantDisconnected, () => {
+      refreshRemote()
+      if (callStateRef.current === 'connected') cleanup()
+    })
+    room.on(RoomEvent.ConnectionStateChanged, state => {
+      if (state === ConnectionState.Reconnecting) {
+        callStateRef.current = 'connecting'
+        setCallState('connecting')
+      }
+      if (state === ConnectionState.Connected && room.remoteParticipants.size > 0) {
+        callStateRef.current = 'connected'
+        setCallState('connected')
+      }
+      if (
+        state === ConnectionState.Disconnected
+        && roomRef.current === room
+        && callStateRef.current !== 'idle'
+      ) cleanup()
+    })
+
+    await room.connect(auth.url, auth.token, { autoSubscribe: true })
+    await room.localParticipant.setMicrophoneEnabled(true)
+    if (info.isVideo) await room.localParticipant.setCameraEnabled(true)
+
+    const localTracks: MediaStreamTrack[] = []
+    room.localParticipant.trackPublications.forEach(publication => {
+      if (publication.track?.mediaStreamTrack) {
+        localTracks.push(publication.track.mediaStreamTrack)
+        if (publication.source === Track.Source.Microphone) {
+          originalAudioTrackRef.current = publication.track.mediaStreamTrack
+        }
+      }
+    })
+    localStreamRef.current = new MediaStream(localTracks)
+    if (localVideoElementRef.current) localVideoElementRef.current.srcObject = localStreamRef.current
+    refreshRemote()
+    return room
+  }, [attachRemoteStream, cleanup, startDurationTimer])
+
   const startCall = useCallback(async (peerId: string, isVideo: boolean) => {
     if (callStateRef.current !== 'idle') return
-
+    const info = {
+      peerId,
+      isVideo,
+      callId: `dc_${Date.now()}_${crypto.randomUUID().replaceAll('-', '')}`,
+    }
+    callStateRef.current = 'outgoing'
+    callInfoRef.current = info
     setCallState('outgoing')
-    setCallInfo({ peerId, isVideo })
+    setCallInfo(info)
     setCallDuration(0)
     setCallError('')
-
     try {
-      const pc = await createPeerConnection(peerId, isVideo)
-
-      const mediaOk = await getLocalMedia(pc, isVideo)
-      if (!mediaOk) {
-        setCallState('error')
-        // Keep error overlay visible for 3 seconds
-        setTimeout(() => cleanup(), 3000)
+      await connectToCall(info)
+      if (callInfoRef.current?.callId !== info.callId || getCallState() === 'idle') {
+        roomRef.current?.disconnect()
+        roomRef.current = null
         return
       }
-
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
       sendWs({
         type: 'call_offer',
         to: peerId,
+        call_id: info.callId,
         is_video: isVideo,
-        sdp: offer.sdp,
-        sdp_type: offer.type,
       })
-    } catch (err) {
-      console.error('[Call] startCall failed:', err)
-      setCallError('Call failed: ' + (err as Error).message)
-      setCallState('error')
-      setTimeout(() => cleanup(), 3000)
+    } catch (error) {
+      failCall(error)
     }
-  }, [cleanup])
+  }, [connectToCall, failCall])
 
-  // ── Accept incoming call ──
   const acceptCall = useCallback(async () => {
-    if (callStateRef.current !== 'incoming' || !callInfo) return
-
-    // Stop ringtone when accepting
+    const info = callInfoRef.current
+    if (callStateRef.current !== 'incoming' || !info) return
     stopRingtone()
-
+    callStateRef.current = 'connecting'
     setCallState('connecting')
-
     try {
-      const pc = await createPeerConnection(callInfo.peerId, callInfo.isVideo)
-
-      const mediaOk = await getLocalMedia(pc, callInfo.isVideo)
-      if (!mediaOk) {
-        sendWs({ type: 'call_reject', to: callInfo.peerId })
-        setCallState('error')
-        setTimeout(() => cleanup(), 3000)
+      await connectToCall(info)
+      if (callInfoRef.current?.callId !== info.callId || getCallState() === 'idle') {
+        roomRef.current?.disconnect()
+        roomRef.current = null
         return
       }
-
-      if (callInfo.sdp && callInfo.sdp_type) {
-        await pc.setRemoteDescription(new RTCSessionDescription({
-          type: callInfo.sdp_type,
-          sdp: callInfo.sdp,
-        }))
+      sendWs({ type: 'call_answer', to: info.peerId, call_id: info.callId })
+      if (roomRef.current?.remoteParticipants.size && getCallState() !== 'connected') {
+        callStateRef.current = 'connected'
+        setCallState('connected')
+        startDurationTimer()
       }
-
-      for (const candidate of iceCandidateQueue.current) {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {})
-      }
-      iceCandidateQueue.current = []
-
-      const answer = await pc.createAnswer()
-      await pc.setLocalDescription(answer)
-
-      sendWs({
-        type: 'call_answer',
-        to: callInfo.peerId,
-        sdp: answer.sdp,
-        sdp_type: answer.type,
-      })
-    } catch (err) {
-      console.error('[Call] acceptCall failed:', err)
-      setCallError('Call failed: ' + (err as Error).message)
-      setCallState('error')
-      setTimeout(() => cleanup(), 3000)
+    } catch (error) {
+      sendWs({ type: 'call_reject', to: info.peerId, call_id: info.callId })
+      failCall(error)
     }
-  }, [callInfo, cleanup])
+  }, [connectToCall, failCall, startDurationTimer])
 
-  // ── Reject / Cancel / Hang up ──
   const rejectCall = useCallback(() => {
-    if (callInfo) sendWs({ type: 'call_reject', to: callInfo.peerId })
+    const info = callInfoRef.current
+    if (info) sendWs({ type: 'call_reject', to: info.peerId, call_id: info.callId })
     cleanup()
-  }, [callInfo, cleanup])
+  }, [cleanup])
 
   const cancelCall = useCallback(() => {
-    if (callInfo) sendWs({ type: 'call_cancel', to: callInfo.peerId })
+    const info = callInfoRef.current
+    if (info) sendWs({ type: 'call_cancel', to: info.peerId, call_id: info.callId })
     cleanup()
-  }, [callInfo, cleanup])
+  }, [cleanup])
 
   const hangUp = useCallback(() => {
-    if (callInfo) sendWs({ type: 'call_end', to: callInfo.peerId })
+    const info = callInfoRef.current
+    if (info) sendWs({ type: 'call_end', to: info.peerId, call_id: info.callId })
     cleanup()
-  }, [callInfo, cleanup])
+  }, [cleanup])
 
-  // ── Toggle mute / camera ──
-  const toggleMute = useCallback(() => {
-    localStreamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled })
-    setIsMuted(m => !m)
+  const toggleMute = useCallback(async () => {
+    const room = roomRef.current
+    if (!room) return
+    const enable = isMuted
+    await room.localParticipant.setMicrophoneEnabled(enable)
+    setIsMuted(!enable)
+  }, [isMuted])
+
+  const toggleCamera = useCallback(async () => {
+    const room = roomRef.current
+    if (!room) return
+    await room.localParticipant.setCameraEnabled(isCameraOff)
+    setIsCameraOff(!isCameraOff)
+  }, [isCameraOff])
+
+  const createVoiceEffectTrack = useCallback((track: MediaStreamTrack): MediaStreamTrack | null => {
+    try {
+      const audioCtx = new AudioContext()
+      audioCtxRef.current = audioCtx
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
+      const source = audioCtx.createMediaStreamSource(new MediaStream([track]))
+      const destination = audioCtx.createMediaStreamDestination()
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1)
+      let outputPhase = 0
+      processor.onaudioprocess = event => {
+        const input = event.inputBuffer.getChannelData(0)
+        const output = event.outputBuffer.getChannelData(0)
+        const rate = VOICE_RATES[voiceModeRef.current]
+        for (let i = 0; i < output.length; i++) {
+          const index = Math.floor(outputPhase)
+          const fraction = outputPhase - index
+          output[i] = index < input.length - 1
+            ? input[index] * (1 - fraction) + input[index + 1] * fraction
+            : (input[index] || 0)
+          outputPhase += rate
+        }
+        outputPhase %= input.length
+      }
+      source.connect(processor)
+      processor.connect(destination)
+      return destination.stream.getAudioTracks()[0] || null
+    } catch (error) {
+      console.warn('[Call] Voice effect failed:', error)
+      return null
+    }
   }, [])
 
-  const toggleCamera = useCallback(() => {
-    localStreamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled })
-    setIsCameraOff(c => !c)
-  }, [])
+  const toggleVoiceMode = useCallback(async () => {
+    const room = roomRef.current
+    const originalTrack = originalAudioTrackRef.current
+    const publication = room?.localParticipant.getTrackPublication(Track.Source.Microphone)
+    const localTrack = publication?.track
+    if (!(localTrack instanceof LocalAudioTrack) || !originalTrack) return
 
-  const toggleVoiceMode = useCallback(() => {
     const modes: VoiceMode[] = ['normal', 'slow', 'fast']
     const nextMode = modes[(modes.indexOf(voiceModeRef.current) + 1) % modes.length]
-    const stream = localStreamRef.current
-    const audioSender = pcRef.current?.getSenders().find(s => s.track?.kind === 'audio')
-    const originalTrack = stream?.getAudioTracks()[0]
-
     voiceModeRef.current = nextMode
     setVoiceMode(nextMode)
 
-    if (!audioSender || !originalTrack) return
-
     if (nextMode === 'normal') {
-      audioSender.replaceTrack(originalTrack).catch(err => {
-        console.warn('[Call] Failed to restore microphone track:', err)
-      })
+      await localTrack.replaceTrack(originalTrack, true)
       if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {})
+        await audioCtxRef.current.close().catch(() => {})
         audioCtxRef.current = null
       }
       return
     }
-
-    // The existing processor reads voiceModeRef, so switching between slow
-    // and fast does not require rebuilding the audio graph.
     if (audioCtxRef.current) return
-
-    const processedTrack = createVoiceEffectTrack(stream)
+    const processedTrack = createVoiceEffectTrack(originalTrack)
     if (processedTrack) {
-      audioSender.replaceTrack(processedTrack).catch(err => {
-        console.warn('[Call] Failed to enable voice effect:', err)
-      })
+      await localTrack.replaceTrack(processedTrack, true)
     } else {
       voiceModeRef.current = 'normal'
       setVoiceMode('normal')
     }
-  }, [])
+  }, [createVoiceEffectTrack])
 
-  const startDurationTimer = () => {
-    if (durationTimer.current) clearInterval(durationTimer.current)
-    setCallDuration(0)
-    durationTimer.current = setInterval(() => {
-      setCallDuration(d => d + 1)
-    }, 1000)
-  }
-
-  // ── WebSocket signaling listener ──
   useEffect(() => {
-    const unsubOffer = onWs('call_offer', (data) => {
-      if (data.from === userId) return
-
-      // Skip group call offers (they have call_id) — handled by useGroupCall
-      if (data.call_id) return
-
+    const unsubOffer = onWs('call_offer', data => {
+      if (data.from === userId || data.group_id || !data.call_id) return
       if (callStateRef.current !== 'idle') {
-        sendWs({ type: 'call_reject', to: data.from })
+        sendWs({ type: 'call_reject', to: data.from, call_id: data.call_id })
         return
       }
-
       setCallInfo({
         peerId: data.from,
-        isVideo: data.is_video || false,
-        sdp: data.sdp,
-        sdp_type: data.sdp_type,
+        isVideo: !!data.is_video,
+        callId: data.call_id,
       })
+      callInfoRef.current = {
+        peerId: data.from,
+        isVideo: !!data.is_video,
+        callId: data.call_id,
+      }
+      callStateRef.current = 'incoming'
       setCallState('incoming')
-
-      // Play ringtone for incoming call
       playCallRingtone()
-
-      // Show browser notification if tab is hidden
-      const callType = data.is_video ? 'Video Call' : 'Voice Call'
       showBrowserNotification(
         'PaperPhonePlus',
-        `Incoming ${callType}`,
-        () => window.focus()
+        `Incoming ${data.is_video ? 'Video Call' : 'Voice Call'}`,
+        () => window.focus(),
       )
     })
-
-    const unsubAnswer = onWs('call_answer', async (data) => {
-      // Skip group call answers
-      if (data.call_id) return
-      const pc = pcRef.current
-      if (!pc) return
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription({
-          type: data.sdp_type || 'answer',
-          sdp: data.sdp,
-        }))
-        for (const candidate of iceCandidateQueue.current) {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {})
-        }
-        iceCandidateQueue.current = []
+    const unsubAnswer = onWs('call_answer', data => {
+      if (data.call_id !== callInfoRef.current?.callId) return
+      if (roomRef.current?.remoteParticipants.size && callStateRef.current !== 'connected') {
+        callStateRef.current = 'connected'
+        setCallState('connected')
+        startDurationTimer()
+      } else if (!roomRef.current?.remoteParticipants.size) {
+        callStateRef.current = 'connecting'
         setCallState('connecting')
-      } catch (err) {
-        console.error('[Call] setRemoteDescription failed:', err)
       }
     })
-
-    const unsubIce = onWs('ice_candidate', async (data) => {
-      // Skip group call ICE candidates
-      if (data.call_id) return
-      const pc = pcRef.current
-      if (data.candidate) {
-        if (pc && pc.remoteDescription) {
-          await pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {})
-        } else {
-          iceCandidateQueue.current.push(data.candidate)
-        }
-      }
-    })
-
-    const unsubReject = onWs('call_reject', () => cleanup())
-    const unsubCancel = onWs('call_cancel', () => cleanup())
-    const unsubEnd = onWs('call_end', () => cleanup())
-
+    const finishMatchingCall = (data: any) => {
+      if (!data.call_id || data.call_id === callInfoRef.current?.callId) cleanup()
+    }
+    const unsubReject = onWs('call_reject', finishMatchingCall)
+    const unsubCancel = onWs('call_cancel', finishMatchingCall)
+    const unsubEnd = onWs('call_end', finishMatchingCall)
     return () => {
       unsubOffer()
       unsubAnswer()
-      unsubIce()
       unsubReject()
       unsubCancel()
       unsubEnd()
     }
-  }, [userId, cleanup])
+  }, [cleanup, startDurationTimer, userId])
 
-  useEffect(() => {
-    return () => { cleanup() }
-  }, [cleanup])
+  useEffect(() => () => cleanup(), [cleanup])
 
-  // The local preview is only rendered after the call connects, while the
-  // camera stream is acquired earlier. Callback refs attach the existing
-  // streams whenever either video element mounts or is recreated.
   const localVideoRef = useCallback((element: HTMLVideoElement | null) => {
     localVideoElementRef.current = element
     if (element) element.srcObject = localStreamRef.current
   }, [])
-
   const remoteVideoRef = useCallback((element: HTMLVideoElement | null) => {
     remoteVideoElementRef.current = element
     if (element) element.srcObject = remoteStreamRef.current
   }, [])
-
   const remoteAudioRef = useCallback((element: HTMLAudioElement | null) => {
     remoteAudioElementRef.current = element
     if (element) {
       element.srcObject = remoteStreamRef.current
-      if (remoteStreamRef.current?.getAudioTracks().length) {
-        element.play().catch(err => {
-          console.warn('[Call] Remote audio playback failed:', err)
-        })
-      }
+      if (remoteStreamRef.current?.getAudioTracks().length) element.play().catch(() => {})
     }
   }, [])
 
   return {
-    callState,
-    callInfo,
-    callDuration,
-    callError,
-    isMuted,
-    isCameraOff,
-    voiceMode,
-    localVideoRef,
-    remoteVideoRef,
-    remoteAudioRef,
-    startCall,
-    acceptCall,
-    rejectCall,
-    cancelCall,
-    hangUp,
-    toggleMute,
-    toggleCamera,
-    toggleVoiceMode,
-    cleanup,
+    callState, callInfo, callDuration, callError, isMuted, isCameraOff, voiceMode,
+    localVideoRef, remoteVideoRef, remoteAudioRef, startCall, acceptCall, rejectCall,
+    cancelCall, hangUp, toggleMute, toggleCamera, toggleVoiceMode, cleanup,
   }
 }
 

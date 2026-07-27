@@ -130,7 +130,9 @@ async fn push_status(
         "vapid_subject_configured": state.config.vapid_subject.is_some(),
         "onesignal_configured": state.config.onesignal_app_id.is_some() && state.config.onesignal_rest_key.is_some(),
         "onesignal_relay_configured": state.config.onesignal_relay_url.is_some() && state.config.onesignal_relay_key.is_some(),
-        "cf_turn_configured": state.config.cf_calls_app_id.is_some() && state.config.cf_calls_app_secret.is_some(),
+        "livekit_calling_configured": state.config.livekit_url.is_some()
+            && state.config.livekit_api_key.is_some()
+            && state.config.livekit_api_secret.is_some(),
         "fcm_configured": state.config.fcm_project_id.is_some() && state.config.fcm_client_email.is_some() && state.config.fcm_private_key.is_some(),
         "fcm_relay_configured": state.config.fcm_relay_url.is_some() && state.config.fcm_relay_key.is_some(),
         "apns_configured": state.config.apns_team_id.is_some() && state.config.apns_key_id.is_some() && state.config.apns_private_key.is_some(),

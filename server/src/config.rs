@@ -23,14 +23,7 @@ pub struct Config {
     pub r2_bucket: Option<String>,
     pub r2_public_url: Option<String>,
 
-    // Cloudflare TURN
-    pub cf_calls_app_id: Option<String>,
-    pub cf_calls_app_secret: Option<String>,
-
-    // Metered.ca TURN (free tier)
-    pub metered_turn_api_key: Option<String>,
-
-    // LiveKit SFU (required for scalable group meetings)
+    // LiveKit SFU (required for all one-to-one calls and group meetings)
     pub livekit_url: Option<String>,
     pub livekit_api_key: Option<String>,
     pub livekit_api_secret: Option<String>,
@@ -107,10 +100,6 @@ impl Config {
             r2_bucket: env_opt("R2_BUCKET"),
             r2_public_url: env_opt("R2_PUBLIC_URL"),
 
-            cf_calls_app_id: env_opt("CF_CALLS_APP_ID"),
-            cf_calls_app_secret: env_opt("CF_CALLS_APP_SECRET"),
-
-            metered_turn_api_key: env_opt("METERED_TURN_API_KEY"),
             livekit_url: env_opt("LIVEKIT_URL"),
             livekit_api_key: env_opt("LIVEKIT_API_KEY"),
             livekit_api_secret: env_opt("LIVEKIT_API_SECRET"),

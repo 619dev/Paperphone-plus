@@ -15,7 +15,7 @@ export const ja: Record<string, string> = {
   'chats.empty_hint': '友達を追加して会話を始めましょう', 'chats.image': '[画像]', 'chats.file': '[ファイル]',
   'chats.voice': '[音声]', 'chats.video': '[動画]', 'chats.sticker': '[スタンプ]',
 
-  'chat.typing': '入力中...', 'chat.placeholder': 'メッセージを入力...', 'chat.send': '送信',
+  'chat.typing': '入力中...', 'chat.placeholder': 'メッセージを入力...', 'chat.send': '送信', 'chat.reply': '返信', 'chat.replying_to': '返信先',
   'chat.encrypted': 'メッセージはエンドツーエンド暗号化されています',
   'chat.no_recent_emoji': '最近の絵文字なし', 'chat.loading_stickers': '読み込み中...', 'chat.no_stickers': 'このパックにスタンプはありません',
   'chat.uploading_image': '画像をアップロード中...', 'chat.uploading_video': '動画をアップロード中...', 'chat.uploading_file': 'ファイルをアップロード中...', 'chat.uploading_voice': '音声をアップロード中...', 'chat.upload_failed': 'アップロードに失敗しました',

@@ -2,7 +2,7 @@
 
 Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo WeChat, con cifrado ECDH + XSalsa20-Poly1305 sin estado por mensaje, videollamadas en tiempo real, almacenamiento de archivos Cloudflare R2, soporte multilingüe y despliegue PWA para iOS.
 
-[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20%2B%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
@@ -43,7 +43,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 |----------------|-------------|
 | 🔐 Cifrado de extremo a extremo | ECDH sin estado + XSalsa20-Poly1305 — claves efímeras por mensaje, forward secrecy, verificación de número de seguridad estilo Signal |
 | 🗝️ Servidor de conocimiento cero | El servidor solo almacena texto cifrado; las claves privadas nunca abandonan el dispositivo |
-| 📹 Reuniones de vídeo y voz | WebRTC P2P (1:1) + SFU LiveKit (hasta 100 participantes), silenciar a todos y modo clase |
+| 📹 Llamadas de vídeo y voz | SFU LiveKit para llamadas 1:1 y reuniones (hasta 100 participantes), silenciar a todos y modo clase |
 | 🎙️ Modificador de voz | Efectos de voz en tiempo real para mensajes de voz, llamadas 1:1 y llamadas grupales — 3 modos (0.8x grave / 1.0x normal / 1.2x agudo), basado en Web Audio API |
 | 📱 Persistencia de sesión | Conserva la sesión local durante cortes de red, errores de autorización comunes y cambios de URL del servidor; solo cierra sesión tras una revocación explícita |
 | 📴 Acceso sin conexión | Caché aislada por cuenta para contactos, grupos, hasta 2.000 mensajes por conversación, Momentos, Línea de tiempo y multimedia; se puede borrar desde el perfil |
@@ -104,7 +104,7 @@ Capa criptográfica
 ### Opción 0: Despliegue en la nube con Zeabur en un clic
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-> **Limitación de red de Zeabur:** la plantilla despliega LiveKit mediante WebSocket/API 7880 e ICE/TCP 7881. Zeabur actualmente no expone puertos UDP, por lo que las reuniones usan TCP como alternativa y pueden tener mayor latencia en redes débiles. UDP 7882 ya está reservado. Para reuniones de producción con 100 participantes, use LiveKit Cloud o una VM compatible con UDP.
+> **Limitación de red de Zeabur:** la plantilla despliega LiveKit mediante WebSocket/API 7880 e ICE/TCP 7881. Zeabur actualmente no expone puertos UDP, por lo que las llamadas 1:1 y las reuniones usan TCP como alternativa. Para llamadas de producción, use LiveKit Cloud o una VM compatible con UDP.
 
 #### Configuración Nginx del servidor
 
@@ -120,7 +120,7 @@ Use la configuración de producción de dos dominios [deploy/nginx/paperphone-pl
 ```bash
 git clone <repo-url> && cd paperphone-plus
 cp server/.env.example server/.env
-# Editar: DB_PASS / JWT_SECRET / CF_CALLS_APP_ID etc.
+# Editar: DB_PASS / JWT_SECRET / LIVEKIT_URL etc.
 docker compose up -d
 open http://localhost
 ```
@@ -159,7 +159,7 @@ Los mensajes de voz, las llamadas 1:1 y las llamadas grupales admiten modificaci
 **Cómo funciona**: Utiliza la Web Audio API para construir una cadena de procesamiento de audio (AudioContext → MediaStreamSource → ScriptProcessorNode → MediaStreamDestination) que ajusta el tono/velocidad de la entrada del micrófono en tiempo real.
 
 - **Mensajes de voz**: Seleccionar el modo de voz durante la grabación. El archivo `.webm` exportado ya contiene el efecto de voz — los destinatarios no pueden restaurar la voz original, permitiendo mensajería verdaderamente anónima
-- **Llamadas 1:1 / Grupales**: Tocar el botón de modificador de voz durante una llamada para alternar entre modos. La pista de audio procesada reemplaza la original mediante `RTCRtpSender.replaceTrack()`
+- **Llamadas 1:1 / Grupales**: Tocar el botón de modificador de voz durante una llamada para alternar entre modos. La pista de audio procesada reemplaza la original mediante `LiveKit LocalAudioTrack.replaceTrack()`
 
 > No se requiere configuración del lado del servidor. El modificador de voz funciona completamente en el lado del cliente.
 
@@ -177,9 +177,9 @@ Los mensajes de voz, las llamadas 1:1 y las llamadas grupales admiten modificaci
 | `R2_SECRET_ACCESS_KEY` | Secret Key del token API de R2 | — |
 | `R2_BUCKET` | Nombre del bucket R2 | — |
 | `R2_PUBLIC_URL` | URL base pública de R2 (opcional) | — |
-| `CF_CALLS_APP_ID` | Cloudflare Calls App ID (opcional) | — |
-| `CF_CALLS_APP_SECRET` | Cloudflare Calls App Secret (opcional) | — |
-| `METERED_TURN_API_KEY` | Metered.ca TURN API Key (opcional, alternativa gratuita) | — |
+| `LIVEKIT_URL` | URL WebSocket pública de LiveKit para todas las llamadas | — |
+| `LIVEKIT_API_KEY` | Clave API compartida por el servidor y LiveKit | — |
+| `LIVEKIT_API_SECRET` | Secreto API compartido por el servidor y LiveKit | — |
 | `VAPID_PUBLIC_KEY` | Clave pública VAPID de Web Push (opcional) | — |
 | `VAPID_PRIVATE_KEY` | Clave privada VAPID de Web Push (opcional) | — |
 | `VAPID_SUBJECT` | Email de contacto VAPID (opcional) | `mailto:admin@paperphoneplus.app` |

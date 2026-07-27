@@ -2,7 +2,7 @@
 
 本文档详细介绍 PaperPhonePlus 的两种推荐部署方式，以及各平台客户端的服务器地址配置方法。
 
-> **核心思路**：后端（server）、数据库（MySQL）、缓存（Redis）和会议 SFU（LiveKit）部署在服务器端；前端（client）可独立部署到 Vercel。客户端通过 **server 地址** 连接业务后端，并通过 `LIVEKIT_URL` 连接会议服务。
+> **核心思路**：后端（server）、数据库（MySQL）、缓存（Redis）和通话 SFU（LiveKit）部署在服务器端；前端（client）可独立部署到 Vercel。客户端通过 **server 地址** 连接业务后端，并通过 `LIVEKIT_URL` 连接所有 1:1 与群组音视频通话。
 
 ---
 
@@ -41,10 +41,10 @@
 
 > ⚠️ 仅删除 `client`，**不要**删除 `server`、`MySQL`、`Redis` 或 `LiveKit`。
 
-### Zeabur 上的会议限制与升级路径
+### Zeabur 上的通话限制与升级路径
 
 - 当前模板公开 LiveKit WebSocket/API 7880 和 ICE/TCP 7881，UDP 7882 仅保留在内部配置。
-- TCP 回退适合功能验证和一般网络；百人生产会议建议使用 LiveKit Cloud，或将 LiveKit 单独部署到具有公网 IP、可开放 UDP 7882 的主机。
+- TCP 回退适合功能验证和一般网络；生产通话建议使用 LiveKit Cloud，或将 LiveKit 单独部署到具有公网 IP、可开放 UDP 7882 的主机。
 - 外置 LiveKit 时，在 Zeabur 的 `server` 服务中设置 `LIVEKIT_URL=wss://meeting.example.com`，并保证 `LIVEKIT_API_KEY`、`LIVEKIT_API_SECRET` 与外置 LiveKit 完全一致。
 - Zeabur 将来支持 UDP 后，在 LiveKit 服务声明 UDP 7882，并在防火墙开放该端口即可；客户端无需修改。
 
@@ -131,7 +131,7 @@ JWT_SECRET=你的随机密钥字符串          # 生产环境必须更改
 DB_PASS=你的数据库密码                 # 与 docker-compose.yml 中保持一致
 ADMIN_PASSWORD=你的管理后台密码        # 生产环境必须更改
 LIVEKIT_URL=wss://meeting.example.com
-LIVEKIT_API_KEY=你的会议API密钥
+LIVEKIT_API_KEY=你的通话API密钥
 LIVEKIT_API_SECRET=至少32字节随机密钥
 
 # 可选配置（按需填写）
@@ -139,8 +139,6 @@ R2_ACCOUNT_ID=...                     # Cloudflare R2 文件存储
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
 R2_BUCKET=...
-CF_CALLS_APP_ID=...                   # Cloudflare TURN（视频通话）
-CF_CALLS_APP_SECRET=...
 VAPID_PUBLIC_KEY=...                  # Web Push 推送通知
 VAPID_PRIVATE_KEY=...
 ```
@@ -164,7 +162,7 @@ VAPID_PRIVATE_KEY=...
     restart: unless-stopped
 ```
 
-删除后应保留 `server`、`mysql`、`redis`、`livekit` 四个服务。不要删除 `livekit`，否则群会议令牌接口会返回未配置错误。
+删除后应保留 `server`、`mysql`、`redis`、`livekit` 四个服务。不要删除 `livekit`，否则所有私聊和群组音视频通话都无法连接。
 
 ### 第四步：启动 Docker 服务
 
@@ -264,7 +262,7 @@ sudo ufw allow 7881/tcp
 sudo ufw allow 7882/udp
 ```
 
-以下单域名配置只适用于不启用群会议的旧式部署；启用会议时请使用上面的仓库配置。创建站点配置文件：
+以下单域名配置只保留给不启用任何音视频通话的旧式部署；正常部署请使用上面的双域名仓库配置。创建站点配置文件：
 
 ```bash
 sudo nano /etc/nginx/sites-available/paperphoneplus

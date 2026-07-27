@@ -2,7 +2,7 @@
 
 一款微信风格的端对端加密即时通讯应用，采用无状态 ECDH + XSalsa20-Poly1305 逐消息加密，支持 iOS PWA 永久免签与 Cloudflare R2 文件存储。
 
-[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20%2B%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
@@ -43,7 +43,7 @@
 |------|------|
 | 🔐 端对端加密 | 无状态 ECDH + XSalsa20-Poly1305，逐消息临时密钥，前向保密，Signal 风格安全号码验证 |
 | 🗝️ 零知识服务器 | 服务器只存储密文，私钥仅在设备本地（四层持久化） |
-| 📹 视频/语音会议 | WebRTC P2P（1:1）+ LiveKit SFU（最多100人），主席全员静音、讲课模式、Cloudflare TURN 穿透 |
+| 📹 视频/语音通话 | 1:1 私聊和群会议统一使用 LiveKit SFU（最多100人），主席全员静音、讲课模式 |
 | 🎙️ 变声功能 | 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链 |
 | 📱 会话保持 | 网络中断、普通鉴权失败或服务器地址变化时保留登录状态，仅在服务器明确撤销会话时退出 |
 | 📴 离线访问 | 按账户隔离缓存联系人、群组、每会话最多 2000 条聊天记录、朋友圈、时间线及媒体；可在个人资料中手动清理 |
@@ -104,7 +104,7 @@
 ### 方式零：Zeabur 一键云部署
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-> **Zeabur 会议网络限制：** 模板会部署 LiveKit，并通过 WebSocket/API 7880 与 ICE/TCP 7881 提供会议连接。Zeabur 当前不支持 UDP 服务端口，因此可以使用 TCP 回退，但弱网延迟和画质可能下降。模板已预留 UDP 7882 配置；平台未来支持 UDP 后只需开放该端口。当前生产级百人会议建议使用 LiveKit Cloud，或将 LiveKit 部署到支持 UDP 的云主机。
+> **Zeabur 通话网络限制：** 模板会部署 LiveKit，并通过 WebSocket/API 7880 与 ICE/TCP 7881 提供私聊及群会议连接。Zeabur 当前不支持 UDP 服务端口，因此可以使用 TCP 回退，但弱网延迟和画质可能下降。模板已预留 UDP 7882 配置；平台未来支持 UDP 后只需开放该端口。当前生产级通话建议使用 LiveKit Cloud，或将 LiveKit 部署到支持 UDP 的云主机。
 
 #### 服务端 Nginx 配置
 
@@ -130,7 +130,7 @@ git clone <repo-url> && cd paperphone-plus
 
 # 复制并编辑环境变量
 cp server/.env.example server/.env
-# 按需编辑：DB_PASS / JWT_SECRET / CF_CALLS_APP_ID 等
+# 按需编辑：DB_PASS / JWT_SECRET / LIVEKIT_URL 等
 
 # 一键启动（含前端、后端、MySQL、Redis）
 docker compose up -d
@@ -177,38 +177,16 @@ npm run dev            # → http://localhost:5173
 
 ---
 
-视频通话使用 WebRTC P2P，局域网内开箱即用。跨网络通话需要配置 TURN 服务器（用于 NAT 穿透）。
-
-### 使用 Cloudflare TURN（推荐）
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages** → **Calls** → 创建 App
-2. 获取 **App ID** 和 **App Secret**（Token Key）
-3. 填入 `server/.env`：
-
-```env
-CF_CALLS_APP_ID=your_app_id_here
-CF_CALLS_APP_SECRET=your_app_secret_here
-```
-
-4. 重启后端，TURN 凭据会在每次通话时自动刷新（TTL 86400s）
-
-### 使用 Metered.ca TURN（免费备选方案）
-1. 在 [Metered.ca](https://www.metered.ca) 注册账号
-2. 创建 TURN App 并获取 **API Key**
-3. 填入 `server/.env`：
-
-```env
-METERED_TURN_API_KEY=your_metered_api_key_here
-```
-
-> **优先级**：Cloudflare TURN → Metered.ca TURN → STUN only（公共 STUN），自动降级。
-
-> **均未配置时**：自动降级为 STUN only（Google + Cloudflare 公共 STUN），局域网内可正常通话。
+所有实时音视频通话统一连接自建 LiveKit SFU。必须配置 `LIVEKIT_URL`、
+`LIVEKIT_API_KEY` 和 `LIVEKIT_API_SECRET`；客户端不再使用 P2P、Cloudflare TURN
+或 Metered TURN。生产环境应为 LiveKit 配置公网地址和可信 TLS，并开放
+`7881/tcp` 与 `7882/udp`；复杂受限网络可额外启用 LiveKit 内置 TURN/TLS。
 
 ### 通话功能说明
 | 类型 | 技术方案 | 适用场景 |
 |------|----------|----------|
-| 私聊 1:1 视频 | WebRTC P2P + TURN | 所有场景 |
-| 私聊 1:1 语音 | WebRTC P2P + TURN | 所有场景 |
+| 私聊 1:1 视频 | LiveKit SFU | 所有场景 |
+| 私聊 1:1 语音 | LiveKit SFU | 所有场景 |
 | 群组多人语音/视频 | LiveKit SFU（自适应订阅、动态编码） | 最多 100 人（上线前按带宽和并发开摄像头数压测） |
 
 ### 变声功能说明
@@ -224,7 +202,7 @@ METERED_TURN_API_KEY=your_metered_api_key_here
 **技术实现**：使用 Web Audio API 构建音频处理链（AudioContext → MediaStreamSource → ScriptProcessorNode → MediaStreamDestination），对麦克风采集的音频流进行实时音高/速度调整，处理后的音频流替换原始流发送给对方。
 
 - **语音消息**：录音时选择变声模式，发出的 `.webm` 音频文件已包含变声效果，接收方无法还原原声，实现真正的匿名发送
-- **1v1 / 群组通话**：通话中点击变声按钮循环切换模式，通过 `RTCRtpSender.replaceTrack()` 实时替换音频轨道
+- **1v1 / 群组通话**：通话中点击变声按钮循环切换模式，通过 `LiveKit LocalAudioTrack.replaceTrack()` 实时替换音频轨道
 
 ---
 
@@ -542,7 +520,7 @@ paperphoneplus/
 │       │   ├── files.rs             # 文件代理（R2_PUBLIC_URL 未设时）
 │       │   ├── moments.rs           # 朋友圈（动态/点赞/评论/隐私控制）
 │       │   ├── timeline.rs          # 时间线（公开发帖/点赞/评论/匿名）
-│       │   ├── calls.rs             # TURN 凭据派发
+│       │   ├── calls.rs             # LiveKit 私聊/会议令牌
 │       │   ├── push.rs              # 推送订阅管理
 │       │   ├── push_relay.rs        # APNS / FCM / OneSignal 推送中继端点
 │       │   ├── stickers.rs          # Telegram 贴纸包代理（缓存）
@@ -670,9 +648,9 @@ paperphoneplus/
 | `R2_SECRET_ACCESS_KEY` | R2 API Token 的 Secret Key | — |
 | `R2_BUCKET` | R2 Bucket 名称 | — |
 | `R2_PUBLIC_URL` | R2 公开 URL（可选），设置后文件走 CDN 直链 | — |
-| `CF_CALLS_APP_ID` | Cloudflare Calls App ID（可选） | — |
-| `CF_CALLS_APP_SECRET` | Cloudflare Calls App Secret（可选） | — |
-| `METERED_TURN_API_KEY` | Metered.ca TURN API Key（可选，免费备选方案） | — |
+| `LIVEKIT_URL` | 所有音视频通话使用的 LiveKit 公网 WebSocket 地址 | — |
+| `LIVEKIT_API_KEY` | 服务端与 LiveKit 共享的 API Key | — |
+| `LIVEKIT_API_SECRET` | 服务端与 LiveKit 共享的 API Secret | — |
 | `VAPID_PUBLIC_KEY` | Web Push VAPID 公钥（可选） | — |
 | `VAPID_PRIVATE_KEY` | Web Push VAPID 私钥（可选） | — |
 | `VAPID_SUBJECT` | VAPID 联系邮箱（可选） | `mailto:admin@paperphoneplus.app` |

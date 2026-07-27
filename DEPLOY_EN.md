@@ -2,7 +2,7 @@
 
 This document provides detailed instructions for two recommended deployment methods for PaperPhonePlus, along with client-side server address configuration for all platforms.
 
-> **Key concept**: server, MySQL, Redis, and the LiveKit meeting SFU run on server infrastructure. The frontend may run on Vercel. Clients use the **server address** for application APIs and the server-provided `LIVEKIT_URL` for meetings.
+> **Key concept**: server, MySQL, Redis, and the LiveKit call SFU run on server infrastructure. The frontend may run on Vercel. Clients use the **server address** for application APIs and the server-provided `LIVEKIT_URL` for all 1:1 and group audio/video calls.
 
 ---
 
@@ -41,10 +41,10 @@ Zeabur creates five services: `client`, `server`, `MySQL`, `Redis`, and `LiveKit
 
 > ⚠️ Delete only `client`. Do **not** delete `server`, `MySQL`, `Redis`, or `LiveKit`.
 
-### Zeabur meeting limitation and upgrade path
+### Zeabur call limitation and upgrade path
 
 - The template exposes LiveKit WebSocket/API 7880 and ICE/TCP 7881. UDP 7882 remains configured internally but is not declared as a Zeabur port.
-- TCP fallback is suitable for functional testing and ordinary networks. For production-quality 100-person meetings, use LiveKit Cloud or host LiveKit on a public VM that exposes UDP 7882.
+- TCP fallback is suitable for functional testing and ordinary networks. For production calls, use LiveKit Cloud or host LiveKit on a public VM that exposes UDP 7882.
 - For external LiveKit, set `LIVEKIT_URL=wss://meeting.example.com` on the Zeabur server service and use identical `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` values on both services.
 - When Zeabur adds UDP support, declare UDP 7882 on the LiveKit service and open it in the firewall. No client update is required.
 
@@ -131,7 +131,7 @@ JWT_SECRET=your_random_secret_string          # Must change for production
 DB_PASS=your_database_password                # Keep consistent with docker-compose.yml
 ADMIN_PASSWORD=your_admin_panel_password      # Must change for production
 LIVEKIT_URL=wss://meeting.example.com
-LIVEKIT_API_KEY=your_meeting_api_key
+LIVEKIT_API_KEY=your_call_api_key
 LIVEKIT_API_SECRET=at_least_32_random_bytes
 
 # Optional configuration (fill in as needed)
@@ -139,8 +139,6 @@ R2_ACCOUNT_ID=...                             # Cloudflare R2 file storage
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
 R2_BUCKET=...
-CF_CALLS_APP_ID=...                           # Cloudflare TURN (video calls)
-CF_CALLS_APP_SECRET=...
 VAPID_PUBLIC_KEY=...                          # Web Push notifications
 VAPID_PRIVATE_KEY=...
 ```
@@ -164,7 +162,7 @@ Edit `docker-compose.yml` and **delete the following block**:
     restart: unless-stopped
 ```
 
-After deletion, keep the `server`, `mysql`, `redis`, and `livekit` services. Removing LiveKit makes the group-meeting token endpoint report that the SFU is not configured.
+After deletion, keep the `server`, `mysql`, `redis`, and `livekit` services. Removing LiveKit prevents every direct and group audio/video call from connecting.
 
 ### Step 4: Start Docker Services
 
@@ -264,7 +262,7 @@ sudo ufw allow 7881/tcp
 sudo ufw allow 7882/udp
 ```
 
-The single-domain example below is retained only for legacy deployments without group meetings. Use the repository configuration above when meetings are enabled.
+The single-domain example below is retained only for legacy deployments with all audio/video calling disabled. Normal deployments must use the two-domain configuration above.
 
 Create an Nginx site configuration file:
 

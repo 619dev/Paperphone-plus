@@ -16,7 +16,7 @@ export const ru: Record<string, string> = {
   'chats.empty_hint': 'Добавьте друзей чтобы начать', 'chats.image': '[Изображение]',
   'chats.file': '[Файл]', 'chats.voice': '[Голос]', 'chats.video': '[Видео]', 'chats.sticker': '[Стикер]',
 
-  'chat.typing': 'печатает...', 'chat.placeholder': 'Введите сообщение...', 'chat.send': 'Отправить',
+  'chat.typing': 'печатает...', 'chat.placeholder': 'Введите сообщение...', 'chat.send': 'Отправить', 'chat.reply': 'Ответить', 'chat.replying_to': 'Ответ для',
   'chat.encrypted': 'Сообщения защищены сквозным шифрованием',
   'chat.no_recent_emoji': 'Нет недавних эмодзи', 'chat.loading_stickers': 'Загрузка...', 'chat.no_stickers': 'Нет стикеров в этом наборе',
   'chat.uploading_image': 'Загрузка изображения...', 'chat.uploading_video': 'Загрузка видео...', 'chat.uploading_file': 'Загрузка файла...', 'chat.uploading_voice': 'Загрузка голосового сообщения...', 'chat.upload_failed': 'Ошибка загрузки',

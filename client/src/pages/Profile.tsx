@@ -14,6 +14,7 @@ import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, S
 import { clearOfflineCache } from '../utils/offlineCache'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
+const APP_VERSION = '2.2.8'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -350,6 +351,14 @@ export default function Profile() {
           >
             <Trash2 size={14} style={{ marginRight: 6 }} /> {t('profile.delete_account')}
           </button>
+        </div>
+
+        <div style={{
+          padding: '0 16px max(24px, env(safe-area-inset-bottom))',
+          textAlign: 'center', color: 'var(--text-muted)',
+          fontSize: 12, opacity: 0.65,
+        }}>
+          PaperPhonePlus v{APP_VERSION}
         </div>
 
         {/* Delete Account Confirmation Modal */}
