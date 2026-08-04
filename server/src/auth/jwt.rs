@@ -20,7 +20,9 @@ pub fn sign_token(id: &str, username: &str, session_id: Option<&str>, secret: &s
         username: username.to_string(),
         session_id: session_id.map(|s| s.to_string()),
         token_type: None,
-        exp: (now + Duration::days(7)).timestamp(),
+        // Access tokens are deliberately short lived. A revocable, rotating
+        // device refresh token keeps normal users signed in without passwords.
+        exp: (now + Duration::minutes(30)).timestamp(),
         iat: now.timestamp(),
     };
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())).unwrap()

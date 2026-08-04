@@ -153,6 +153,7 @@ async fn verify_totp(
         .execute(&state.db).await.ok();
 
     let token = sign_token(&claims.id, &claims.username, Some(&session_id), &state.config.jwt_secret);
+    let refresh_token = crate::routes::auth::attach_refresh_token(&state, &session_id).await;
 
     let user: Option<(String, String, String, Option<String>, Option<String>)> = sqlx::query_as(
         "SELECT id, username, nickname, avatar, ik_pub FROM users WHERE id = ?"
@@ -160,7 +161,7 @@ async fn verify_totp(
 
     let (id, username, nickname, avatar, ik_pub) = user.unwrap_or_default();
     Ok(Json(serde_json::json!({
-        "token": token,
+        "token": token, "refresh_token": refresh_token,
         "user": { "id": id, "username": username, "nickname": nickname, "avatar": avatar, "ik_pub": ik_pub }
     })))
 }
@@ -235,8 +236,9 @@ async fn use_recovery_code(
             .bind(&session_id).bind(&claims.id).bind(&device_name).bind(&device_type).bind(&os_name).bind(&browser_name).bind(&ip_address)
             .execute(&state.db).await.ok();
         let token = sign_token(&claims.id, &claims.username, Some(&session_id), &state.config.jwt_secret);
+        let refresh_token = crate::routes::auth::attach_refresh_token(&state, &session_id).await;
 
-        Ok(Json(serde_json::json!({ "token": token, "remaining_codes": codes.len() })))
+        Ok(Json(serde_json::json!({ "token": token, "refresh_token": refresh_token, "remaining_codes": codes.len() })))
     } else {
         Err((axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid recovery code" }))))
     }

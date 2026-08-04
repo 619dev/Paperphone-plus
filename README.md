@@ -45,8 +45,9 @@
 | 🗝️ 零知识服务器 | 服务器只存储密文，私钥仅在设备本地（四层持久化） |
 | 📹 视频/语音通话 | 1:1 私聊和群会议统一使用 LiveKit SFU（最多100人），主席全员静音、讲课模式 |
 | 🎙️ 变声功能 | 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链 |
-| 📱 会话保持 | 网络中断、普通鉴权失败或服务器地址变化时保留登录状态，仅在服务器明确撤销会话时退出 |
-| 📴 离线访问 | 按账户隔离缓存联系人、群组、每会话最多 2000 条聊天记录、朋友圈、时间线及媒体；可在个人资料中手动清理 |
+| 📱 会话保持 | 30 分钟 Access Token + 90 天设备 Refresh Token 自动续期；网络/IP/VPN/代理变化时自动重建连接，仅在设备会话被撤销或长期凭证失效时要求重新登录 |
+| 📨 可靠消息同步 | WebSocket 双向心跳与半死连接检测、持久化发件箱、客户端消息 ID 幂等、服务端序号增量同步；即使通知到达但实时连接丢包，重连后也会自动补齐 |
+| 📴 离线访问 | 按账户隔离缓存联系人、群组、每会话最多 2000 条聊天记录、朋友圈、时间线及媒体；离线发送进入本地队列，联网后自动重试；可在个人资料中手动清理 |
 | 🔎 Unicode 好友搜索 | 中文输入法组合状态保护、NFC 归一化与 UTF-8 参数编码，支持可靠搜索中文用户名和昵称 |
 | 👥 群聊 | 最多 2000 人群组，支持「加密」与「未加密」两种模式（群主可切换，切换清空历史消息）。加密模式采用 Signal 风格 Sender Key 协议（XSalsa20-Poly1305 对称加密 + ECDH 密钥分发），仅群成员可解密消息；加密模式下无法使用群机器人。免打扰模式，成员管理 |
 | 👫 好友系统 | 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组 |
@@ -71,6 +72,21 @@
 | 🌐 代理设置 | 支持 SOCKS5 / HTTP / HTTPS 代理协议，可在登录页和设置页配置代理服务器地址、端口、用户名和密码，方便受限网络环境下使用 |
 | 🛡️ 内容审核 | 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA |
 | 🔧 管理后台 | 内嵌 Web 管理面板（`/admin`，路径可自定义），密码保护，审核举报、删除违规内容、封禁用户，支持 8 种语言 |
+
+---
+
+## 会话恢复与消息可靠性
+
+PaperPhonePlus 将“本地账号状态”“实时连接状态”和“消息同步状态”分开处理。WebSocket 打开并不代表可用；客户端只有收到服务端 `auth_ok` 后才进入已连接状态，并通过双向 `ping/pong` 检测 VPN、IP、Wi-Fi/蜂窝切换或系统休眠产生的半死连接。
+
+- Access Token 有效期为 30 分钟，设备 Refresh Token 有效期为 90 天，并在活跃使用时续期。普通 Token 过期会静默刷新，不要求用户重新输入密码。
+- 老版本已经登录的设备会在 Token 仍有效时自动升级为新会话。若旧 Token 在升级前已经过期，需要重新登录一次，之后即可使用自动续期。
+- 每条消息由客户端生成稳定的 `client_msg_id`。未收到服务端 ACK 的消息保存在本地发件箱，网络恢复后用同一 ID 自动重试，服务端通过唯一约束防止重复入库。
+- 每条服务端消息具有单调递增的 `server_seq`。客户端在登录、重连和回到前台后按游标增量同步，因此 APNS/FCM 通知与 WebSocket 实时投递不一致时仍能补齐正文。
+- 用户主动退出、管理员撤销设备或账号失效时，服务端设备会话会被撤销；普通断网和 IP 变化不会清除登录状态。
+
+> [!IMPORTANT]
+> 升级时必须先部署 server，再发布新版客户端。server 启动会自动新增可靠同步所需的数据库字段并验证迁移结果；迁移不完整时会拒绝启动，避免出现“能连接但消息无法写入”的带病状态。生产升级前请备份 MySQL。
 
 ---
 
@@ -506,16 +522,16 @@ paperphoneplus/
 │       ├── db/
 │       │   ├── mysql.rs             # MySQL 连接池 (sqlx)
 │       │   ├── redis.rs             # Redis 连接池 (deadpool-redis)
-│       │   └── schema.sql           # 数据库 schema（幂等）
+│       │   └── schema.sql           # 数据库 schema 与可靠性字段迁移（幂等）
 │       ├── auth/
-│       │   ├── jwt.rs               # JWT 签名/验证（含 2FA pending token）
+│       │   ├── jwt.rs               # 短期 Access JWT 签名/验证（含 2FA pending token）
 │       │   └── middleware.rs        # Axum 鉴权中间件
 │       ├── routes/
 │       │   ├── auth.rs              # 注册/登录（含 X3DH 公钥上传）
 │       │   ├── users.rs             # 用户搜索 / Prekey 下载
 │       │   ├── friends.rs           # 好友申请 / 接受
 │       │   ├── groups.rs            # 群组管理
-│       │   ├── messages.rs          # 消息历史分页
+│       │   ├── messages.rs          # 消息历史分页与 server_seq 增量同步
 │       │   ├── upload.rs            # Cloudflare R2 文件上传
 │       │   ├── files.rs             # 文件代理（R2_PUBLIC_URL 未设时）
 │       │   ├── moments.rs           # 朋友圈（动态/点赞/评论/隐私控制）
@@ -553,8 +569,9 @@ paperphoneplus/
         ├── store/
         │   └── index.ts             # Zustand 全局状态
         ├── api/
-        │   ├── http.ts              # HTTP 客户端（JWT 拦截）
-        │   └── socket.ts            # WebSocket 客户端（自动重连 + 心跳）
+        │   ├── http.ts              # HTTP 客户端（自动刷新 Token 与请求重放）
+        │   ├── socket.ts            # WebSocket 鉴权、双向心跳、重连与持久化发件箱
+        │   └── sync.ts              # server_seq 游标增量同步
         ├── i18n/
         │   ├── index.ts             # 多语言引擎
         │   └── locales/             # zh/en/ja/ko/fr/de/ru/es
@@ -591,7 +608,7 @@ paperphoneplus/
 | `prekeys` | X3DH 一次性预密钥池 |
 | `friends` | 好友关系（pending/accepted/blocked） |
 | `groups` / `group_members` | 群组 + 成员（含免打扰状态） |
-| `messages` | 加密消息（离线缓冲，送达后可删） |
+| `messages` | 加密消息、客户端幂等 ID、全局同步序号与离线补偿 |
 | `moments` | 朋友圈动态（文字 ≤1024 字） |
 | `moment_images` | 动态图片（每条最多 9 张） |
 | `moment_videos` | 动态视频（封面图+时长，每条最多 1 个，≤10 分钟） |
@@ -605,7 +622,7 @@ paperphoneplus/
 | `ntfy_subscriptions` | ntfy 推送订阅（国产安卓设备） |
 | `apns_tokens` | APNS 设备令牌（Capacitor iOS） |
 | `user_totp` | TOTP 两步验证密钥与恢复码 |
-| `sessions` | 多设备会话管理 |
+| `sessions` | 多设备会话、Refresh Token 哈希、长期凭证有效期与撤销状态 |
 | `friend_tags` / `friend_tag_assignments` | 好友标签系统 |
 | `timeline_posts` | 时间线帖子（文字 ≤2000 字，支持匿名） |
 | `timeline_media` | 时间线媒体（图片/视频，每帖最多 50 个） |

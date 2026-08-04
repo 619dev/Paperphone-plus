@@ -81,4 +81,15 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
         Ok(_) => {}
         Err(e) => tracing::warn!("Unable to inspect user field character sets: {}", e),
     }
+
+    // These columns are protocol-critical: starting without them would accept
+    // connections but silently fail every reliable send/sync operation.
+    let reliability_columns: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA=DATABASE() AND (
+           (TABLE_NAME='messages' AND COLUMN_NAME IN ('server_seq','client_msg_id')) OR
+           (TABLE_NAME='sessions' AND COLUMN_NAME IN ('refresh_token_hash','refresh_expires_at'))
+         )"
+    ).fetch_one(pool).await.expect("Unable to verify reliability schema");
+    assert_eq!(reliability_columns.0, 4, "Reliability schema migration incomplete; inspect the preceding database warnings");
 }

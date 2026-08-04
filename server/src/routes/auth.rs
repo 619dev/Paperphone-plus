@@ -3,9 +3,12 @@ use axum::{Router, routing::post, extract::State, Json, http::HeaderMap};
 use serde::{Deserialize, Serialize};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier, password_hash::{SaltString, rand_core::OsRng}};
 use uuid::Uuid;
+use rand::{RngCore, rngs::OsRng as RandOsRng};
+use sha2::{Digest, Sha256};
 
 use crate::AppState;
 use crate::auth::jwt::{sign_token, sign_2fa_pending_token};
+use crate::auth::middleware::AuthUser;
 
 #[derive(Deserialize)]
 pub struct RegisterReq {
@@ -29,6 +32,24 @@ pub struct PrekeyItem {
 pub struct LoginReq {
     username: String,
     password: String,
+}
+
+#[derive(Deserialize)]
+struct RefreshReq { refresh_token: String }
+
+fn new_refresh_token() -> (String, String) {
+    let mut bytes = [0u8; 32];
+    RandOsRng.fill_bytes(&mut bytes);
+    let raw = hex::encode(bytes);
+    let hash = hex::encode(Sha256::digest(raw.as_bytes()));
+    (raw, hash)
+}
+
+pub async fn attach_refresh_token(state: &AppState, session_id: &str) -> String {
+    let (raw, hash) = new_refresh_token();
+    sqlx::query("UPDATE sessions SET refresh_token_hash = ?, refresh_expires_at = DATE_ADD(NOW(), INTERVAL 90 DAY) WHERE id = ?")
+        .bind(hash).bind(session_id).execute(&state.db).await.ok();
+    format!("{}.{}", session_id, raw)
 }
 
 #[derive(Serialize)]
@@ -57,6 +78,8 @@ pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/register", post(register))
         .route("/login", post(login))
+        .route("/refresh", post(refresh))
+        .route("/upgrade-session", post(upgrade_session))
 }
 
 async fn register(
@@ -115,9 +138,10 @@ async fn register(
         .execute(&state.db).await.ok();
 
     let token = sign_token(&id, &body.username, Some(&session_id), &state.config.jwt_secret);
+    let refresh_token = attach_refresh_token(&state, &session_id).await;
 
     Ok((axum::http::StatusCode::CREATED, Json(serde_json::json!({
-        "token": token,
+        "token": token, "refresh_token": refresh_token,
         "user": { "id": id, "username": body.username, "nickname": nickname }
     }))))
 }
@@ -169,11 +193,49 @@ async fn login(
         .execute(&state.db).await.ok();
 
     let token = sign_token(&id, &username, Some(&session_id), &state.config.jwt_secret);
+    let refresh_token = attach_refresh_token(&state, &session_id).await;
 
     Ok(Json(serde_json::json!({
-        "token": token,
+        "token": token, "refresh_token": refresh_token,
         "user": { "id": id, "username": username, "nickname": nickname, "avatar": avatar, "ik_pub": ik_pub }
     })))
+}
+
+async fn refresh(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<RefreshReq>,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let (session_id, raw) = body.refresh_token.split_once('.').ok_or_else(|| (
+        axum::http::StatusCode::UNAUTHORIZED,
+        Json(serde_json::json!({"error":"Invalid refresh token","code":"session_revoked","logout":true}))
+    ))?;
+    let supplied_hash = hex::encode(Sha256::digest(raw.as_bytes()));
+    let row: Option<(String, String, String)> = sqlx::query_as(
+        "SELECT s.user_id, u.username, s.refresh_token_hash FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=? AND s.revoked=0 AND s.refresh_expires_at > NOW()"
+    ).bind(session_id).fetch_optional(&state.db).await.ok().flatten();
+    let (user_id, username, _) = row.filter(|r| r.2 == supplied_hash).ok_or_else(|| (
+        axum::http::StatusCode::UNAUTHORIZED,
+        Json(serde_json::json!({"error":"Session expired or revoked","code":"session_revoked","logout":true}))
+    ))?;
+
+    // Keep the device token stable across tabs/processes. Session revocation is
+    // the kill switch; rotating here would make simultaneous refreshes race and
+    // randomly sign one client out.
+    let refresh_token = body.refresh_token.clone();
+    let token = sign_token(&user_id, &username, Some(session_id), &state.config.jwt_secret);
+    sqlx::query("UPDATE sessions SET last_active=NOW(),refresh_expires_at=DATE_ADD(NOW(),INTERVAL 90 DAY) WHERE id=?").bind(session_id).execute(&state.db).await.ok();
+    Ok(Json(serde_json::json!({"token":token,"refresh_token":refresh_token})))
+}
+
+async fn upgrade_session(
+    State(state): State<Arc<AppState>>, auth: AuthUser,
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let session_id = auth.0.session_id.ok_or_else(|| (
+        axum::http::StatusCode::UNAUTHORIZED,
+        Json(serde_json::json!({"error":"No device session","code":"session_revoked","logout":true}))
+    ))?;
+    let refresh_token = attach_refresh_token(&state, &session_id).await;
+    Ok(Json(serde_json::json!({"refresh_token":refresh_token})))
 }
 
 /// Parse User-Agent header into (device_name, device_type, os, browser)

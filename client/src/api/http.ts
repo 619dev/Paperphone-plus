@@ -1,4 +1,7 @@
 import { endSession, isExplicitLogoutSignal } from '../utils/session'
+import { useStore } from '../store'
+
+let refreshInFlight: Promise<string | null> | null = null
 
 function getBase(): string {
   return localStorage.getItem('serverUrl') || import.meta.env.VITE_API_URL || ''
@@ -17,7 +20,18 @@ export async function api<T = any>(
     headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(`${getBase()}${path}`, { ...opts, headers })
+  let res = await fetch(`${getBase()}${path}`, { ...opts, headers })
+
+  // A short-lived access token may expire while the durable device session is
+  // still valid. Refresh once, share that refresh across concurrent requests,
+  // then replay the original request transparently.
+  if (res.status === 401 && path !== '/api/auth/refresh') {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      headers['Authorization'] = `Bearer ${refreshed}`
+      res = await fetch(`${getBase()}${path}`, { ...opts, headers })
+    }
+  }
 
   const text = await res.text()
   let data: any
@@ -39,6 +53,56 @@ export async function api<T = any>(
   }
 
   return data as T
+}
+
+export async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) {
+    // A legacy installation that missed the one-time upgrade can no longer
+    // recover an expired signed token without proving credentials again.
+    endSession('reauth_required')
+    return null
+  }
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${getBase()}/api/auth/refresh`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.token) {
+        if (isExplicitLogoutSignal(data, res.headers)) endSession('session_revoked')
+        return null
+      }
+      useStore.getState().setToken(data.token, data.refresh_token)
+      return data.token as string
+    } catch {
+      // Offline is recoverable: preserve local account and cached messages.
+      return null
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+  return refreshInFlight
+}
+
+let upgradeInFlight: Promise<void> | null = null
+export function ensureRefreshToken(): Promise<void> {
+  if (localStorage.getItem('refreshToken') || !localStorage.getItem('token')) return Promise.resolve()
+  if (upgradeInFlight) return upgradeInFlight
+  upgradeInFlight = (async () => {
+    try {
+      const res = await fetch(`${getBase()}/api/auth/upgrade-session`, {
+        method:'POST', headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token)
+      else if (res.status === 401) endSession('reauth_required')
+    } catch { /* offline: preserve account and retry on the next reconnect */ }
+    finally { upgradeInFlight = null }
+  })()
+  return upgradeInFlight
 }
 
 // Convenience methods

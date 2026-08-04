@@ -87,6 +87,10 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   delivered   TINYINT(1)    NOT NULL DEFAULT 0,
   read_at     DATETIME      DEFAULT NULL,
+  server_seq  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  client_msg_id VARCHAR(64) DEFAULT NULL,
+  UNIQUE KEY uk_message_server_seq (server_seq),
+  UNIQUE KEY uk_sender_client_msg (from_id, client_msg_id),
   INDEX idx_to_undelivered (to_id, delivered, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -184,9 +188,17 @@ CREATE TABLE IF NOT EXISTS sessions (
   last_active  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   revoked      TINYINT(1)    NOT NULL DEFAULT 0,
+  refresh_token_hash CHAR(64) DEFAULT NULL,
+  refresh_expires_at DATETIME DEFAULT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_sess_user (user_id, revoked)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── Reliability migrations for existing installations ───────────────────
+ALTER TABLE messages ADD COLUMN server_seq BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, ADD UNIQUE KEY uk_message_server_seq (server_seq);
+ALTER TABLE messages ADD COLUMN client_msg_id VARCHAR(64) DEFAULT NULL, ADD UNIQUE KEY uk_sender_client_msg (from_id, client_msg_id);
+ALTER TABLE sessions ADD COLUMN refresh_token_hash CHAR(64) DEFAULT NULL;
+ALTER TABLE sessions ADD COLUMN refresh_expires_at DATETIME DEFAULT NULL;
 
 -- ── Friend Tags ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS friend_tags (

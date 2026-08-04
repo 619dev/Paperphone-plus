@@ -41,11 +41,29 @@ impl FromRequestParts<Arc<AppState>> for AuthUser {
                         axum::Json(serde_json::json!({ "error": "2FA verification required" })),
                     ));
                 }
+                if let Some(session_id) = claims.session_id.as_deref() {
+                    let active: Option<(i8,)> = sqlx::query_as(
+                        "SELECT revoked FROM sessions WHERE id = ? AND user_id = ?"
+                    ).bind(session_id).bind(&claims.id)
+                        .fetch_optional(&state.db).await.ok().flatten();
+                    if active.map(|r| r.0).unwrap_or(1) != 0 {
+                        return Err((
+                            StatusCode::UNAUTHORIZED,
+                            axum::Json(serde_json::json!({
+                                "error":"Session revoked", "code":"session_revoked", "logout":true
+                            })),
+                        ));
+                    }
+                    sqlx::query("UPDATE sessions SET last_active=NOW() WHERE id=?")
+                        .bind(session_id).execute(&state.db).await.ok();
+                }
                 Ok(AuthUser(claims))
             }
             Err(_) => Err((
                 StatusCode::UNAUTHORIZED,
-                axum::Json(serde_json::json!({ "error": "Invalid or expired token" })),
+                axum::Json(serde_json::json!({
+                    "error": "Invalid or expired token", "code":"access_token_expired", "refreshable":true
+                })),
             )),
         }
     }

@@ -92,6 +92,9 @@ export interface ChatMessage {
   read_at?: number
   offline?: boolean
   decrypted?: string
+  client_msg_id?: string
+  delivery_status?: 'queued' | 'sent' | 'failed'
+  server_seq?: number
 }
 
 export interface Group {
@@ -141,7 +144,8 @@ interface AppStore {
   // Auth
   token: string | null
   user: User | null
-  setAuth: (token: string, user: User) => void
+  setAuth: (token: string, user: User, refreshToken?: string) => void
+  setToken: (token: string, refreshToken?: string) => void
   logout: () => void
 
   // Theme
@@ -196,6 +200,7 @@ export const useStore = create<AppStore>((set, get) => ({
   setServerUrl: (url) => {
     localStorage.setItem('serverUrl', url)
     set({ serverUrl: url })
+    window.dispatchEvent(new Event('paperphone:network-changed'))
   },
 
   // Proxy list (up to 5) + active selection
@@ -230,6 +235,7 @@ export const useStore = create<AppStore>((set, get) => ({
     // Re-apply if this is the active proxy
     if (get().activeProxyId === proxy.id) {
       applyNativeProxy(proxy)
+      window.dispatchEvent(new Event('paperphone:network-changed'))
     }
   },
   removeProxy: (id) => {
@@ -250,23 +256,37 @@ export const useStore = create<AppStore>((set, get) => ({
       set({ activeProxyId: id })
       const proxy = get().proxyList.find(p => p.id === id)
       if (proxy) applyNativeProxy(proxy)
+      window.dispatchEvent(new Event('paperphone:network-changed'))
     } else {
       localStorage.removeItem('activeProxyId')
       set({ activeProxyId: null })
       clearNativeProxy()
+      window.dispatchEvent(new Event('paperphone:network-changed'))
     }
   },
 
   // Auth
   token: localStorage.getItem('token'),
   user: JSON.parse(localStorage.getItem('user') || 'null'),
-  setAuth: (token, user) => {
+  setAuth: (token, user, refreshToken) => {
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
     set({ token, user })
   },
+  setToken: (token, refreshToken) => {
+    localStorage.setItem('token', token)
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
+    set({ token })
+  },
   logout: () => {
+    const currentUserId = get().user?.id
+    if (currentUserId) {
+      localStorage.removeItem(`pp_sync_cursor:${currentUserId}`)
+      localStorage.removeItem(`pp_outbox:${currentUserId}`)
+    }
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     localStorage.removeItem(MSG_CACHE_KEY)
     set({ token: null, user: null, friends: [], groups: [], messages: {}, unread: {} })
@@ -317,6 +337,16 @@ export const useStore = create<AppStore>((set, get) => ({
       // and its return value atomic so callers do not count a replay as new.
       if (msg.id && existing.some(m => m.id === msg.id)) {
         return s
+      }
+      const optimisticIndex = msg.client_msg_id
+        ? existing.findIndex(m => m.client_msg_id === msg.client_msg_id)
+        : -1
+      if (optimisticIndex >= 0) {
+        const reconciled = [...existing]
+        reconciled[optimisticIndex] = { ...reconciled[optimisticIndex], ...msg, delivery_status: 'sent' }
+        const updated = { ...s.messages, [chatId]: reconciled }
+        persistMessages(updated)
+        return { messages: updated }
       }
       const updated = {
         ...s.messages,

@@ -132,7 +132,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                             "SELECT revoked FROM sessions WHERE id = ? AND user_id = ?"
                         ).bind(sid).bind(&claims.id).fetch_optional(&state.db).await.ok().flatten();
 
-                        if revoked.map(|r| r.0).unwrap_or(0) == 1 {
+                        if revoked.map(|r| r.0).unwrap_or(1) == 1 {
                             let _ = tx.send(serde_json::json!({"type":"session_revoked"}).to_string());
                             break;
                         }
@@ -171,7 +171,12 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                     flush_offline_messages(&state, &claims.id, &tx).await;
                 }
                 Err(_) => {
-                    let _ = tx.send(serde_json::json!({"type":"error","msg":"Auth failed"}).to_string());
+                    let _ = tx.send(serde_json::json!({
+                        "type":"auth_error", "code":"access_token_expired",
+                        "msg":"Auth failed", "refreshable":true
+                    }).to_string());
+                    tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+                    break;
                 }
             }
             continue;
@@ -194,13 +199,18 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                     .arg("EX").arg(60)
                     .query_async(&mut *conn).await;
             }
+            let _ = tx.send(serde_json::json!({
+                "type":"pong", "id":parsed.get("id"),
+                "server_time":chrono::Utc::now().timestamp_millis()
+            }).to_string());
             continue;
         }
 
         // ── PRIVATE MESSAGE ──────────────────────────────────────
         if msg_type == "message" && parsed.get("to").is_some() && parsed.get("group_id").is_none() {
             let to = parsed["to"].as_str().unwrap_or("");
-            let msg_id = Uuid::new_v4().to_string();
+            let client_msg_id = parsed.get("client_msg_id").and_then(|v|v.as_str());
+            let mut msg_id = Uuid::new_v4().to_string();
             let msg_sub_type = parsed.get("msg_type").and_then(|v| v.as_str()).unwrap_or("text");
             let ciphertext = parsed.get("ciphertext").and_then(|v| v.as_str()).unwrap_or("");
             let header = parsed.get("header").and_then(|v| v.as_str());
@@ -208,34 +218,46 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             let self_hdr = parsed.get("self_header").and_then(|v| v.as_str());
             let ts = chrono::Utc::now().timestamp_millis();
 
-            let envelope = serde_json::json!({
-                "type": "message", "id": msg_id, "from": uid, "to": to,
-                "msg_type": msg_sub_type, "ciphertext": ciphertext,
-                "header": header, "ts": ts,
-            });
-
-            let delivered = state.ws_clients.send_to_user(to, envelope);
-
-            sqlx::query(
-                "INSERT INTO messages (id, type, from_id, to_id, ciphertext, header, self_ciphertext, self_header, msg_type, delivered) VALUES (?, 'private', ?, ?, ?, ?, ?, ?, ?, ?)"
+            let insert = sqlx::query(
+                "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,self_ciphertext,self_header,msg_type,delivered,client_msg_id) VALUES (?,'private',?,?,?,?,?,?,?,0,?)"
             )
             .bind(&msg_id).bind(&uid).bind(to)
             .bind(ciphertext).bind(header).bind(self_ct).bind(self_hdr)
-            .bind(msg_sub_type).bind(delivered as i8)
-            .execute(&state.db).await.ok();
+            .bind(msg_sub_type).bind(client_msg_id)
+            .execute(&state.db).await;
+
+            let (server_seq, is_new) = match insert {
+                Ok(result) => (result.last_insert_id(), true),
+                Err(_) if client_msg_id.is_some() => {
+                    let existing: Option<(String,u64)> = sqlx::query_as(
+                        "SELECT id,server_seq FROM messages WHERE from_id=? AND client_msg_id=?"
+                    ).bind(&uid).bind(client_msg_id).fetch_optional(&state.db).await.ok().flatten();
+                    if let Some((id,seq))=existing { msg_id=id; (seq,false) } else { continue; }
+                }
+                Err(_) => continue,
+            };
+
+            if is_new {
+                let envelope = serde_json::json!({
+                    "type":"message","id":msg_id,"server_seq":server_seq,"from":uid,"to":to,
+                    "msg_type":msg_sub_type,"ciphertext":ciphertext,"header":header,"ts":ts,
+                });
+                state.ws_clients.send_to_user(to, envelope);
+            }
 
             // Push notification if offline or stale connection (no recent heartbeat)
-            if !delivered || !has_fresh_heartbeat(&state, to).await {
+            if is_new && !has_fresh_heartbeat(&state, to).await {
                 push_offline_message(&state, &uid, to).await;
             }
 
-            let _ = tx.send(serde_json::json!({"type":"ack","msg_id":msg_id,"ts":ts}).to_string());
+            let _ = tx.send(serde_json::json!({"type":"ack","msg_id":msg_id,"client_msg_id":client_msg_id,"server_seq":server_seq,"ts":ts}).to_string());
         }
 
         // ── GROUP MESSAGE ────────────────────────────────────────
         if msg_type == "message" && parsed.get("group_id").is_some() {
             let group_id = parsed["group_id"].as_str().unwrap_or("");
-            let msg_id = Uuid::new_v4().to_string();
+            let client_msg_id = parsed.get("client_msg_id").and_then(|v|v.as_str());
+            let mut msg_id = Uuid::new_v4().to_string();
             let msg_sub_type = parsed.get("msg_type").and_then(|v| v.as_str()).unwrap_or("text");
             let ciphertext = parsed.get("ciphertext").and_then(|v| v.as_str()).unwrap_or("");
             let header = parsed.get("header").and_then(|v| v.as_str());
@@ -248,27 +270,30 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             ).bind(&uid).fetch_optional(&state.db).await.ok().flatten();
             let (nick, avatar) = sender.unwrap_or(("".to_string(), None));
 
-            let mut envelope = serde_json::json!({
-                "type": "message", "id": msg_id, "from": uid,
-                "from_nickname": nick, "from_avatar": avatar,
-                "group_id": group_id, "msg_type": msg_sub_type,
-                "ciphertext": ciphertext, "header": header, "ts": ts,
-            });
-            // Include encryption metadata if present
-            if let Some(n) = nonce {
-                envelope["nonce"] = serde_json::json!(n);
-            }
-            if let Some(skv) = sender_key_version {
-                envelope["sender_key_version"] = serde_json::json!(skv);
-            }
-
-            sqlx::query(
-                "INSERT INTO messages (id, type, from_id, to_id, ciphertext, header, msg_type, nonce, sender_key_version) VALUES (?, 'group', ?, ?, ?, ?, ?, ?, ?)"
+            let insert = sqlx::query(
+                "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,msg_type,nonce,sender_key_version,client_msg_id) VALUES (?,'group',?,?,?,?,?,?,?,?)"
             )
             .bind(&msg_id).bind(&uid).bind(group_id)
             .bind(ciphertext).bind(header).bind(msg_sub_type)
-            .bind(nonce).bind(sender_key_version.map(|v| v as i64))
-            .execute(&state.db).await.ok();
+            .bind(nonce).bind(sender_key_version.map(|v| v as i64)).bind(client_msg_id)
+            .execute(&state.db).await;
+            let (server_seq,is_new)=match insert {
+                Ok(result)=>(result.last_insert_id(),true),
+                Err(_) if client_msg_id.is_some()=>{
+                    let existing: Option<(String,u64)>=sqlx::query_as("SELECT id,server_seq FROM messages WHERE from_id=? AND client_msg_id=?")
+                        .bind(&uid).bind(client_msg_id).fetch_optional(&state.db).await.ok().flatten();
+                    if let Some((id,seq))=existing { msg_id=id;(seq,false) } else { continue; }
+                }
+                Err(_)=>continue,
+            };
+
+            let mut envelope = serde_json::json!({
+                "type":"message","id":msg_id,"server_seq":server_seq,"from":uid,
+                "from_nickname":nick,"from_avatar":avatar,"group_id":group_id,
+                "msg_type":msg_sub_type,"ciphertext":ciphertext,"header":header,"ts":ts,
+            });
+            if let Some(n)=nonce { envelope["nonce"]=serde_json::json!(n); }
+            if let Some(skv)=sender_key_version { envelope["sender_key_version"]=serde_json::json!(skv); }
 
             // Send to all group members except sender
             let members: Vec<(String, i8)> = sqlx::query_as(
@@ -276,16 +301,16 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             ).bind(group_id).fetch_all(&state.db).await.unwrap_or_default();
 
             for (member_id, muted) in &members {
-                if member_id != &uid {
-                    let delivered = state.ws_clients.send_to_user(member_id, envelope.clone());
+                if is_new && member_id != &uid {
+                    state.ws_clients.send_to_user(member_id, envelope.clone());
                     // Push notification if (offline or stale) AND not muted
-                    if (!delivered || !has_fresh_heartbeat(&state, member_id).await) && *muted == 0 {
+                    if !has_fresh_heartbeat(&state, member_id).await && *muted == 0 {
                         push_offline_message(&state, &uid, member_id).await;
                     }
                 }
             }
 
-            let _ = tx.send(serde_json::json!({"type":"ack","msg_id":msg_id,"ts":ts}).to_string());
+            let _ = tx.send(serde_json::json!({"type":"ack","msg_id":msg_id,"client_msg_id":client_msg_id,"server_seq":server_seq,"ts":ts}).to_string());
         }
 
         // ── TYPING ───────────────────────────────────────────────

@@ -177,7 +177,14 @@ docker compose ps
 docker compose logs -f server
 ```
 
-确认所有服务状态为 `running` 且 `healthy`。server 首次启动会自动创建数据库表，无需手动导入 SQL。升级现有部署时，server 还会检查 `users.username` 和 `users.nickname` 的字符集，并在需要时迁移为 `utf8mb4`，从而支持中文用户名与昵称搜索。生产升级前仍建议备份 MySQL。
+确认所有服务状态为 `running` 且 `healthy`。server 首次启动会自动创建数据库表，无需手动导入 SQL。升级现有部署时，server 会自动执行以下迁移：
+
+- 检查 `users.username` 和 `users.nickname`，必要时迁移为 `utf8mb4`；
+- 为 `messages` 增加 `server_seq` 和 `client_msg_id`，用于游标同步和幂等发送；
+- 为 `sessions` 增加 Refresh Token 哈希与有效期字段；
+- 启动前验证以上可靠性字段是否齐全。迁移不完整时 server 会直接停止，并在日志中报告数据库错误。
+
+生产升级前必须备份 MySQL，并采用“先 server、后客户端”的发布顺序。新客户端首次连接时会为仍然有效的旧登录会话自动签发 Refresh Token；旧 JWT 如果已经过期，则该设备需要重新登录一次。
 
 ### 第五步：构建前端静态文件
 
@@ -461,3 +468,11 @@ Nginx 会根据请求路径自动将 API 请求（`/api/*`）和 WebSocket 连�
 - **Vercel 前端**：推送到 GitHub，Vercel 自动触发重新部署
 
 升级后请至少验证一次中文用户名搜索，并刷新 Web/PWA 以激活新版 Service Worker。Web 端会按账户缓存联系人、群组、聊天记录、朋友圈、时间线和媒体；用户可在“个人资料 → 清理本地缓存”删除这些离线数据。若前后端使用不同域名，媒体服务器必须允许浏览器跨域获取媒体，才能写入离线缓存。
+
+涉及可靠会话与消息同步的版本还应验证：
+
+1. 先升级 server 并检查日志，确认数据库可靠性字段验证通过；
+2. 登录后切换 Wi-Fi/蜂窝网络或 VPN，确认连接会自动恢复且不要求输入密码；
+3. 断网发送一条消息，确认消息显示等待状态，恢复网络后自动发送且接收方只有一条；
+4. 接收方在后台收到推送后再打开 App，确认消息正文通过增量同步出现；
+5. 在“登录设备”中撤销某个设备，确认该设备无法再刷新 Token，并进入重新登录状态。

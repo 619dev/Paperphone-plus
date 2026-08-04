@@ -2,7 +2,6 @@
 pub struct Config {
     pub port: u16,
     pub jwt_secret: String,
-    pub jwt_expires_in: String,
 
     // MySQL
     pub db_host: String,
@@ -82,7 +81,6 @@ impl Config {
         Self {
             port: env_or("PORT", "3000").parse().unwrap_or(3000),
             jwt_secret: env_or("JWT_SECRET", "dev_secret_change_me"),
-            jwt_expires_in: env_or("JWT_EXPIRES_IN", "7d"),
 
             db_host: env_or("DB_HOST", "localhost"),
             db_port: env_or("DB_PORT", "3306").parse().unwrap_or(3306),

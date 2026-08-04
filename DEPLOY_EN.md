@@ -177,7 +177,14 @@ docker compose ps
 docker compose logs -f server
 ```
 
-Confirm all services show `running` and `healthy` status. The server automatically creates database tables on first startup, so no manual SQL import is needed. During an upgrade, it also inspects `users.username` and `users.nickname` and migrates incompatible character sets to `utf8mb4` when required, enabling Chinese username and nickname search. A MySQL backup is still recommended before a production upgrade.
+Confirm all services show `running` and `healthy` status. The server automatically creates database tables on first startup, so no manual SQL import is needed. During an existing deployment upgrade, it automatically performs these migrations:
+
+- Inspect `users.username` and `users.nickname`, migrating them to `utf8mb4` when required.
+- Add `server_seq` and `client_msg_id` to `messages` for cursor-based synchronization and idempotent sends.
+- Add the refresh-token hash and expiration fields to `sessions`.
+- Verify all reliability-critical columns before becoming healthy. The server stops and reports the database error when the migration is incomplete.
+
+Back up MySQL before a production upgrade and deploy in this order: **server first, clients second**. On its first connection, the new client automatically provisions a refresh token for a still-valid legacy login session. If the old JWT has already expired, that device must sign in once more.
 
 ### Step 5: Build Frontend Static Files
 
@@ -463,3 +470,11 @@ Nginx automatically routes API requests (`/api/*`) and WebSocket connections (`/
 - **Vercel Frontend**: Push to GitHub and Vercel will automatically trigger redeployment
 
 After upgrading, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.
+
+For releases containing reliable sessions and message synchronization, also verify:
+
+1. Upgrade the server first and check its logs for successful reliability-schema verification.
+2. While signed in, switch between Wi-Fi/cellular or enable/disable a VPN. The connection must recover without requesting a password.
+3. Send a message while offline. It should show a waiting state, send automatically after connectivity returns, and appear only once for the recipient.
+4. Let the recipient receive a push notification in the background, then open the app and confirm cursor catch-up loads the message body.
+5. Revoke a device under **Active Sessions** and confirm that device can no longer refresh its token and returns to sign-in.

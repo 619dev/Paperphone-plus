@@ -45,8 +45,9 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🗝️ Zero-Knowledge Server | Server stores only ciphertext; private keys never leave the device |
 | 📹 Video & Voice Calls | LiveKit SFU for 1:1 calls and meetings (up to 100 participants), host mute-all and lecture mode |
 | 🎙️ Voice Changer | Real-time voice effects for voice messages, 1:1 calls, and group calls — 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API |
-| 📱 Session Persistence | Keeps local login state through network loss, ordinary authorization failures, and server URL changes; signs out only after an explicit server revocation |
-| 📴 Offline Access | Account-isolated caching for contacts, groups, up to 2,000 messages per conversation, Moments, Timeline, and media, with manual cache clearing in Profile |
+| 📱 Session Persistence | 30-minute access tokens with silently renewed 90-day device refresh tokens; reconnects after network/IP/VPN/proxy changes and asks for credentials only when the durable session expires or is revoked |
+| 📨 Reliable Message Sync | Bidirectional heartbeat, dead-connection detection, persistent outbox, idempotent client message IDs, and server-sequence catch-up recover messages even when push arrives but realtime delivery is lost |
+| 📴 Offline Access | Account-isolated caching for contacts, groups, up to 2,000 messages per conversation, Moments, Timeline, and media; offline sends remain queued and retry automatically |
 | 🔎 Unicode Friend Search | IME composition protection, NFC normalization, and UTF-8 query encoding provide reliable Chinese username and nickname search |
 | 👥 Group Chat | Up to 2000 members, switchable "Encrypted" / "Unencrypted" modes (owner-only toggle, switching clears chat history). Encrypted mode uses Signal-style Sender Key protocol (XSalsa20-Poly1305 symmetric encryption + ECDH key distribution) — only group members can decrypt messages; bots are disabled in encrypted mode. Do Not Disturb mode, member management |
 | 👫 Friend System | Friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping |
@@ -71,6 +72,21 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
 | 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
 | 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
+
+---
+
+## Session Recovery and Message Reliability
+
+PaperPhonePlus treats local account state, realtime connection state, and message synchronization as separate concerns. An open WebSocket is not considered usable until the server returns `auth_ok`. Bidirectional `ping/pong` heartbeats detect half-open connections caused by VPN/IP changes, Wi-Fi/cellular handoff, or application suspension.
+
+- Access tokens last 30 minutes. Device refresh tokens last 90 days and extend while actively used, allowing silent renewal without asking for a password.
+- Devices already signed in on an older release are upgraded automatically while their existing token remains valid. If that legacy token has already expired, one final manual sign-in is required.
+- Every outbound message has a stable `client_msg_id`. Messages without a server ACK remain in the persistent local outbox and retry with the same ID; a server uniqueness constraint prevents duplicate inserts.
+- Every stored message has a monotonically increasing `server_seq`. The client performs cursor-based catch-up after authentication, reconnection, and foreground resume, so a push notification cannot permanently get ahead of local message history.
+- Explicit logout and device revocation invalidate the durable server session. Ordinary transport failures and IP changes preserve it.
+
+> [!IMPORTANT]
+> Deploy the server before releasing the updated client. On startup, the server automatically applies and verifies the reliability schema migration. It refuses to start when critical columns are missing, preventing a partially upgraded deployment from silently losing sends. Back up MySQL before production upgrades.
 
 ---
 
