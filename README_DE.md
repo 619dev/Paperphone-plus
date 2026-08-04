@@ -45,8 +45,9 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🗝️ Zero-Knowledge-Server | Server speichert nur Chiffretext; private Schlüssel verlassen niemals das Gerät |
 | 📹 Video- & Audioanrufe | LiveKit-SFU für 1:1-Anrufe und Konferenzen (bis zu 100 Teilnehmer), Alle stummschalten und Vortragsmodus |
 | 🎙️ Stimmverzerrer | Echtzeit-Stimmeffekte für Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe — 3 Modi (0.8x tief / 1.0x normal / 1.2x hoch), basierend auf Web Audio API |
-| 📱 Sitzungspersistenz | Behält die lokale Anmeldung bei Netzwerkausfällen, gewöhnlichen Autorisierungsfehlern und Änderungen der Server-URL bei; Abmeldung nur nach ausdrücklichem Server-Widerruf |
-| 📴 Offline-Zugriff | Kontogetrennter Cache für Kontakte, Gruppen, bis zu 2.000 Nachrichten je Unterhaltung, Momente, Timeline und Medien; manuell im Profil löschbar |
+| 📱 Sitzungspersistenz | 30-minütige Access Tokens mit automatisch verlängerten 90-Tage-Geräte-Refresh-Sitzungen; Netzwerk-, IP-, VPN- und Proxywechsel werden ohne Passworteingabe wiederhergestellt |
+| 📨 Zuverlässige Nachrichtensynchronisierung | Bidirektionaler Heartbeat, Erkennung halboffener Verbindungen, persistenter Postausgang, idempotente Nachrichten-IDs und Cursor-Nachsynchronisierung über Serversequenzen |
+| 📴 Offline-Zugriff | Kontogetrennter Cache für Kontakte, Gruppen, bis zu 2.000 Nachrichten je Unterhaltung, Momente, Timeline und Medien; Offline-Sendungen werden automatisch wiederholt |
 | 🔎 Unicode-Freundessuche | IME-Kompositionsschutz, NFC-Normalisierung und UTF-8-Abfragekodierung ermöglichen die zuverlässige Suche chinesischer Benutzernamen und Spitznamen |
 | 👥 Gruppenchat | Bis zu 2000 Mitglieder, umschaltbare Modi „Verschlüsselt" / „Unverschlüsselt" (nur Besitzer, Umschalten löscht den Chatverlauf). Verschlüsselter Modus verwendet das Signal-Sender-Key-Protokoll (XSalsa20-Poly1305 symmetrische Verschlüsselung + ECDH-Schlüsselverteilung) — nur Gruppenmitglieder können Nachrichten entschlüsseln; Bots sind im verschlüsselten Modus deaktiviert. Nicht-stören-Modus, Mitgliederverwaltung |
 | 👫 Freundesystem | Freundschaftsanfragen erfordern Genehmigung mit bis zu 512 Zeichen Nachricht; Spitznamen; Multi-Tag-Gruppierung |
@@ -71,6 +72,21 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🌐 Proxy-Einstellungen | SOCKS5 / HTTP / HTTPS Proxy-Unterstützung — konfigurierbar auf Login- und Einstellungsseiten mit Serveradresse, Port, Benutzername und Passwort für eingeschränkte Netzwerkumgebungen |
 | 🛡️ Inhaltsmoderation | Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung von Beiträgen/Nachrichten) + Nutzungsbedingungen (EULA) |
 | 🔧 Admin-Panel | Eingebettetes Web-Admin-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen |
+
+---
+
+## Sitzungswiederherstellung und Nachrichtenzuverlässigkeit
+
+PaperPhonePlus behandelt lokalen Kontostatus, Echtzeitverbindung und Nachrichtensynchronisierung getrennt. Ein offener WebSocket gilt erst nach `auth_ok` als einsatzbereit. Bidirektionale `ping/pong`-Heartbeats erkennen halboffene Verbindungen nach VPN-/IP-Wechseln, WLAN-/Mobilfunkübergängen oder App-Unterbrechungen.
+
+- Access Tokens gelten 30 Minuten. Geräte-Refresh-Tokens gelten 90 Tage und werden bei aktiver Nutzung verlängert, sodass die Erneuerung ohne Passworteingabe erfolgt.
+- Bereits mit einer älteren Version angemeldete Geräte werden automatisch aktualisiert, solange ihr vorhandenes Token gültig ist. Ist es bereits abgelaufen, ist eine einmalige erneute Anmeldung erforderlich.
+- Jede ausgehende Nachricht besitzt eine stabile `client_msg_id`. Nachrichten ohne Server-ACK bleiben im persistenten lokalen Postausgang und werden mit derselben ID erneut gesendet; eine Eindeutigkeitsbedingung verhindert doppelte Einträge.
+- Jede gespeicherte Nachricht besitzt eine monoton steigende `server_seq`. Nach Anmeldung, Wiederverbindung und Rückkehr in den Vordergrund synchronisiert der Client per Cursor fehlende Nachrichten nach.
+- Explizite Abmeldung und Gerätewiderruf machen die dauerhafte Serversitzung ungültig. Gewöhnliche Transportfehler und IP-Wechsel erhalten sie.
+
+> [!IMPORTANT]
+> Bei einem Upgrade zuerst den Server und danach die Clients bereitstellen. Der Server führt die Zuverlässigkeitsmigration automatisch aus und verweigert den Start, wenn kritische Spalten fehlen. Vor Produktions-Upgrades MySQL sichern.
 
 ---
 

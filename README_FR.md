@@ -45,8 +45,9 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🗝️ Serveur à connaissance nulle | Le serveur ne stocke que le texte chiffré ; les clés privées ne quittent jamais l'appareil |
 | 📹 Appels vidéo et audio | SFU LiveKit pour les appels 1:1 et les réunions (jusqu’à 100 participants), mise en sourdine globale et mode cours |
 | 🎙️ Modificateur de voix | Effets vocaux en temps réel pour les messages vocaux, appels 1:1 et appels de groupe — 3 modes (0.8x grave / 1.0x normal / 1.2x aigu), basé sur Web Audio API |
-| 📱 Persistance de session | Conserve la connexion locale lors des coupures réseau, erreurs d’autorisation ordinaires et changements d’URL du serveur ; déconnexion uniquement après révocation explicite |
-| 📴 Accès hors ligne | Cache isolé par compte pour contacts, groupes, jusqu’à 2 000 messages par conversation, Moments, Timeline et médias ; nettoyage manuel depuis le profil |
+| 📱 Persistance de session | Jetons d’accès de 30 minutes avec sessions de rafraîchissement d’appareil de 90 jours ; récupération automatique après changement de réseau, IP, VPN ou proxy sans mot de passe |
+| 📨 Synchronisation fiable | Heartbeat bidirectionnel, détection des connexions semi-ouvertes, boîte d’envoi persistante, identifiants idempotents et rattrapage par curseur de séquence serveur |
+| 📴 Accès hors ligne | Cache isolé par compte pour contacts, groupes, jusqu’à 2 000 messages par conversation, Moments, Timeline et médias ; les envois hors ligne sont retentés automatiquement |
 | 🔎 Recherche Unicode d’amis | Protection de composition IME, normalisation NFC et encodage UTF-8 pour une recherche fiable des noms d’utilisateur et pseudonymes chinois |
 | 👥 Chat de groupe | Jusqu'à 2000 membres, modes « Chiffré » / « Non chiffré » commutables (propriétaire uniquement, le changement efface l'historique). Le mode chiffré utilise le protocole Sender Key de type Signal (chiffrement symétrique XSalsa20-Poly1305 + distribution de clés ECDH) — seuls les membres du groupe peuvent déchiffrer les messages ; les bots sont désactivés en mode chiffré. Mode Ne pas déranger, gestion des membres |
 | 👫 Système d'amis | Les demandes d'amitié nécessitent une approbation avec jusqu'à 512 caractères de message ; surnoms personnalisés ; regroupement par étiquettes |
@@ -71,6 +72,21 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🌐 Paramètres de proxy | Support proxy SOCKS5 / HTTP / HTTPS — configurable sur les pages de connexion et de paramètres avec adresse serveur, port, identifiant et mot de passe pour les environnements réseau restreints |
 | 🛡️ Modération de contenu | Signalements utilisateurs (6 catégories) + blocage d'utilisateurs (masquage instantané des publications/messages) + Conditions d'utilisation (EULA) |
 | 🔧 Panneau d'administration | Dashboard web d'administration intégré (`/admin`, chemin configurable), protégé par mot de passe, examiner les signalements, supprimer le contenu problématique, bannir des utilisateurs — 8 langues |
+
+---
+
+## Récupération de session et fiabilité des messages
+
+PaperPhonePlus sépare l’état local du compte, la connexion temps réel et la synchronisation des messages. Un WebSocket ouvert n’est utilisable qu’après réception de `auth_ok`. Les heartbeats bidirectionnels `ping/pong` détectent les connexions semi-ouvertes causées par un changement de VPN/IP, un basculement Wi-Fi/mobile ou la suspension de l’application.
+
+- Les jetons d’accès durent 30 minutes. Les jetons de rafraîchissement d’appareil durent 90 jours et sont prolongés pendant l’utilisation active, sans redemander le mot de passe.
+- Les appareils déjà connectés avec une ancienne version sont mis à niveau automatiquement tant que leur jeton reste valide. S’il a expiré, une dernière connexion manuelle est nécessaire.
+- Chaque message sortant possède une `client_msg_id` stable. Sans ACK serveur, il reste dans la boîte d’envoi locale persistante et est renvoyé avec le même ID ; une contrainte d’unicité empêche les doublons.
+- Chaque message stocké possède une `server_seq` croissante. Le client rattrape les messages manquants par curseur après authentification, reconnexion et retour au premier plan.
+- La déconnexion explicite et la révocation d’un appareil invalident la session durable. Les erreurs réseau ordinaires et changements d’IP la conservent.
+
+> [!IMPORTANT]
+> Lors d’une mise à niveau, déployez d’abord le serveur, puis les clients. Le serveur applique et vérifie automatiquement la migration de fiabilité et refuse de démarrer si des colonnes critiques manquent. Sauvegardez MySQL avant toute mise à niveau de production.
 
 ---
 

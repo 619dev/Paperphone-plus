@@ -45,8 +45,9 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🗝️ Servidor de conocimiento cero | El servidor solo almacena texto cifrado; las claves privadas nunca abandonan el dispositivo |
 | 📹 Llamadas de vídeo y voz | SFU LiveKit para llamadas 1:1 y reuniones (hasta 100 participantes), silenciar a todos y modo clase |
 | 🎙️ Modificador de voz | Efectos de voz en tiempo real para mensajes de voz, llamadas 1:1 y llamadas grupales — 3 modos (0.8x grave / 1.0x normal / 1.2x agudo), basado en Web Audio API |
-| 📱 Persistencia de sesión | Conserva la sesión local durante cortes de red, errores de autorización comunes y cambios de URL del servidor; solo cierra sesión tras una revocación explícita |
-| 📴 Acceso sin conexión | Caché aislada por cuenta para contactos, grupos, hasta 2.000 mensajes por conversación, Momentos, Línea de tiempo y multimedia; se puede borrar desde el perfil |
+| 📱 Persistencia de sesión | Tokens de acceso de 30 minutos con sesiones de actualización de dispositivo de 90 días; recupera cambios de red, IP, VPN o proxy sin pedir la contraseña |
+| 📨 Sincronización fiable de mensajes | Heartbeat bidireccional, detección de conexiones semimuertas, bandeja de salida persistente, IDs idempotentes y recuperación por cursor de secuencia del servidor |
+| 📴 Acceso sin conexión | Caché aislada por cuenta para contactos, grupos, hasta 2.000 mensajes por conversación, Momentos, Línea de tiempo y multimedia; los envíos sin conexión se reintentan automáticamente |
 | 🔎 Búsqueda Unicode de amigos | La protección de composición IME, normalización NFC y codificación UTF-8 permiten buscar de forma fiable nombres de usuario y apodos chinos |
 | 👥 Chat grupal | Hasta 2000 miembros, modos "Cifrado" / "Sin cifrar" conmutables (solo propietario, al cambiar se borra el historial del chat). El modo cifrado usa el protocolo Sender Key estilo Signal (cifrado simétrico XSalsa20-Poly1305 + distribución de claves ECDH) — solo los miembros del grupo pueden descifrar los mensajes; los bots están desactivados en modo cifrado. Modo No Molestar, gestión de miembros |
 | 👫 Sistema de amigos | Las solicitudes de amistad requieren aprobación con hasta 512 caracteres de mensaje; apodos personalizados; agrupación por etiquetas |
@@ -71,6 +72,21 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🌐 Configuración de proxy | Soporte de proxy SOCKS5 / HTTP / HTTPS — configurable en páginas de inicio de sesión y ajustes con dirección del servidor, puerto, usuario y contraseña para entornos de red restringidos |
 | 🛡️ Moderación de contenido | Reportes de usuarios (6 categorías) + bloqueo de usuarios (oculta instantáneamente publicaciones/mensajes) + Términos de uso (EULA) |
 | 🔧 Panel de administración | Dashboard de administración web integrado (`/admin`, ruta configurable), protegido por contraseña, revisar reportes, eliminar contenido infractor, banear usuarios — 8 idiomas |
+
+---
+
+## Recuperación de sesión y fiabilidad de mensajes
+
+PaperPhonePlus separa el estado local de la cuenta, la conexión en tiempo real y la sincronización de mensajes. Un WebSocket abierto no se considera utilizable hasta recibir `auth_ok`. Los heartbeats bidireccionales `ping/pong` detectan conexiones semimuertas por cambios de VPN/IP, transiciones Wi-Fi/móvil o suspensión de la aplicación.
+
+- Los tokens de acceso duran 30 minutos. Los tokens de actualización del dispositivo duran 90 días y se prolongan durante el uso activo, permitiendo renovar la sesión sin contraseña.
+- Los dispositivos conectados con una versión anterior se actualizan automáticamente mientras su token siga vigente. Si ya caducó, se requiere un último inicio de sesión manual.
+- Cada mensaje saliente tiene una `client_msg_id` estable. Los mensajes sin ACK permanecen en la bandeja de salida local persistente y se reintentan con el mismo ID; una restricción única evita duplicados.
+- Cada mensaje almacenado tiene una `server_seq` creciente. El cliente recupera por cursor los mensajes faltantes tras autenticarse, reconectarse o volver al primer plano.
+- El cierre de sesión explícito y la revocación del dispositivo invalidan la sesión duradera. Los fallos de transporte y cambios de IP normales no la eliminan.
+
+> [!IMPORTANT]
+> En una actualización, despliegue primero el servidor y después los clientes. El servidor aplica y verifica automáticamente la migración de fiabilidad y no arranca si faltan columnas críticas. Haga una copia de seguridad de MySQL antes de actualizar producción.
 
 ---
 
