@@ -693,7 +693,7 @@ paperphoneplus/
 | `APNS_RELAY_URL` | 推送中继 URL（可选，自建服务器指向 Relay 主机） | — |
 | `APNS_RELAY_KEY` | 推送中继认证密钥（可选，与 Relay 主机的 `APNS_RELAY_SECRET` 一致） | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选，贴纸包代理） | — |
-| `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 12 个默认包 |
+| `STICKER_PACKS` | 自定义贴纸包列表（可选，逗号分隔 `包名:显示名`） | 内置 13 个默认包 |
 | `ADMIN_PATH` | 管理后台 URL 路径 | `/admin` |
 | `ADMIN_PASSWORD` | 管理后台访问密码（**生产必改**） | `admin123` |
 

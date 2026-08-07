@@ -221,7 +221,7 @@ Los mensajes de voz, las llamadas 1:1 y las llamadas grupales admiten modificaci
 | `APNS_RELAY_URL` | URL del relay push (opcional, servidores auto-hospedados apuntan al host relay) | — |
 | `APNS_RELAY_KEY` | Clave de autenticación del relay push (opcional, debe coincidir con `APNS_RELAY_SECRET` del host relay) | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token (opcional) | — |
-| `STICKER_PACKS` | Paquetes de stickers personalizados (opcional, `nombre:etiqueta`) | 12 predeterminados integrados |
+| `STICKER_PACKS` | Paquetes de stickers personalizados (opcional, `nombre:etiqueta`) | 13 predeterminados integrados |
 | `ADMIN_PATH` | Ruta URL del panel de administración | `/admin` |
 | `ADMIN_PASSWORD` | Contraseña del panel de administración (**cambiar en producción**) | `admin123` |
 

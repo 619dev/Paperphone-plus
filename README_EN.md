@@ -221,7 +221,7 @@ Voice messages, 1:1 calls, and group calls all support real-time voice changing 
 | `APNS_RELAY_URL` | Push relay URL (optional, self-hosted servers point to relay host) | — |
 | `APNS_RELAY_KEY` | Push relay auth key (optional, must match relay host's `APNS_RELAY_SECRET`) | — |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token (optional) | — |
-| `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 12 built-in defaults |
+| `STICKER_PACKS` | Custom sticker packs (optional, `name:label`) | 13 built-in defaults |
 | `ADMIN_PATH` | Admin panel URL path | `/admin` |
 | `ADMIN_PASSWORD` | Admin panel password (**change in production**) | `admin123` |
 
