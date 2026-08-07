@@ -19,6 +19,7 @@ import TermsOfUse from './pages/TermsOfUse'
 import TabBar from './components/TabBar'
 import CallOverlay from './components/CallOverlay'
 import GroupCallOverlay from './components/GroupCallOverlay'
+import CallKeepAwake from './components/CallKeepAwake'
 import NotificationToast from './components/NotificationToast'
 import { CallProvider } from './contexts/CallContext'
 import { GroupCallProvider } from './contexts/GroupCallContext'
@@ -150,6 +151,7 @@ function ProtectedLayout() {
   return (
     <CallProvider>
       <GroupCallProvider>
+        <CallKeepAwake />
         <Routes>
           <Route path="/chats" element={<Chats />} />
           <Route path="/chat/:id" element={<Chat />} />

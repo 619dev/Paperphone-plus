@@ -14,7 +14,7 @@ import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, S
 import { clearOfflineCache } from '../utils/offlineCache'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
-const APP_VERSION = '2.2.9'
+const APP_VERSION = '2.3.3'
 
 export default function Profile() {
   const { t } = useI18n()

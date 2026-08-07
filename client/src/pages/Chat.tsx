@@ -15,6 +15,7 @@ import StickerMedia from '../components/StickerMedia'
 import { decodeMessagePayload, encodeMessagePayload, type ReplyReference } from '../utils/messagePayload'
 import { cacheSticker, cacheStickerPack } from '../utils/stickerCache'
 import { readOfflineData, writeOfflineData } from '../utils/offlineCache'
+import { useKeepAwake } from '../hooks/useKeepAwake'
 
 // Auto-delete options (seconds)
 const AUTO_DELETE_OPTIONS = [
@@ -40,6 +41,7 @@ const EMOJI_CATEGORIES = [
 const RECENT_EMOJI_KEY = 'pp_recent_emoji'
 const STICKER_PACKS_CACHE_KEY = 'sticker-packs'
 const STICKER_PACK_CACHE_PREFIX = 'sticker-pack:'
+const MAX_VOICE_DURATION_SECONDS = 120
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
@@ -363,12 +365,14 @@ export default function Chat() {
   const recChunksRef = useRef<Blob[]>([])
   const recStartRef = useRef<number>(0)
   const recIntervalRef = useRef<any>(null)
+  const recTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordVoiceModeRef = useRef<'normal'|'slow'|'fast'>('normal')
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressOriginRef = useRef<{ x: number; y: number } | null>(null)
   const suppressMessageClickRef = useRef(false)
   recordVoiceModeRef.current = recordVoiceMode
+  useKeepAwake(isRecording)
 
   const resizeInput = useCallback((element?: HTMLTextAreaElement | null) => {
     const textarea = element || inputRef.current
@@ -382,6 +386,17 @@ export default function Chat() {
   useEffect(() => {
     resizeInput()
   }, [input, resizeInput])
+
+  useEffect(() => () => {
+    clearInterval(recIntervalRef.current)
+    if (recTimeoutRef.current) clearTimeout(recTimeoutRef.current)
+    const recorder = mediaRecRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.onstop = null
+      recorder.stop()
+    }
+    mediaStreamRef.current?.getTracks().forEach(track => track.stop())
+  }, [])
 
   const friend = friends.find(f => f.id === id)
   const group = groups.find(g => g.id === id)
@@ -880,7 +895,10 @@ export default function Chat() {
       const srcBuffer = await audioCtx.decodeAudioData(arrayBuf)
       const offline = new OfflineAudioContext(
         srcBuffer.numberOfChannels,
-        Math.ceil(srcBuffer.length / rate),
+        Math.min(
+          Math.ceil(srcBuffer.length / rate),
+          srcBuffer.sampleRate * MAX_VOICE_DURATION_SECONDS,
+        ),
         srcBuffer.sampleRate,
       )
       const source = offline.createBufferSource()
@@ -912,8 +930,14 @@ export default function Chat() {
       mediaRecRef.current = rec
       setIsRecording(true)
       recIntervalRef.current = setInterval(() => {
-        setRecordDuration(Math.floor((Date.now() - recStartRef.current) / 1000))
+        setRecordDuration(Math.min(
+          MAX_VOICE_DURATION_SECONDS,
+          Math.floor((Date.now() - recStartRef.current) / 1000),
+        ))
       }, 500)
+      recTimeoutRef.current = setTimeout(() => {
+        void stopVoice()
+      }, MAX_VOICE_DURATION_SECONDS * 1000)
     } catch {
       alert(t('chat.mic_failed'))
     }
@@ -923,23 +947,33 @@ export default function Chat() {
     const rec = mediaRecRef.current
     if (!rec || rec.state === 'inactive') return
     clearInterval(recIntervalRef.current)
+    if (recTimeoutRef.current) {
+      clearTimeout(recTimeoutRef.current)
+      recTimeoutRef.current = null
+    }
     setIsRecording(false)
-    const duration = Math.round((Date.now() - recStartRef.current) / 1000)
+    const duration = Math.min(
+      MAX_VOICE_DURATION_SECONDS,
+      Math.round((Date.now() - recStartRef.current) / 1000),
+    )
     const mode = recordVoiceModeRef.current
-    rec.stop()
     rec.onstop = async () => {
       const raw = new Blob(recChunksRef.current, { type: 'audio/webm' })
       try {
         const { blob, ext, mime, rateApplied } = await processVoiceBlob(raw, mode)
         const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: mime })
         // 变速会改变时长：实际时长 = 原时长 / rate
-        const finalDuration = Math.max(1, Math.round(duration / rateApplied))
+        const finalDuration = Math.min(
+          MAX_VOICE_DURATION_SECONDS,
+          Math.max(1, Math.round(duration / rateApplied)),
+        )
         const { url } = await uploadWithProgress(file, t('chat.uploading_voice'))
         sendMessage(url, 'voice', { url, duration: finalDuration })
       } catch {
         alert(t('chat.upload_failed'))
       }
     }
+    rec.stop()
     rec.stream.getTracks().forEach(t => t.stop())
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(t => t.stop())
@@ -1188,6 +1222,7 @@ export default function Chat() {
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>
               {Math.floor(recordDuration / 60).toString().padStart(2, '0')}:{(recordDuration % 60).toString().padStart(2, '0')}
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}> / 02:00</span>
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('chat.recording')}</div>
 
