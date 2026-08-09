@@ -6,6 +6,8 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/Version-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
 | 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
 | 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
+
+---
+
+## What's New in v2.3.5
+
+- Outgoing private messages populate the optimistic message object with ciphertext immediately after end-to-end encryption, preventing plaintext from being briefly persisted while awaiting the server acknowledgement.
+- Voice messages stop automatically at 120 seconds; voice-changed output follows the same limit.
+- Voice recording and active calls keep the screen awake, while page cleanup reliably releases recording devices and timers.
+- Android additionally protects keys and chat caches with Android Keystore and AES-256-GCM; the Web client retains its browser storage model.
 
 ---
 

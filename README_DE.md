@@ -6,6 +6,8 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/Version-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🌐 Proxy-Einstellungen | SOCKS5 / HTTP / HTTPS Proxy-Unterstützung — konfigurierbar auf Login- und Einstellungsseiten mit Serveradresse, Port, Benutzername und Passwort für eingeschränkte Netzwerkumgebungen |
 | 🛡️ Inhaltsmoderation | Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung von Beiträgen/Nachrichten) + Nutzungsbedingungen (EULA) |
 | 🔧 Admin-Panel | Eingebettetes Web-Admin-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen |
+
+---
+
+## Neu in v2.3.5
+
+- Ausgehende Privatnachrichten werden direkt nach der Ende-zu-Ende-Verschlüsselung als Chiffretext im optimistischen Nachrichtenobjekt gespeichert; beim Warten auf die Serverbestätigung landet kein Klartext im Offline-Cache.
+- Sprachnachrichten stoppen automatisch nach 120 Sekunden; die Ausgabe mit Stimmeffekt hat dasselbe Limit.
+- Bei Aufnahmen und Anrufen bleibt der Bildschirm wach; beim Verlassen werden Aufnahmegeräte und Timer zuverlässig freigegeben.
+- Android schützt Schlüssel und Chat-Caches zusätzlich mit Android Keystore und AES-256-GCM; der Web-Client verwendet weiterhin Browser-Speicher.
 
 ---
 

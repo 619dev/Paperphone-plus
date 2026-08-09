@@ -6,6 +6,8 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/版本-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-客户端下载-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@
 | 🌐 代理设置 | 支持 SOCKS5 / HTTP / HTTPS 代理协议，可在登录页和设置页配置代理服务器地址、端口、用户名和密码，方便受限网络环境下使用 |
 | 🛡️ 内容审核 | 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA |
 | 🔧 管理后台 | 内嵌 Web 管理面板（`/admin`，路径可自定义），密码保护，审核举报、删除违规内容、封禁用户，支持 8 种语言 |
+
+---
+
+## v2.3.5 更新
+
+- 私聊消息完成端到端加密后立即把密文写入发送中的乐观消息对象，避免等待服务器确认期间将明文短暂持久化到离线缓存。
+- 语音消息最长 120 秒，到达上限后自动停止；变声处理后的音频同样限制为 120 秒。
+- 录制语音和通话期间保持屏幕唤醒，离开页面时可靠释放录音设备与计时器。
+- Android 原生版另使用 Android Keystore 与 AES-256-GCM 保护密钥和聊天缓存；Web 版继续使用浏览器存储模型。
 
 ---
 

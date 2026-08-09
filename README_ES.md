@@ -6,6 +6,8 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/Versión-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Cliente-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🌐 Configuración de proxy | Soporte de proxy SOCKS5 / HTTP / HTTPS — configurable en páginas de inicio de sesión y ajustes con dirección del servidor, puerto, usuario y contraseña para entornos de red restringidos |
 | 🛡️ Moderación de contenido | Reportes de usuarios (6 categorías) + bloqueo de usuarios (oculta instantáneamente publicaciones/mensajes) + Términos de uso (EULA) |
 | 🔧 Panel de administración | Dashboard de administración web integrado (`/admin`, ruta configurable), protegido por contraseña, revisar reportes, eliminar contenido infractor, banear usuarios — 8 idiomas |
+
+---
+
+## Novedades de v2.3.5
+
+- Los mensajes privados salientes guardan el texto cifrado en el objeto optimista justo después del cifrado de extremo a extremo, evitando persistir texto plano mientras llega la confirmación del servidor.
+- Los mensajes de voz se detienen automáticamente a los 120 segundos; el audio con cambio de voz usa el mismo límite.
+- La pantalla permanece activa durante grabaciones y llamadas, y al salir se liberan de forma fiable dispositivos y temporizadores.
+- Android protege además claves y cachés con Android Keystore y AES-256-GCM; el cliente Web conserva el almacenamiento del navegador.
 
 ---
 

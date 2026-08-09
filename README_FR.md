@@ -6,6 +6,8 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/Version-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🌐 Paramètres de proxy | Support proxy SOCKS5 / HTTP / HTTPS — configurable sur les pages de connexion et de paramètres avec adresse serveur, port, identifiant et mot de passe pour les environnements réseau restreints |
 | 🛡️ Modération de contenu | Signalements utilisateurs (6 catégories) + blocage d'utilisateurs (masquage instantané des publications/messages) + Conditions d'utilisation (EULA) |
 | 🔧 Panneau d'administration | Dashboard web d'administration intégré (`/admin`, chemin configurable), protégé par mot de passe, examiner les signalements, supprimer le contenu problématique, bannir des utilisateurs — 8 langues |
+
+---
+
+## Nouveautés de la v2.3.5
+
+- Les messages privés sortants placent le texte chiffré dans l’objet optimiste dès la fin du chiffrement de bout en bout, sans persister temporairement le texte en clair avant l’accusé du serveur.
+- Les messages vocaux s’arrêtent automatiquement à 120 secondes ; la sortie avec changement de voix suit la même limite.
+- L’écran reste actif pendant les enregistrements et appels, et les périphériques ainsi que les minuteurs sont libérés en quittant la page.
+- Android protège aussi les clés et caches avec Android Keystore et AES-256-GCM ; le client Web conserve le stockage du navigateur.
 
 ---
 

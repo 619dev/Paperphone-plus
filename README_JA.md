@@ -6,6 +6,8 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/バージョン-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-クライアント-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🌐 プロキシ設定 | SOCKS5 / HTTP / HTTPS プロキシ対応 — ログインページと設定ページでサーバーアドレス、ポート、ユーザー名、パスワードを設定可能（制限されたネットワーク環境向け） |
 | 🛡️ コンテンツモデレーション | ユーザー報告（6 カテゴリ）+ ユーザーブロック（投稿/メッセージを即時非表示）+ 利用規約（EULA） |
 | 🔧 管理パネル | 内蔵 Web 管理ダッシュボード（`/admin`、パス変更可能）、パスワード保護、報告審査、コンテンツ削除、ユーザー BAN — 8 言語対応 |
+
+---
+
+## v2.3.5 の更新内容
+
+- エンドツーエンド暗号化の完了直後に送信中の個人メッセージへ暗号文を設定し、サーバー確認待ちの間に平文が一時保存されることを防止しました。
+- 音声メッセージは最長120秒で自動停止し、ボイスチェンジ後の音声も同じ上限です。
+- 録音中と通話中は画面をスリープさせず、ページ離脱時に録音デバイスとタイマーを確実に解放します。
+- Android は Android Keystore と AES-256-GCM で鍵とキャッシュも保護します。Web クライアントはブラウザストレージを継続します。
 
 ---
 

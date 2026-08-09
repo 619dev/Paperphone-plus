@@ -6,6 +6,8 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
+[![Version](https://img.shields.io/badge/버전-2.3.5-orange)](client/package.json)
+
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-다운로드-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
@@ -72,6 +74,15 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 | 🌐 프록시 설정 | SOCKS5 / HTTP / HTTPS 프록시 지원 — 로그인 및 설정 페이지에서 서버 주소, 포트, 사용자 이름, 비밀번호 설정 가능 |
 | 🛡️ 콘텐츠 관리 | 사용자 신고 (6가지 카테고리) + 사용자 차단 (게시물/메시지 즉시 숨김) + 이용약관 (EULA) |
 | 🔧 관리자 패널 | 내장 웹 관리 대시보드 (`/admin`, 경로 변경 가능), 비밀번호 보호, 신고 검토, 콘텐츠 삭제, 사용자 차단 — 8개 언어 지원 |
+
+---
+
+## v2.3.5 업데이트
+
+- 종단간 암호화 직후 발신 개인 메시지의 낙관적 객체에 암호문을 기록하여 서버 확인을 기다리는 동안 평문이 잠시 저장되지 않도록 했습니다.
+- 음성 메시지는 최대 120초에서 자동 중지되며 음성 변조 결과에도 같은 제한을 적용합니다.
+- 녹음과 통화 중 화면을 켜 두고 페이지를 떠날 때 녹음 장치와 타이머를 확실히 해제합니다.
+- Android는 Android Keystore와 AES-256-GCM으로 키와 캐시도 보호합니다. Web 클라이언트는 브라우저 저장소를 유지합니다.
 
 ---
 
