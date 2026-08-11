@@ -98,7 +98,22 @@ async fn send_request(
     .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
     if relationships.iter().any(|(_, _, status)| status == "accepted") {
-        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Already friends" }))));
+        // Older releases could leave only one accepted direction behind. A
+        // one-way friendship is invisible to one participant because most
+        // reads intentionally use user_id -> friend_id. Repair both rows when
+        // either side is already accepted instead of trapping the user in an
+        // "Already friends" state with no visible contact.
+        sqlx::query(
+            "INSERT INTO friends (user_id, friend_id, status) VALUES
+               (?, ?, 'accepted'), (?, ?, 'accepted')
+             ON DUPLICATE KEY UPDATE status = 'accepted'"
+        )
+        .bind(&auth.0.id).bind(&body.friend_id)
+        .bind(&body.friend_id).bind(&auth.0.id)
+        .execute(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+        return Ok(Json(serde_json::json!({ "ok": true, "already_friends": true })));
     }
     if relationships.iter().any(|(user_id, _, status)| user_id == &body.friend_id && status == "pending") {
         return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "This user has already sent you a friend request" }))));

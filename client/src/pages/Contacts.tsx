@@ -132,13 +132,20 @@ export default function Contacts() {
 
   const sendFriendRequest = async (friendId: string) => {
     try {
-      await post('/api/friends/request', { friend_id: friendId, message: requestMsg || null })
+      const result = await post<{ ok: boolean; already_friends?: boolean }>(
+        '/api/friends/request',
+        { friend_id: friendId, message: requestMsg || null },
+      )
+      if (result.already_friends) {
+        const updated = await get<Friend[]>('/api/friends')
+        setFriends(updated)
+      }
       setRequestMsg('')
       setSentIds(prev => new Set(prev).add(friendId))
       setSearchResults([])
       setSearchQ('')
       setShowAdd(false)
-      alert(t('contacts.request_sent'))
+      alert(t(result.already_friends ? 'contacts.already_friend' : 'contacts.request_sent'))
     } catch (err: any) {
       alert(err.message || t('common.error'))
     }

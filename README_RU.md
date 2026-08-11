@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Версия-2.3.8-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.3.9-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,12 @@
 | 🌐 Настройки прокси | Поддержка SOCKS5 / HTTP / HTTPS прокси — настройка на страницах входа и настроек с указанием адреса сервера, порта, имени пользователя и пароля для ограниченных сетевых сред |
 | 🛡️ Модерация контента | Жалобы пользователей (6 категорий) + блокировка пользователей (мгновенное скрытие постов/сообщений) + Условия использования (EULA) |
 | 🔧 Панель администратора | Встроенная веб-панель администратора (`/admin`, путь настраивается), защита паролем, проверка жалоб, удаление нарушающего контента, бан пользователей — поддержка 8 языков |
+
+---
+
+## Новое в v2.3.9
+
+- Исправлены старые односторонние записи дружбы, из-за которых отображалось «Уже в друзьях», но контакт оставался невидимым и недоступным для чата; повторное добавление теперь восстанавливает обе стороны связи и сразу обновляет список контактов.
 
 ---
 

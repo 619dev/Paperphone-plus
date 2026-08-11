@@ -6,7 +6,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.3.8-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.3.9-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,12 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🌐 プロキシ設定 | SOCKS5 / HTTP / HTTPS プロキシ対応 — ログインページと設定ページでサーバーアドレス、ポート、ユーザー名、パスワードを設定可能（制限されたネットワーク環境向け） |
 | 🛡️ コンテンツモデレーション | ユーザー報告（6 カテゴリ）+ ユーザーブロック（投稿/メッセージを即時非表示）+ 利用規約（EULA） |
 | 🔧 管理パネル | 内蔵 Web 管理ダッシュボード（`/admin`、パス変更可能）、パスワード保護、報告審査、コンテンツ削除、ユーザー BAN — 8 言語対応 |
+
+---
+
+## v2.3.9 の更新内容
+
+- 古い一方向の友達関係データにより、「友達です」と表示されても連絡先に現れずチャットできない問題を修正しました。再度追加すると双方向の関係が自動修復され、連絡先一覧がすぐに更新されます。
 
 ---
 
