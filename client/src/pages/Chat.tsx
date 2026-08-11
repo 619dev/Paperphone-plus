@@ -771,7 +771,7 @@ export default function Chat() {
             const forRecipient = await encryptHybrid(recipientPub, recipientKem, wireContent)
             const forSelf = await encryptHybrid(keys.ik_pub, null, wireContent)
             // Keep the optimistic cache ciphertext-only while waiting for the
-            // server acknowledgement, matching the Android 2.3.5 hardening.
+            // server acknowledgement, matching the Android 2.3.8 hardening.
             pendingMsg.ciphertext = forRecipient.ciphertext
             pendingMsg.header = forRecipient.header
             pendingMsg.self_ciphertext = forSelf.ciphertext

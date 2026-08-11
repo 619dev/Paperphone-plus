@@ -73,6 +73,17 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState('')
 
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop())
+    streamRef.current = null
+    if (videoRef.current) videoRef.current.srcObject = null
+  }
+
+  const handleClose = () => {
+    stopCamera()
+    onClose()
+  }
+
   useEffect(() => {
     let active = true
     let animFrame: number
@@ -82,6 +93,11 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },
         })
+        // The scanner may have been closed while the permission prompt was open.
+        if (!active) {
+          stream.getTracks().forEach(track => track.stop())
+          return
+        }
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
@@ -114,7 +130,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
             // Since we don't want an extra dep, we'll just rely on BarcodeDetector
             // which is supported in most modern browsers
           }
-          animFrame = requestAnimationFrame(scan)
+          if (active) animFrame = requestAnimationFrame(scan)
         }
 
         scan()
@@ -128,7 +144,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
     return () => {
       active = false
       cancelAnimationFrame(animFrame)
-      streamRef.current?.getTracks().forEach(t => t.stop())
+      stopCamera()
     }
   }, [])
 
@@ -139,11 +155,11 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
     }}>
       <div style={{
         padding: '12px 16px', display: 'flex', alignItems: 'center',
-        background: 'rgba(0,0,0,0.8)', zIndex: 2,
+        background: 'rgba(0,0,0,0.8)', position: 'relative', zIndex: 2,
       }}>
-        <button onClick={onClose} style={{
+        <button type="button" aria-label="Close scanner" onClick={handleClose} style={{
           border: 'none', background: 'none', color: '#fff',
-          fontSize: 24, cursor: 'pointer', padding: 4,
+          fontSize: 24, cursor: 'pointer', padding: 4, touchAction: 'manipulation',
         }}>←</button>
         <span style={{ flex: 1, textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: 16 }}>
           Scan QR Code
@@ -160,7 +176,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         {/* Scan frame overlay */}
         <div style={{
           position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div style={{
             width: 240, height: 240, border: '3px solid rgba(255,255,255,0.7)',

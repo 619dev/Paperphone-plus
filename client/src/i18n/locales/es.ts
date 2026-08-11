@@ -26,7 +26,7 @@ export const es: Record<string, string> = {
 
   'contacts.title': 'Contactos', 'contacts.friends': 'Amigos', 'contacts.groups': 'Grupos',
   'contacts.requests': 'Solicitudes de amistad', 'contacts.add': 'Agregar amigo',
-  'contacts.search_user': 'Buscar usuarios...', 'contacts.add_friend': 'Agregar', 'contacts.request_message_hint': 'Escribe un mensaje (máx. 512 caracteres)',
+  'contacts.search_user': 'Buscar usuarios...', 'contacts.add_friend': 'Agregar', 'contacts.already_friend': 'Ya son amigos', 'contacts.request_message_hint': 'Escribe un mensaje (máx. 512 caracteres)',
   'contacts.search_no_results': 'No se encontraron usuarios coincidentes', 'contacts.search_failed': 'Error de búsqueda',
   'contacts.pending': 'Pendiente', 'contacts.accept': 'Aceptar', 'contacts.reject': 'Rechazar',
   'contacts.send_request': 'Enviar solicitud', 'contacts.request_sent': 'Solicitud enviada', 'contacts.request_message': 'Mensaje',

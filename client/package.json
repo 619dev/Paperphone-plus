@@ -1,7 +1,7 @@
 {
   "name": "paperphone-plus-client",
   "private": true,
-  "version": "2.3.5",
+  "version": "2.3.8",
   "type": "module",
   "scripts": {
     "dev": "vite",

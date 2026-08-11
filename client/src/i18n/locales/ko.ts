@@ -26,7 +26,7 @@ export const ko: Record<string, string> = {
   'contacts.title': '연락처', 'contacts.friends': '친구', 'contacts.groups': '그룹',
   'contacts.requests': '친구 요청', 'contacts.add': '친구 추가', 'contacts.search_user': '사용자 검색...',
   'contacts.search_no_results': '일치하는 사용자를 찾을 수 없습니다', 'contacts.search_failed': '검색 실패',
-  'contacts.add_friend': '추가', 'contacts.request_message_hint': '메시지 작성 (최대 512자)', 'contacts.pending': '대기 중', 'contacts.accept': '수락',
+  'contacts.add_friend': '추가', 'contacts.already_friend': '이미 친구입니다', 'contacts.request_message_hint': '메시지 작성 (최대 512자)', 'contacts.pending': '대기 중', 'contacts.accept': '수락',
   'contacts.reject': '거절', 'contacts.send_request': '요청 보내기', 'contacts.request_sent': '친구 요청을 보냈습니다', 'contacts.request_message': '메시지',
   'contacts.empty': '연락처가 없습니다', 'contacts.scan_qr': 'QR 스캔',
 

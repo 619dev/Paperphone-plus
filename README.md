@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@
 
 ---
 
-## v2.3.5 更新
+## v2.3.8 更新
 
+- 修复扫码启动摄像头后左上角返回按钮无法退出的问题，退出时会立即停止并释放摄像头。
+- 修复向已有好友重复发送添加请求会破坏好友关系的问题；搜索结果现在会明确标记“已是好友”。
 - 私聊消息完成端到端加密后立即把密文写入发送中的乐观消息对象，避免等待服务器确认期间将明文短暂持久化到离线缓存。
 - 语音消息最长 120 秒，到达上限后自动停止；变声处理后的音频同样限制为 120 秒。
 - 录制语音和通话期间保持屏幕唤醒，离开页面时可靠释放录音设备与计时器。

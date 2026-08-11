@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Версия-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@
 
 ---
 
-## Новое в v2.3.5
+## Новое в v2.3.8
 
+- Исправлена неработающая кнопка «Назад» после запуска камеры QR-сканера; при закрытии камера теперь сразу останавливается и освобождается.
+- Исправлено повреждение связи при повторной заявке уже добавленному другу; результаты поиска теперь показывают «Уже в друзьях».
 - После сквозного шифрования исходящие личные сообщения сразу получают шифротекст в оптимистическом объекте, поэтому открытый текст не сохраняется в ожидании подтверждения сервера.
 - Голосовые сообщения автоматически останавливаются на 120 секундах; результат изменения голоса имеет тот же предел.
 - Во время записи и звонков экран остаётся включённым, а при уходе со страницы устройства и таймеры освобождаются.

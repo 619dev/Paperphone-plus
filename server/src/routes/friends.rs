@@ -85,13 +85,55 @@ async fn send_request(
         }
     }
 
+    // Never let a new request downgrade an existing friendship. The friends
+    // table stores one row per direction, so inspect both directions before
+    // writing to also handle incoming requests and legacy inconsistent rows.
+    let relationships: Vec<(String, String, String)> = sqlx::query_as(
+        "SELECT user_id, friend_id, status FROM friends
+         WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)"
+    )
+    .bind(&auth.0.id).bind(&body.friend_id)
+    .bind(&body.friend_id).bind(&auth.0.id)
+    .fetch_all(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    if relationships.iter().any(|(_, _, status)| status == "accepted") {
+        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Already friends" }))));
+    }
+    if relationships.iter().any(|(user_id, _, status)| user_id == &body.friend_id && status == "pending") {
+        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "This user has already sent you a friend request" }))));
+    }
+    if relationships.iter().any(|(_, _, status)| status == "blocked") {
+        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Unable to send friend request" }))));
+    }
+
     sqlx::query(
         "INSERT INTO friends (user_id, friend_id, status, message) VALUES (?, ?, 'pending', ?)
-         ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message)"
+         ON DUPLICATE KEY UPDATE
+           message = IF(status = 'pending', VALUES(message), message),
+           status = status"
     )
     .bind(&auth.0.id).bind(&body.friend_id).bind(&body.message)
     .execute(&state.db).await
     .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+
+    // Close the small race between the relationship check and the upsert: the
+    // upsert above preserves accepted/blocked rows, and this check prevents a
+    // misleading notification or success response if one changed meanwhile.
+    let stored_status: Option<(String,)> = sqlx::query_as(
+        "SELECT status FROM friends WHERE user_id = ? AND friend_id = ?"
+    )
+    .bind(&auth.0.id).bind(&body.friend_id)
+    .fetch_optional(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+    if let Some((status,)) = stored_status {
+        if status == "accepted" {
+            return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Already friends" }))));
+        }
+        if status == "blocked" {
+            return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Unable to send friend request" }))));
+        }
+    }
 
     // Send WS notification
     let sender_info: Option<(String, String, Option<String>)> = sqlx::query_as(

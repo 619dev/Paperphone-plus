@@ -6,7 +6,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 ---
 
-## Nouveautés de la v2.3.5
+## Nouveautés de la v2.3.8
 
+- Correction du bouton Retour inactif après le démarrage de la caméra du scanner QR ; la fermeture arrête et libère désormais immédiatement la caméra.
+- Correction des demandes d’ami répétées à un ami existant qui endommageaient la relation ; les résultats indiquent désormais « Déjà amis ».
 - Les messages privés sortants placent le texte chiffré dans l’objet optimiste dès la fin du chiffrement de bout en bout, sans persister temporairement le texte en clair avant l’accusé du serveur.
 - Les messages vocaux s’arrêtent automatiquement à 120 secondes ; la sortie avec changement de voix suit la même limite.
 - L’écran reste actif pendant les enregistrements et appels, et les périphériques ainsi que les minuteurs sont libérés en quittant la page.

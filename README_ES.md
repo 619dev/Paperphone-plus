@@ -6,7 +6,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Versión-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 ---
 
-## Novedades de v2.3.5
+## Novedades de v2.3.8
 
+- Se corrigió el botón Atrás que no respondía después de iniciar la cámara del escáner QR; al cerrar, la cámara se detiene y libera inmediatamente.
+- Se corrigieron las solicitudes duplicadas a amigos existentes que dañaban la relación; los resultados ahora muestran «Ya son amigos».
 - Los mensajes privados salientes guardan el texto cifrado en el objeto optimista justo después del cifrado de extremo a extremo, evitando persistir texto plano mientras llega la confirmación del servidor.
 - Los mensajes de voz se detienen automáticamente a los 120 segundos; el audio con cambio de voz usa el mismo límite.
 - La pantalla permanece activa durante grabaciones y llamadas, y al salir se liberan de forma fiable dispositivos y temporizadores.

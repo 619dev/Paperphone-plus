@@ -27,7 +27,9 @@ spec:
     - **Stateless ECDH + XSalsa20-Poly1305** — per-message ephemeral keys, forward secrecy without session state
     - **Zero-knowledge server** — only ciphertext is stored; private keys never leave the device
     - **Four-tier key persistence** — memory → localStorage → sessionStorage → IndexedDB, survives WebView restarts
-    - **Ciphertext-only optimistic sends (v2.3.5)** — outgoing private messages are encrypted before entering the persistent offline cache
+    - **Ciphertext-only optimistic sends (v2.3.8)** — outgoing private messages are encrypted before entering the persistent offline cache
+    - **QR scanner lifecycle fix (v2.3.8)** — closing the scanner immediately stops and releases the camera, including during permission prompts
+    - **Friendship integrity fix (v2.3.8)** — duplicate requests can no longer downgrade or remove an accepted friendship
 
     ## Features
     - 📹 **Video & Voice Calls** — LiveKit SFU for both 1:1 calls and meetings (up to 100 participants, host mute-all and lecture mode)
@@ -65,7 +67,7 @@ spec:
     5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
     7. After an upgrade, inspect the **server** logs and confirm it becomes healthy before updating clients. Test a VPN/network switch and an offline send to verify automatic recovery and exactly-once storage.
-    8. For v2.3.5, send a private message while briefly offline and confirm it retries after reconnecting; pending Web messages persist ciphertext only.
+    8. For v2.3.8, send a private message while briefly offline and confirm it retries after reconnecting; pending Web messages persist ciphertext only.
 
     MySQL is started with `utf8mb4` and `utf8mb4_unicode_ci`. On startup, the server automatically migrates and verifies the message sequence, idempotency, refresh-session, and searchable-character-set fields. **For upgrades, redeploy the server first and wait for it to become healthy before updating clients. Back up MySQL before production upgrades.**
 
@@ -634,7 +636,9 @@ localization:
       - **无状态 ECDH + XSalsa20-Poly1305** — 逐消息临时密钥，前向保密无需会话状态同步
       - **零知识服务器** — 仅存储密文，私钥仅在设备本地，永不上传
       - **四层密钥持久化** — 内存 → localStorage → sessionStorage → IndexedDB，Android WebView 重启后仍可恢复
-      - **发送缓存仅保留密文（v2.3.5）** — 私聊消息在进入持久化离线缓存前完成加密，等待服务器确认期间不会短暂落盘明文
+      - **发送缓存仅保留密文（v2.3.8）** — 私聊消息在进入持久化离线缓存前完成加密，等待服务器确认期间不会短暂落盘明文
+      - **扫码摄像头生命周期修复（v2.3.8）** — 关闭扫码页会立即停止并释放摄像头，包括等待授权期间退出的情况
+      - **好友关系完整性修复（v2.3.8）** — 重复好友请求不会再降级或移除已接受的好友关系
 
       ## 功能亮点
       - 📹 **视频/语音通话** — 1:1 私聊和群会议统一使用 LiveKit SFU（最多 100 人，支持主席全员静音和讲课模式）
@@ -672,7 +676,7 @@ localization:
       5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
       7. 升级后先检查 **server** 日志并确认健康检查通过，再更新客户端；切换一次 VPN/网络并进行一次断网发送，验证自动恢复且消息只入库一次。
-      8. v2.3.5 升级后可在短暂离线时发送一条私聊消息并确认重连后自动重试；Web 客户端对待发送消息只持久化密文。
+      8. v2.3.8 升级后可在短暂离线时发送一条私聊消息并确认重连后自动重试；Web 客户端对待发送消息只持久化密文。
 
       MySQL 已使用 `utf8mb4` 和 `utf8mb4_unicode_ci` 启动；server 启动时会自动迁移并验证消息序号、幂等 ID、刷新会话及搜索字符集字段。**升级时必须先重新部署 server，等待健康检查通过后再更新客户端；生产升级前请备份 MySQL。**
 

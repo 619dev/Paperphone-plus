@@ -75,6 +75,7 @@ export const en: Record<string, string> = {
   'contacts.search_no_results': 'No matching users found',
   'contacts.search_failed': 'Search failed',
   'contacts.add_friend': 'Add',
+  'contacts.already_friend': 'Already friends',
   'contacts.request_message_hint': 'Write a message (up to 512 chars)',
   'contacts.pending': 'Pending',
   'contacts.accept': 'Accept',

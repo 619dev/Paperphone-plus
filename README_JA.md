@@ -6,7 +6,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 ---
 
-## v2.3.5 の更新内容
+## v2.3.8 の更新内容
 
+- QRスキャナーでカメラ起動後に戻るボタンが反応しない問題を修正し、終了時にカメラを即座に停止・解放するようにしました。
+- 既存の友達への重複申請で友達関係が壊れる問題を修正し、検索結果に「友達です」と表示するようにしました。
 - エンドツーエンド暗号化の完了直後に送信中の個人メッセージへ暗号文を設定し、サーバー確認待ちの間に平文が一時保存されることを防止しました。
 - 音声メッセージは最長120秒で自動停止し、ボイスチェンジ後の音声も同じ上限です。
 - 録音中と通話中は画面をスリープさせず、ページ離脱時に録音デバイスとタイマーを確実に解放します。

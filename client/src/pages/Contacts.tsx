@@ -397,8 +397,12 @@ export default function Contacts() {
                 <div className="name">{u.nickname}</div>
                 <div className="preview">@{u.username}</div>
               </div>
-              <button className="btn btn-sm btn-primary" onClick={() => sendFriendRequest(u.id)}>
-                {t('contacts.add_friend')}
+              <button
+                className="btn btn-sm btn-primary"
+                disabled={friends.some(friend => friend.id === u.id)}
+                onClick={() => sendFriendRequest(u.id)}
+              >
+                {friends.some(friend => friend.id === u.id) ? t('contacts.already_friend') : t('contacts.add_friend')}
               </button>
             </div>
           ))}

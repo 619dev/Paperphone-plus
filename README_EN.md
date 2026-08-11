@@ -6,7 +6,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.3.5-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.3.8-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,10 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 ---
 
-## What's New in v2.3.5
+## What's New in v2.3.8
 
+- Fixed the unresponsive back button after the QR scanner starts the camera; closing now stops and releases the camera immediately.
+- Fixed duplicate friend requests to existing friends corrupting the friendship; search results now clearly show “Already friends.”
 - Outgoing private messages populate the optimistic message object with ciphertext immediately after end-to-end encryption, preventing plaintext from being briefly persisted while awaiting the server acknowledgement.
 - Voice messages stop automatically at 120 seconds; voice-changed output follows the same limit.
 - Voice recording and active calls keep the screen awake, while page cleanup reliably releases recording devices and timers.
