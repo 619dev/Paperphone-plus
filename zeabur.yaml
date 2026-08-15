@@ -6,7 +6,7 @@ metadata:
 
 spec:
   description: >-
-    PaperPhonePlus v2.4.1, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
+    PaperPhonePlus v2.4.2, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
     featuring hybrid X25519 + ML-KEM-768 E2EE, group E2E encryption (Signal-style Sender Keys),
     LiveKit SFU voice/video calls (1:1 and meetings up to 100 participants), real-time voice changer,
     reliable cursor-based message synchronization, durable device sessions, SOCKS5/HTTP/HTTPS proxy support,
@@ -23,12 +23,12 @@ spec:
     Rewritten with **React 19 + TypeScript + Vite** frontend and **Rust (Axum)** backend
     for maximum performance and type safety.
 
-    ## Security — v2.4.1
+    ## Security — v2.4.2
     - **Hybrid X25519 + ML-KEM-768 + XSalsa20-Poly1305** — message headers identify the actual `PQ v2`, downgraded `X25519 ↓`, or group `SK vN` protocol
     - **Fail-closed encrypted sending** — encryption, key-distribution, and secure-storage failures stop the send instead of falling back to plaintext
     - **Zero-knowledge server** — only ciphertext is stored; private keys never leave the device
     - **Protected local secrets** — the Web client uses AES-GCM-wrapped IndexedDB; native clients use platform secure storage for identity private keys and Sender Keys
-    - **Optional history privacy layer** — a memory-only extra password protects local history behind eight presentation codecs, with 5/15/30/60-minute background auto-lock
+    - **Global history privacy layer** — configured in Profile > Message privacy and applied to every chat on the device; a memory-only extra password, eight fully encoded text appearances, and 5/15/30/60-minute background auto-lock prevent plaintext and protocol-metadata exposure
 
     ## Features
     - 📹 **Video & Voice Calls** — LiveKit SFU for both 1:1 calls and meetings (up to 100 participants, host mute-all and lecture mode)
@@ -66,7 +66,7 @@ spec:
     5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
     7. After an upgrade, inspect the **server** logs and confirm it becomes healthy before updating clients. Test a VPN/network switch and an offline send to verify automatic recovery and exactly-once storage.
-    8. For v2.4.1, test an encrypted send with key delivery unavailable and confirm it fails without transmitting plaintext; verify the protocol badge matches the actual envelope.
+    8. For v2.4.2, test an encrypted send with key delivery unavailable and confirm it fails without transmitting plaintext; verify the protocol badge matches the actual envelope.
     9. Enable the optional history password, background the app past the selected timeout, and confirm only presentation ciphertext is visible until the correct password is entered.
 
     MySQL is started with `utf8mb4` and `utf8mb4_unicode_ci`. On startup, the server automatically migrates and verifies the message sequence, idempotency, refresh-session, and searchable-character-set fields. **For upgrades, redeploy the server first and wait for it to become healthy before updating clients. Back up MySQL before production upgrades.**
@@ -622,7 +622,7 @@ spec:
 localization:
   zh-CN:
     description: >-
-      PaperPhonePlus v2.4.1 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
+      PaperPhonePlus v2.4.2 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
       消息游标可靠同步与长期设备会话、LiveKit SFU 单聊与百人会议、实时变声、SOCKS5/HTTP/HTTPS 代理、
       Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
     readme: |-
@@ -632,12 +632,12 @@ localization:
       使用 **React 19 + TypeScript + Vite** 前端和 **Rust (Axum)** 后端重写，
       获得极致性能和类型安全。
 
-      ## 安全模型 — v2.4.1
+      ## 安全模型 — v2.4.2
       - **X25519 + ML-KEM-768 + XSalsa20-Poly1305 混合加密** — 消息准确标示实际采用的 `PQ v2`、降级后的 `X25519 ↓` 或群聊 `SK vN` 协议
       - **加密发送失败即停止** — 加密、密钥分发或安全存储失败时不会回退为明文发送
       - **零知识服务器** — 仅存储密文，私钥仅在设备本地，永不上传
       - **本地秘密保护** — Web 使用 AES-GCM 包装的 IndexedDB；原生客户端使用系统安全存储保存身份私钥与 Sender Key
-      - **可选聊天记录隐私层** — 额外密码仅保存在内存中，支持 8 种文本外观编码及离开前台 5/15/30/60 分钟自动锁定
+      - **全局聊天记录隐私层** — 在“个人信息 > 消息隐私”统一配置并应用于本设备所有聊天；额外密码仅保存在内存中，8 种文本外观会完整隐藏原文及协议元数据，并支持离开前台 5/15/30/60 分钟自动锁定
 
       ## 功能亮点
       - 📹 **视频/语音通话** — 1:1 私聊和群会议统一使用 LiveKit SFU（最多 100 人，支持主席全员静音和讲课模式）
@@ -675,8 +675,8 @@ localization:
       5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
       7. 升级后先检查 **server** 日志并确认健康检查通过，再更新客户端；切换一次 VPN/网络并进行一次断网发送，验证自动恢复且消息只入库一次。
-      8. v2.4.1 升级后模拟密钥获取失败，确认加密消息明确发送失败且不会传输明文，并核对协议标签与实际信封一致。
-      9. 开启额外聊天记录密码，等待所选后台锁定时间后返回，确认输入正确密码前只显示文本外观密文。
+      8. v2.4.2 升级后模拟密钥获取失败，确认加密消息明确发送失败且不会传输明文，并核对协议标签与实际信封一致。
+      9. 在“个人信息 > 消息隐私”开启额外聊天记录密码，确认设置对所有聊天生效；等待所选后台锁定时间后返回，确认输入正确密码前只显示完整文本外观密文，不暴露原文、协议前缀、盐值或 IV。
 
       MySQL 已使用 `utf8mb4` 和 `utf8mb4_unicode_ci` 启动；server 启动时会自动迁移并验证消息序号、幂等 ID、刷新会话及搜索字符集字段。**升级时必须先重新部署 server，等待健康检查通过后再更新客户端；生产升级前请备份 MySQL。**
 

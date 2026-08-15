@@ -6,7 +6,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/버전-2.4.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.4.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,10 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 ---
 
-## v2.4.1 업데이트
+## v2.4.2 업데이트
+
+- 텍스트 모양이 프로토콜 접두사, 솔트, IV를 숨기며 전송 중 로컬 캐시에 원문을 보관하지 않습니다.
+- 추가 암호화 설정을 프로필 > 메시지 개인정보 보호로 이동하고 기기의 모든 채팅에 전역 적용했습니다.
 
 - 암호화, 키 배포 또는 보안 저장이 실패하면 전송을 중단하며 평문으로 폴백하지 않습니다. 각 메시지에 실제 `PQ v2`, `X25519 ↓`, `SK vN` 프로토콜을 표시합니다.
 - 선택형 채팅 기록 추가 암호와 불교 문구, 무작위 중국어, 주역 기호, 한글, 이집트 상형문자, 설형문자, 핵심 가치관 문구, 영숫자 등 8개 표시 코덱을 추가했습니다.

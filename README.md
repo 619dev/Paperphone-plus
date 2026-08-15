@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.4.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.4.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,10 @@
 
 ---
 
-## v2.4.1 更新
+## v2.4.2 更新
+
+- 文本外观现在会隐藏协议前缀、盐值和 IV，发送中的本地缓存也不再保留原始正文。
+- 额外聊天记录加密已移至个人信息 > 消息隐私，并全局应用于本设备的所有聊天。
 
 - 加密会话改为失败即停止：加密、密钥分发或安全存储失败时不再降级为明文发送；消息气泡会准确标示 `PQ v2`、`X25519 ↓` 或 `SK vN`。
 - 新增可选的聊天记录额外密码与 8 种独立文本外观编码：与佛论禅、随机中文、易经符号、韩文、埃及象形文字、楔形文字、核心价值观文本和英数字。

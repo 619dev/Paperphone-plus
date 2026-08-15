@@ -8,8 +8,7 @@ import { get, post, put, uploadFileWithProgress, normalizeFileUrl } from '../api
 import { sendWs, onWs } from '../api/socket'
 import { getKeys } from '../crypto/keystore'
 import { encryptHybrid, decryptHybrid, inspectHybridProtocol } from '../crypto/ratchet'
-import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/presentationCodec'
-import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, protectPresentationText, unlockPresentationCrypto, unprotectPresentationText, updatePresentationSettings } from '../crypto/presentationCrypto'
+import { getPresentationSettings, protectPresentationText, unprotectPresentationText } from '../crypto/presentationCrypto'
 import { getMySenderKey, getSenderKey, generateSenderKey, encryptWithSenderKey, decryptWithSenderKey, distributeSenderKey, storeSenderKey, receiveSenderKey, isSenderKeyDistributed, markSenderKeyDistributed, removeSenderKey } from '../crypto/groupCrypto'
 import { Shield } from 'lucide-react'
 import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
@@ -331,12 +330,10 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [presentationSettings, setPresentationSettings] = useState(getPresentationSettings)
   const [presentationStateVersion, setPresentationStateVersion] = useState(0)
 
   useEffect(() => {
     const update = () => {
-      setPresentationSettings(getPresentationSettings())
       setPresentationStateVersion(v => v + 1)
     }
     window.addEventListener('paperphone:presentation-state-changed', update)
@@ -677,7 +674,9 @@ export default function Chat() {
         delivery_status: 'queued',
         from: user.id,
         msg_type: msgType,
-        decrypted: displayWireContent,
+        // Never retain the original body in the optimistic cache when the
+        // global appearance/encryption layer is enabled.
+        decrypted: getPresentationSettings().enabled ? wireContent : displayWireContent,
         ciphertext: (isGroup && !group?.encrypted) ? wireContent : '',
       }
       if (isGroup) {
@@ -1190,68 +1189,6 @@ export default function Chat() {
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('chat.e2e_desc')}</div>
               </div>
             </div>
-          )}
-          <div className="section-title" style={{ padding: '16px 16px 8px' }}>{t('chat.presentation_title')}</div>
-          <div style={{ padding: '0 16px 8px', fontSize: 12, color: 'var(--text-muted)' }}>
-            {t('chat.presentation_desc')}
-          </div>
-          <div className="settings-item">
-            <span className="label">{t('chat.presentation_codec')}</span>
-            <select
-              value={presentationSettings.codec}
-              onChange={e => {
-                const codec = e.target.value as PresentationCodecId
-                updatePresentationSettings({ codec })
-                setPresentationSettings(getPresentationSettings())
-              }}
-              disabled={presentationSettings.enabled}
-              style={{ maxWidth: 150, padding: 6, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-            >
-              {PRESENTATION_CODECS.map(codec => <option key={codec.id} value={codec.id}>{codec.label}</option>)}
-            </select>
-          </div>
-          <div
-            className="settings-item"
-            onClick={async () => {
-              if (presentationSettings.enabled && isPresentationUnlocked()) {
-                lockPresentationCrypto()
-                return
-              }
-              const pass = prompt(t('chat.presentation_password_prompt')) || ''
-              if (!pass) return
-              try {
-                if (presentationSettings.enabled) {
-                  if (!(await unlockPresentationCrypto(pass))) { alert(t('chat.presentation_wrong_password')); return }
-                } else {
-                  const confirmPass = prompt(t('chat.presentation_password_confirm')) || ''
-                  if (pass !== confirmPass) { alert(t('password.mismatch')); return }
-                  await enablePresentationCrypto(presentationSettings.codec, pass)
-                }
-                setPresentationSettings(getPresentationSettings())
-              } catch (err: any) {
-                alert(err?.message || t('common.error'))
-              }
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            <span className="label">{presentationSettings.enabled ? (isPresentationUnlocked() ? t('chat.presentation_lock_now') : t('chat.presentation_unlock')) : t('chat.presentation_enable')}</span>
-            <span style={{ color: isPresentationUnlocked() ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 600 }}>
-              {presentationSettings.enabled ? (isPresentationUnlocked() ? t('chat.presentation_unlocked') : t('chat.presentation_locked')) : 'OFF'}
-            </span>
-          </div>
-          {presentationSettings.enabled && (
-            <>
-              <div className="settings-item">
-                <span className="label">{t('chat.presentation_auto_lock')}</span>
-                <select value={presentationSettings.lockMinutes} onChange={e => { updatePresentationSettings({ lockMinutes: Number(e.target.value) as 5 | 15 | 30 | 60 }); setPresentationSettings(getPresentationSettings()) }}
-                  style={{ padding: 6, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                  {[5, 15, 30, 60].map(minutes => <option key={minutes} value={minutes}>{minutes === 60 ? t('chat.presentation_1_hour') : `${minutes} ${t('chat.presentation_minutes')}`}</option>)}
-                </select>
-              </div>
-              <div className="settings-item" onClick={async () => { await disablePresentationCrypto(); setPresentationSettings(getPresentationSettings()) }} style={{ cursor: 'pointer', color: 'var(--danger)' }}>
-                <span className="label">{t('chat.presentation_disable')}</span>
-              </div>
-            </>
           )}
           <div className="section-title" style={{ padding: '16px 16px 8px' }}><Timer size={14} /> {t('auto_delete.title')}</div>
           <div style={{ padding: '0 16px 8px', fontSize: 12, color: 'var(--text-muted)' }}>

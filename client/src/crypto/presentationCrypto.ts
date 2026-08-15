@@ -4,6 +4,11 @@ import { decodePresentationBytes, encodePresentationBytes, type PresentationCode
 const SETTINGS_KEY = 'pp_presentation_crypto_v1'
 const LEGACY_SECRET_NAME = 'presentation-password-v1'
 const PREFIX = 'ppx1|'
+const PRIVATE_PREFIX = '§'
+const CODEC_MARKERS: Record<PresentationCodecId, string> = {
+  buddha: '佛', chinese: '文', yijing: '☷', hangul: '한',
+  egyptian: '𓀀', cuneiform: '𒀀', values: '和', alphanumeric: 'A',
+}
 const AAD = new TextEncoder().encode('PaperPhonePlus-presentation-v1')
 const VERIFY_TEXT = 'PaperPhonePlus-presentation-password-check-v1'
 const iterations = 210_000
@@ -141,14 +146,40 @@ export async function protectPresentationText(text: string): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const key = await deriveKey(password, salt)
   const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: AAD }, key, new TextEncoder().encode(text)))
-  const presented = `${PREFIX}${settings.codec}|${settings.salt}|${b64(iv)}|${encodePresentationBytes(encrypted, settings.codec)}`
+  // v2 keeps all cryptographic metadata inside the selected presentation
+  // alphabet. Only a neutral sentinel and a one-character codec marker remain
+  // outside, so salts, IVs, protocol names and Base64 never leak into bubbles.
+  const frame = new Uint8Array(1 + salt.length + iv.length + encrypted.length)
+  frame[0] = 2
+  frame.set(salt, 1)
+  frame.set(iv, 1 + salt.length)
+  frame.set(encrypted, 1 + salt.length + iv.length)
+  const presented = `${PRIVATE_PREFIX}${CODEC_MARKERS[settings.codec]}${encodePresentationBytes(frame, settings.codec)}`
   presentationByPlaintext.set(text, presented)
   return presented
 }
 
 export async function unprotectPresentationText(text: string): Promise<string> {
-  if (!text.startsWith(PREFIX) || !password) return text
+  if (!password) return text
   try {
+    if (text.startsWith(PRIVATE_PREFIX)) {
+      const marker = Array.from(text.slice(PRIVATE_PREFIX.length))[0]
+      const codec = (Object.entries(CODEC_MARKERS).find(([, value]) => value === marker)?.[0]) as PresentationCodecId | undefined
+      if (!codec) return text
+      const payload = text.slice(PRIVATE_PREFIX.length + marker.length)
+      const frame = decodePresentationBytes(payload, codec)
+      if (frame[0] !== 2 || frame.length < 30) return text
+      const salt = frame.slice(1, 17)
+      const iv = frame.slice(17, 29)
+      const encrypted = frame.slice(29)
+      const key = await deriveKey(password, salt)
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: AAD }, key, encrypted)
+      const plaintext = new TextDecoder().decode(plain)
+      presentationByPlaintext.set(plaintext, text)
+      return plaintext
+    }
+    // Backward compatibility for messages created by 2.4.1.
+    if (!text.startsWith(PREFIX)) return text
     const [, codec, salt64, iv64, payload] = text.split('|')
     const key = await deriveKey(password, unb64(salt64))
     const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(iv64), additionalData: AAD }, key, decodePresentationBytes(payload, codec as PresentationCodecId))

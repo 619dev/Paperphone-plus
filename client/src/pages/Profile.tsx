@@ -12,9 +12,11 @@ import { isPushSupported, isPushSubscribed, subscribePush, unsubscribePush } fro
 import { logoutOneSignal } from '../api/onesignal'
 import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Download as DownloadIcon, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle } from 'lucide-react'
 import { clearOfflineCache } from '../utils/offlineCache'
+import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/presentationCodec'
+import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
-type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy'
-const APP_VERSION = '2.4.1'
+type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy'
+const APP_VERSION = '2.4.2'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -158,6 +160,7 @@ export default function Profile() {
   if (subView === 'fingerprint') return <KeyFingerprint onBack={() => setSubView(null)} t={t} user={user} />
   if (subView === 'myqr') return <MyQRCode onBack={() => setSubView(null)} t={t} user={user} />
   if (subView === 'proxy') return <ProxySettings onBack={() => setSubView(null)} t={t} />
+  if (subView === 'message-privacy') return <MessagePrivacySettings onBack={() => setSubView(null)} t={t} />
 
   return (
     <div className="page" id="profile-page">
@@ -202,6 +205,10 @@ export default function Profile() {
         </div>
         <div className="settings-item" onClick={() => setSubView('fingerprint')}>
           <span className="label"><Fingerprint size={16} /> {t('fingerprint.title')}</span>
+          <span className="arrow"><ChevronRight size={14} /></span>
+        </div>
+        <div className="settings-item" onClick={() => setSubView('message-privacy')}>
+          <span className="label"><Shield size={16} /> {t('profile.message_privacy')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
 
@@ -422,6 +429,55 @@ export default function Profile() {
       </div>
     </div>
   )
+}
+
+function MessagePrivacySettings({ onBack, t }: { onBack: () => void; t: (k: string) => string }) {
+  const [settings, setSettings] = useState(getPresentationSettings)
+  const refresh = () => setSettings(getPresentationSettings())
+  useEffect(() => {
+    window.addEventListener('paperphone:presentation-state-changed', refresh)
+    return () => window.removeEventListener('paperphone:presentation-state-changed', refresh)
+  }, [])
+  const toggleLock = async () => {
+    if (settings.enabled && isPresentationUnlocked()) { lockPresentationCrypto(); return }
+    const pass = prompt(t('chat.presentation_password_prompt')) || ''
+    if (!pass) return
+    try {
+      if (settings.enabled) {
+        if (!(await unlockPresentationCrypto(pass))) alert(t('chat.presentation_wrong_password'))
+      } else {
+        const confirmation = prompt(t('chat.presentation_password_confirm')) || ''
+        if (pass !== confirmation) { alert(t('password.mismatch')); return }
+        await enablePresentationCrypto(settings.codec, pass)
+      }
+      refresh()
+    } catch (err: any) { alert(err?.message || t('common.error')) }
+  }
+  return <div className="page">
+    <div className="page-header"><button className="back-btn" onClick={onBack}><ChevronLeft size={20} /></button><h1>{t('profile.message_privacy')}</h1></div>
+    <div className="page-body">
+      <div style={{ padding: '12px 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{t('profile.message_privacy_desc')}</div>
+      <div className="settings-item">
+        <span className="label">{t('chat.presentation_codec')}</span>
+        <select value={settings.codec} disabled={settings.enabled} onChange={e => { updatePresentationSettings({ codec: e.target.value as PresentationCodecId }); refresh() }}
+          style={{ maxWidth: 170, padding: 6, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+          {PRESENTATION_CODECS.map(codec => <option key={codec.id} value={codec.id}>{t(`presentation.codec_${codec.id}`)}</option>)}
+        </select>
+      </div>
+      <div className="settings-item" onClick={toggleLock} style={{ cursor: 'pointer' }}>
+        <span className="label">{settings.enabled ? (isPresentationUnlocked() ? t('chat.presentation_lock_now') : t('chat.presentation_unlock')) : t('chat.presentation_enable')}</span>
+        <span style={{ color: isPresentationUnlocked() ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 600 }}>{settings.enabled ? (isPresentationUnlocked() ? t('chat.presentation_unlocked') : t('chat.presentation_locked')) : 'OFF'}</span>
+      </div>
+      {settings.enabled && <>
+        <div className="settings-item"><span className="label">{t('chat.presentation_auto_lock')}</span>
+          <select value={settings.lockMinutes} onChange={e => { updatePresentationSettings({ lockMinutes: Number(e.target.value) as 5 | 15 | 30 | 60 }); refresh() }}
+            style={{ padding: 6, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+            {[5, 15, 30, 60].map(minutes => <option key={minutes} value={minutes}>{minutes === 60 ? t('chat.presentation_1_hour') : `${minutes} ${t('chat.presentation_minutes')}`}</option>)}</select>
+        </div>
+        <div className="settings-item" onClick={async () => { await disablePresentationCrypto(); refresh() }} style={{ cursor: 'pointer', color: 'var(--danger)' }}><span className="label">{t('chat.presentation_disable')}</span></div>
+      </>}
+    </div>
+  </div>
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

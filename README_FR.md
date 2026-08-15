@@ -6,7 +6,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,10 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 ---
 
-## Nouveautés de la v2.4.1
+## Nouveautés de la v2.4.2
+
+- L’apparence du texte masque désormais préfixes de protocole, sel et IV ; le cache local ne conserve plus le texte original.
+- Le chiffrement supplémentaire se trouve dans Profil > Confidentialité des messages et s’applique globalement à tous les chats.
 
 - Les conversations chiffrées échouent désormais de façon sûre : aucune erreur de chiffrement, de distribution de clé ou de stockage sécurisé ne peut entraîner un envoi en clair. Chaque message affiche le protocole réellement utilisé (`PQ v2`, `X25519 ↓` ou `SK vN`).
 - Ajout d'un mot de passe facultatif pour l'historique et de huit codecs de présentation : texte bouddhique, chinois aléatoire, symboles du Yi Jing, coréen, hiéroglyphes égyptiens, cunéiforme, valeurs fondamentales et alphanumérique.

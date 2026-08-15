@@ -469,7 +469,9 @@ Nginx automatically routes API requests (`/api/*`) and WebSocket connections (`/
 - **Docker Compose**: Run `docker compose pull && docker compose up -d`
 - **Vercel Frontend**: Push to GitHub and Vercel will automatically trigger redeployment
 
-After upgrading, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.
+After upgrading to **v2.4.2**, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.
+
+In v2.4.2, extra message-history encryption is configured under **Profile → Message privacy** and applies globally to every chat on that device. The selected text appearance encodes the complete protected envelope, so message bubbles and optimistic local caches do not expose the original body, protocol prefix, salt, IV, or Base64 metadata. Existing `ppx1` messages remain readable for backward compatibility.
 
 For releases containing reliable sessions and message synchronization, also verify:
 
@@ -479,4 +481,4 @@ For releases containing reliable sessions and message synchronization, also veri
 4. Let the recipient receive a push notification in the background, then open the app and confirm cursor catch-up loads the message body.
 5. Revoke a device under **Active Sessions** and confirm that device can no longer refresh its token and returns to sign-in.
 6. Simulate unavailable private-chat key lookup or group Sender Key distribution. The send must fail visibly without transmitting plaintext, and the message badge must match `PQ v2`, `X25519 ↓`, or `SK vN`.
-7. Enable the extra history password and a presentation codec, leave the app in the background past the chosen timeout, and confirm only presentation ciphertext is visible until the correct password is entered.
+7. Under **Profile → Message privacy**, enable the extra history password and select a text appearance. Confirm the setting applies to every chat, then leave the app in the background past the chosen timeout. Until the correct password is entered, only the fully encoded presentation ciphertext may be visible; the original body, protocol prefix, salt, IV, and Base64 metadata must not appear.

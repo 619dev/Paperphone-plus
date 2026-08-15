@@ -6,7 +6,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Versión-2.4.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.4.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,10 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 ---
 
-## Novedades de v2.4.1
+## Novedades de v2.4.2
+
+- La apariencia de texto ahora oculta prefijos de protocolo, sal e IV; la caché local ya no conserva el texto original.
+- El cifrado adicional se trasladó a Perfil > Privacidad de los mensajes y se aplica globalmente a todos los chats.
 
 - Los chats cifrados ahora fallan de forma segura: los errores de cifrado, distribución de claves o almacenamiento seguro nunca provocan un envío en texto claro. Cada mensaje muestra el protocolo realmente utilizado (`PQ v2`, `X25519 ↓` o `SK vN`).
 - Se añadió una contraseña opcional para el historial y ocho códecs de presentación: texto budista, chino aleatorio, símbolos del I Ching, coreano, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales y alfanumérico.

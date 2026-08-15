@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Версия-2.4.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.4.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,10 @@
 
 ---
 
-## Новое в v2.4.1
+## Новое в v2.4.2
+
+- Оформление текста теперь скрывает префикс протокола, соль и IV; локальный кэш отправки больше не хранит исходный текст.
+- Дополнительное шифрование перенесено в Профиль > Конфиденциальность сообщений и применяется ко всем чатам устройства.
 
 - Зашифрованные чаты теперь работают по принципу fail-closed: ошибки шифрования, распределения ключей или защищённого хранения больше не приводят к отправке открытого текста. Для каждого сообщения показывается фактический протокол: `PQ v2`, `X25519 ↓` или `SK vN`.
 - Добавлены необязательный пароль для истории и восемь кодеков представления: буддийский текст, случайный китайский, символы И-цзина, корейский, египетские иероглифы, клинопись, текст основных ценностей и буквенно-цифровой формат.
