@@ -16,6 +16,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _sodium: any = null
+import { unprotectPresentationText } from './presentationCrypto'
 
 export async function initSodium(): Promise<any> {
   if (_sodium) return _sodium
@@ -117,7 +118,7 @@ export async function encryptHybrid(
   recipientPubKey: string,
   recipientKemPub: string | null | undefined,
   plaintext: string
-): Promise<{ ciphertext: string; header: string }> {
+): Promise<{ ciphertext: string; header: string; protocolVersion: 1 | 2; downgraded: boolean }> {
   const sodium = await initSodium()
   const kyber = recipientKemPub ? await getKyber() : null
 
@@ -180,6 +181,28 @@ export async function encryptHybrid(
   return {
     ciphertext: sodium.to_base64(ct),
     header: sodium.to_base64(header),
+    protocolVersion: version as 1 | 2,
+    downgraded: version === 1,
+  }
+}
+
+export interface HybridProtocolInfo {
+  version: number
+  name: string
+  downgraded: boolean
+}
+
+/** Read the authenticated-encryption protocol version embedded in a message header. */
+export function inspectHybridProtocol(headerB64?: string | null): HybridProtocolInfo | null {
+  if (!headerB64) return null
+  try {
+    const normalized = headerB64.replace(/-/g, '+').replace(/_/g, '/')
+    const version = atob(normalized)[0]?.charCodeAt(0)
+    if (!version) return null
+    if (version >= 2) return { version, name: 'X25519 + ML-KEM-768', downgraded: false }
+    return { version, name: 'X25519', downgraded: true }
+  } catch {
+    return null
   }
 }
 
@@ -234,7 +257,7 @@ export async function decryptHybrid(
   }
 
   const plainBytes = sodium.crypto_secretbox_open_easy(ct, nonce, finalKey)
-  return sodium.to_string(plainBytes)
+  return unprotectPresentationText(sodium.to_string(plainBytes))
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

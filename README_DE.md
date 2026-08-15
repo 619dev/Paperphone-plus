@@ -6,7 +6,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🌐 Proxy-Einstellungen | SOCKS5 / HTTP / HTTPS Proxy-Unterstützung — konfigurierbar auf Login- und Einstellungsseiten mit Serveradresse, Port, Benutzername und Passwort für eingeschränkte Netzwerkumgebungen |
 | 🛡️ Inhaltsmoderation | Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung von Beiträgen/Nachrichten) + Nutzungsbedingungen (EULA) |
 | 🔧 Admin-Panel | Eingebettetes Web-Admin-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen |
+
+---
+
+## Neu in v2.4.1
+
+- Verschlüsselte Chats arbeiten jetzt fail-closed: Fehler bei Verschlüsselung, Schlüsselverteilung oder sicherer Speicherung führen nie zu einem Klartextversand. Jede Nachricht zeigt das tatsächlich verwendete Protokoll (`PQ v2`, `X25519 ↓` oder `SK vN`).
+- Optionales Zusatzpasswort für den Chatverlauf und acht Darstellungs-Codecs: Buddha-Text, zufälliges Chinesisch, I-Ging-Symbole, Koreanisch, ägyptische Hieroglyphen, Keilschrift, Kernwerte-Text und alphanumerisch.
+- Ohne korrektes Zusatzpasswort wird nur der Darstellungs-Geheimtext angezeigt; nach 5/15/30/60 Minuten im Hintergrund kann automatisch gesperrt werden. Das Passwort bleibt ausschließlich im Arbeitsspeicher.
+- Lokaler Schutz von privaten Identitäts- und Sender Keys durch AES-GCM-gekapseltes IndexedDB im Web und sicheren Systemspeicher in nativen Clients; UI-Texte für alle acht Sprachen vervollständigt.
 
 ---
 

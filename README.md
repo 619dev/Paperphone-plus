@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@
 | 🌐 代理设置 | 支持 SOCKS5 / HTTP / HTTPS 代理协议，可在登录页和设置页配置代理服务器地址、端口、用户名和密码，方便受限网络环境下使用 |
 | 🛡️ 内容审核 | 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA |
 | 🔧 管理后台 | 内嵌 Web 管理面板（`/admin`，路径可自定义），密码保护，审核举报、删除违规内容、封禁用户，支持 8 种语言 |
+
+---
+
+## v2.4.1 更新
+
+- 加密会话改为失败即停止：加密、密钥分发或安全存储失败时不再降级为明文发送；消息气泡会准确标示 `PQ v2`、`X25519 ↓` 或 `SK vN`。
+- 新增可选的聊天记录额外密码与 8 种独立文本外观编码：与佛论禅、随机中文、易经符号、韩文、埃及象形文字、楔形文字、核心价值观文本和英数字。
+- 未输入或输错额外密码时只显示文本外观；应用离开前台 5/15/30/60 分钟后可自动锁定。额外密码只保存在内存中，本地仅保存验证信息。
+- 加强身份私钥与 Sender Key 的本地保护：Web 使用 AES-GCM 包装的 IndexedDB，原生端使用系统安全存储；并补齐全部 8 种语言的界面文案。
 
 ---
 

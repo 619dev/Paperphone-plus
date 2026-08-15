@@ -463,7 +463,7 @@ Nginx 会根据请求路径自动将 API 请求（`/api/*`）和 WebSocket 连�
 
 ### Q: 如何更新部署？
 **A:**
-- **Zeabur**：在 Dashboard 中重新部署 server 服务即可
+- **Zeabur**：确认模板中的 server/client 镜像均使用 `latest` 标签，先重新部署 server 并等待健康检查通过，再部署 client
 - **Docker Compose**：执行 `docker compose pull && docker compose up -d`
 - **Vercel 前端**：推送到 GitHub，Vercel 自动触发重新部署
 
@@ -476,3 +476,5 @@ Nginx 会根据请求路径自动将 API 请求（`/api/*`）和 WebSocket 连�
 3. 断网发送一条消息，确认消息显示等待状态，恢复网络后自动发送且接收方只有一条；
 4. 接收方在后台收到推送后再打开 App，确认消息正文通过增量同步出现；
 5. 在“登录设备”中撤销某个设备，确认该设备无法再刷新 Token，并进入重新登录状态。
+6. 模拟私聊密钥获取或群聊 Sender Key 分发失败，确认客户端明确报错且不会发送明文，并核对消息上的 `PQ v2`、`X25519 ↓` 或 `SK vN` 标签；
+7. 开启聊天记录额外密码并选择文本外观，等待所选后台锁定时长后返回，确认解锁前只显示外观密文，错误密码不能显示明文。

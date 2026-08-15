@@ -11,10 +11,13 @@
  */
 
 import { initSodium, encryptHybrid, decryptHybrid } from './ratchet'
+import { deleteBrowserSecret, getBrowserSecret, setBrowserSecret } from './browserSecretStore'
+import { unprotectPresentationText } from './presentationCrypto'
 
 // ── Sender Key Store ────────────────────────────────────────────────────────
 
 const SK_STORAGE_KEY = '__pp_sender_keys'
+const SK_SECRET_NAME = 'sender-keys-v1'
 
 interface SenderKeyEntry {
   groupId: string
@@ -26,20 +29,41 @@ interface SenderKeyEntry {
 
 /** In-memory + localStorage cache of sender keys */
 let senderKeyCache: SenderKeyEntry[] = []
+let senderKeysAccount: string | null = null
+
+function currentAccount(): string | null {
+  try { return JSON.parse(localStorage.getItem('user') || 'null')?.id || null } catch { return null }
+}
+
+export async function hydrateSenderKeys(accountId?: string): Promise<void> {
+  const account = accountId || currentAccount()
+  if (!account || senderKeysAccount === account) return
+  senderKeyCache = []
+  try {
+    const secure = await getBrowserSecret(account, SK_SECRET_NAME)
+    if (secure) senderKeyCache = JSON.parse(secure)
+    else {
+      const legacy = localStorage.getItem(SK_STORAGE_KEY)
+      if (legacy) {
+        senderKeyCache = JSON.parse(legacy)
+        await setBrowserSecret(account, SK_SECRET_NAME, JSON.stringify(senderKeyCache))
+      }
+    }
+  } finally {
+    localStorage.removeItem(SK_STORAGE_KEY)
+    senderKeysAccount = account
+  }
+}
 
 function loadSenderKeys(): SenderKeyEntry[] {
-  if (senderKeyCache.length > 0) return senderKeyCache
-  try {
-    const raw = localStorage.getItem(SK_STORAGE_KEY)
-    if (raw) senderKeyCache = JSON.parse(raw)
-  } catch { senderKeyCache = [] }
   return senderKeyCache
 }
 
 function saveSenderKeys() {
-  try {
-    localStorage.setItem(SK_STORAGE_KEY, JSON.stringify(senderKeyCache))
-  } catch { /* localStorage full */ }
+  localStorage.removeItem(SK_STORAGE_KEY)
+  const account = currentAccount()
+  if (account) void setBrowserSecret(account, SK_SECRET_NAME, JSON.stringify(senderKeyCache))
+    .catch(err => console.warn('[GroupCrypto] Sender key persistence failed:', err))
 }
 
 /**
@@ -109,7 +133,9 @@ export function clearGroupSenderKeys(groupId: string) {
  */
 export function clearAllSenderKeys() {
   senderKeyCache = []
-  saveSenderKeys()
+  const account = currentAccount()
+  if (account) void deleteBrowserSecret(account, SK_SECRET_NAME).catch(() => {})
+  localStorage.removeItem(SK_STORAGE_KEY)
 }
 
 /**
@@ -168,7 +194,7 @@ export async function decryptWithSenderKey(
   const nonce = sodium.from_base64(nonceBase64)
   const ct = sodium.from_base64(ciphertextBase64)
   const plain = sodium.crypto_secretbox_open_easy(ct, nonce, key)
-  return sodium.to_string(plain)
+  return unprotectPresentationText(sodium.to_string(plain))
 }
 
 // ── Sender Key Distribution ─────────────────────────────────────────────────

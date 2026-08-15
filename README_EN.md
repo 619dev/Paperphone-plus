@@ -6,7 +6,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
 | 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
 | 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
+
+---
+
+## What's New in v2.4.1
+
+- Encrypted chats now fail closed: encryption, key-distribution, or secure-storage errors can no longer fall back to plaintext; message bubbles report the actual `PQ v2`, `X25519 ↓`, or `SK vN` protocol.
+- Added an optional chat-history password and eight independent presentation codecs: Buddha text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, and alphanumeric.
+- Without the correct extra password, only presentation ciphertext is shown; the app can auto-lock 5/15/30/60 minutes after leaving the foreground. The password remains memory-only and only a verifier is persisted.
+- Hardened local identity private-key and Sender Key protection with AES-GCM-wrapped IndexedDB on Web and system secure storage on native clients; completed UI copy for all eight languages.
 
 ---
 

@@ -6,7 +6,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Versión-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🌐 Configuración de proxy | Soporte de proxy SOCKS5 / HTTP / HTTPS — configurable en páginas de inicio de sesión y ajustes con dirección del servidor, puerto, usuario y contraseña para entornos de red restringidos |
 | 🛡️ Moderación de contenido | Reportes de usuarios (6 categorías) + bloqueo de usuarios (oculta instantáneamente publicaciones/mensajes) + Términos de uso (EULA) |
 | 🔧 Panel de administración | Dashboard de administración web integrado (`/admin`, ruta configurable), protegido por contraseña, revisar reportes, eliminar contenido infractor, banear usuarios — 8 idiomas |
+
+---
+
+## Novedades de v2.4.1
+
+- Los chats cifrados ahora fallan de forma segura: los errores de cifrado, distribución de claves o almacenamiento seguro nunca provocan un envío en texto claro. Cada mensaje muestra el protocolo realmente utilizado (`PQ v2`, `X25519 ↓` o `SK vN`).
+- Se añadió una contraseña opcional para el historial y ocho códecs de presentación: texto budista, chino aleatorio, símbolos del I Ching, coreano, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales y alfanumérico.
+- Sin la contraseña adicional correcta solo se muestra el texto cifrado de presentación; puede bloquearse automáticamente tras 5/15/30/60 minutos en segundo plano. La contraseña permanece únicamente en memoria.
+- Se reforzó la protección local de claves privadas y Sender Keys con IndexedDB envuelto en AES-GCM en Web y almacenamiento seguro del sistema en clientes nativos; se completó la interfaz en los ocho idiomas.
 
 ---
 

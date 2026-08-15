@@ -465,7 +465,7 @@ Nginx automatically routes API requests (`/api/*`) and WebSocket connections (`/
 
 ### Q: How do I update the deployment?
 **A:**
-- **Zeabur**: Redeploy the server service in the Dashboard
+- **Zeabur**: Confirm both server and client images use the `latest` tag, redeploy the server first, wait for a healthy state, then deploy the client
 - **Docker Compose**: Run `docker compose pull && docker compose up -d`
 - **Vercel Frontend**: Push to GitHub and Vercel will automatically trigger redeployment
 
@@ -478,3 +478,5 @@ For releases containing reliable sessions and message synchronization, also veri
 3. Send a message while offline. It should show a waiting state, send automatically after connectivity returns, and appear only once for the recipient.
 4. Let the recipient receive a push notification in the background, then open the app and confirm cursor catch-up loads the message body.
 5. Revoke a device under **Active Sessions** and confirm that device can no longer refresh its token and returns to sign-in.
+6. Simulate unavailable private-chat key lookup or group Sender Key distribution. The send must fail visibly without transmitting plaintext, and the message badge must match `PQ v2`, `X25519 ↓`, or `SK vN`.
+7. Enable the extra history password and a presentation codec, leave the app in the background past the chosen timeout, and confirm only presentation ciphertext is visible until the correct password is entered.

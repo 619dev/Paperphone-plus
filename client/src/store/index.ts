@@ -25,7 +25,7 @@ function persistMessages(messages: Record<string, ChatMessage[]>) {
       // Keep a deep offline history for every conversation.
       const trimmed: Record<string, ChatMessage[]> = { _v: MSG_CACHE_VERSION } as any
       for (const [chatId, msgs] of Object.entries(messages)) {
-        trimmed[chatId] = msgs.slice(-2000)
+        trimmed[chatId] = msgs.slice(-2000).map(({ decrypted: _plaintext, ...stored }) => stored as ChatMessage)
       }
       localStorage.setItem(MSG_CACHE_KEY, JSON.stringify(trimmed))
       void cacheMediaIn(trimmed)

@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from './store'
 import { useSocket } from './hooks/useSocket'
 import { loadFromIndexedDB } from './crypto/keystore'
+import { hydrateSenderKeys } from './crypto/groupCrypto'
+import { handlePresentationAppState, hydratePresentationCrypto, isPresentationUnlocked, presentationCiphertextForPlaintext } from './crypto/presentationCrypto'
 import { applyNativeProxy } from './api/proxy-bridge'
 import Login from './pages/Login'
 import Chats from './pages/Chats'
@@ -177,15 +179,50 @@ function ProtectedLayout() {
 
 export default function App() {
   const token = useStore(s => s.token)
+  const user = useStore(s => s.user)
   const theme = useStore(s => s.theme)
+  const [hydratedAccount, setHydratedAccount] = useState<string | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // Hydrate crypto keys from IndexedDB (tier 4 of 4-tier key persistence)
   useEffect(() => {
-    loadFromIndexedDB().catch(() => {})
+    let cancelled = false
+    if (!token || !user?.id) {
+      setHydratedAccount(null)
+      return
+    }
+    Promise.all([loadFromIndexedDB(user.id), hydrateSenderKeys(user.id), hydratePresentationCrypto(user.id)])
+      .then(() => { if (!cancelled) setHydratedAccount(user.id) })
+      .catch(err => {
+        console.error('[App] Secure crypto state hydration failed:', err)
+        if (!cancelled) setHydratedAccount(user.id)
+      })
+    return () => { cancelled = true }
+  }, [token, user?.id])
+
+  useEffect(() => {
+    const onVisibility = () => handlePresentationAppState(document.visibilityState === 'visible')
+    const onPresentationState = () => {
+      if (isPresentationUnlocked()) return
+      const messages = useStore.getState().messages
+      const locked = Object.fromEntries(Object.entries(messages).map(([chatId, items]) => [
+        chatId,
+        items.map(({ decrypted, ...message }) => ({ ...message, ...(presentationCiphertextForPlaintext(decrypted) ? { decrypted: presentationCiphertextForPlaintext(decrypted) } : {}) })),
+      ]))
+      useStore.setState({ messages: locked })
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('paperphone:presentation-state-changed', onPresentationState)
+    let removeNative: (() => void) | undefined
+    import('@capacitor/app').then(({ App: CapApp }) => CapApp.addListener('appStateChange', ({ isActive }) => handlePresentationAppState(isActive)))
+      .then(handle => { removeNative = () => void handle.remove() }).catch(() => {})
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('paperphone:presentation-state-changed', onPresentationState)
+      removeNative?.()
+    }
   }, [])
 
   // Apply persisted proxy settings on app startup (native Android)
@@ -233,7 +270,7 @@ export default function App() {
         <Route path="/login" element={token ? <Navigate to="/chats" replace /> : <Login />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfUse />} />
-        <Route path="/*" element={token ? <ProtectedLayout /> : <Navigate to="/login" replace />} />
+        <Route path="/*" element={token && user?.id && hydratedAccount === user.id ? <ProtectedLayout /> : <Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   )

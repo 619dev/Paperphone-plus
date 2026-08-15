@@ -6,7 +6,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/버전-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 | 🌐 프록시 설정 | SOCKS5 / HTTP / HTTPS 프록시 지원 — 로그인 및 설정 페이지에서 서버 주소, 포트, 사용자 이름, 비밀번호 설정 가능 |
 | 🛡️ 콘텐츠 관리 | 사용자 신고 (6가지 카테고리) + 사용자 차단 (게시물/메시지 즉시 숨김) + 이용약관 (EULA) |
 | 🔧 관리자 패널 | 내장 웹 관리 대시보드 (`/admin`, 경로 변경 가능), 비밀번호 보호, 신고 검토, 콘텐츠 삭제, 사용자 차단 — 8개 언어 지원 |
+
+---
+
+## v2.4.1 업데이트
+
+- 암호화, 키 배포 또는 보안 저장이 실패하면 전송을 중단하며 평문으로 폴백하지 않습니다. 각 메시지에 실제 `PQ v2`, `X25519 ↓`, `SK vN` 프로토콜을 표시합니다.
+- 선택형 채팅 기록 추가 암호와 불교 문구, 무작위 중국어, 주역 기호, 한글, 이집트 상형문자, 설형문자, 핵심 가치관 문구, 영숫자 등 8개 표시 코덱을 추가했습니다.
+- 올바른 추가 암호가 없으면 표시용 암호문만 보이며, 앱이 백그라운드로 간 뒤 5/15/30/60분에 자동 잠금할 수 있습니다. 암호는 메모리에만 유지됩니다.
+- Web의 AES-GCM 래핑 IndexedDB와 네이티브 시스템 보안 저장소로 개인 키와 Sender Key 보호를 강화하고 8개 언어 UI 번역을 완성했습니다.
 
 ---
 

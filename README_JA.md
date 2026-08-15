@@ -6,7 +6,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.3.9-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.4.1-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -74,6 +74,15 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🌐 プロキシ設定 | SOCKS5 / HTTP / HTTPS プロキシ対応 — ログインページと設定ページでサーバーアドレス、ポート、ユーザー名、パスワードを設定可能（制限されたネットワーク環境向け） |
 | 🛡️ コンテンツモデレーション | ユーザー報告（6 カテゴリ）+ ユーザーブロック（投稿/メッセージを即時非表示）+ 利用規約（EULA） |
 | 🔧 管理パネル | 内蔵 Web 管理ダッシュボード（`/admin`、パス変更可能）、パスワード保護、報告審査、コンテンツ削除、ユーザー BAN — 8 言語対応 |
+
+---
+
+## v2.4.1 の更新内容
+
+- 暗号化、鍵配布、安全な保存に失敗した場合は送信を停止し、平文へフォールバックしない fail-closed 方式に変更しました。各メッセージに実際の `PQ v2`、`X25519 ↓`、`SK vN` を表示します。
+- 任意のチャット履歴用追加パスワードと、仏文風、ランダム中国語、易経記号、ハングル、エジプト象形文字、楔形文字、核心価値観、英数字の 8 種類の表示コーデックを追加しました。
+- 正しい追加パスワードがない場合は表示用暗号文のみを表示し、バックグラウンド移行後 5/15/30/60 分で自動ロックできます。パスワードはメモリ内だけに保持されます。
+- Web の AES-GCM ラップ IndexedDB とネイティブのシステム安全領域で秘密鍵と Sender Key を保護し、8 言語の UI 文言を完成させました。
 
 ---
 
