@@ -44,7 +44,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | Fonctionnalité | Description |
 |----------------|-------------|
 | 🔐 Chiffrement de bout en bout | ECDH sans état + XSalsa20-Poly1305 — clés éphémères par message, forward secrecy, vérification du numéro de sécurité style Signal |
-| 🗝️ Serveur à connaissance nulle | Le serveur ne stocke que le texte chiffré ; les clés privées ne quittent jamais l'appareil |
+| 🗝️ Chiffrement à connaissance nulle | Pour les conversations chiffrées, le serveur stocke le texte chiffré tout en traitant les métadonnées indispensables de compte, de contacts/groupes, de routage et de notifications. Les clés privées d'identité et les Sender Keys restent locales : le Web utilise IndexedDB enveloppé par AES-GCM, tandis que les clients Android, iOS, Windows et macOS utilisent le stockage sécurisé du système |
 | 📹 Appels vidéo et audio | SFU LiveKit pour les appels 1:1 et les réunions (jusqu’à 100 participants), mise en sourdine globale et mode cours |
 | 🎙️ Modificateur de voix | Effets vocaux en temps réel pour les messages vocaux, appels 1:1 et appels de groupe — 3 modes (0.8x grave / 1.0x normal / 1.2x aigu), basé sur Web Audio API |
 | 📱 Persistance de session | Jetons d’accès de 30 minutes avec sessions de rafraîchissement d’appareil de 90 jours ; récupération automatique après changement de réseau, IP, VPN ou proxy sans mot de passe |
@@ -105,7 +105,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 - Les messages privés sortants placent le texte chiffré dans l’objet optimiste dès la fin du chiffrement de bout en bout, sans persister temporairement le texte en clair avant l’accusé du serveur.
 - Les messages vocaux s’arrêtent automatiquement à 120 secondes ; la sortie avec changement de voix suit la même limite.
 - L’écran reste actif pendant les enregistrements et appels, et les périphériques ainsi que les minuteurs sont libérés en quittant la page.
-- Android protège aussi les clés et caches avec Android Keystore et AES-256-GCM ; le client Web conserve le stockage du navigateur.
+- Les clients Android, iOS, Windows et macOS protègent les clés privées d'identité et les Sender Keys locales avec le stockage sécurisé du système ; le Web utilise IndexedDB enveloppé par AES-GCM. Le cache des conversations et le stockage des clés privées constituent des périmètres de sécurité distincts, ce qui remplace l'ancienne description de « persistance à quatre couches ».
 
 ---
 
@@ -143,8 +143,8 @@ Frontend (client/)
 
 Couche cryptographique
   ECDH sans état + XSalsa20-Poly1305 — paire de clés éphémère par message
-  Persistance des clés à quatre niveaux : mémoire → localStorage → sessionStorage → IndexedDB
-  Toutes les clés privées stockées uniquement sur l'appareil — jamais envoyées au serveur
+  Protection locale des clés : IndexedDB enveloppé par AES-GCM sur le Web ; stockage sécurisé du système sur Android/iOS/Windows/macOS
+  Les clés privées d'identité et les Sender Keys restent locales et ne sont jamais envoyées au serveur
 ```
 
 ---

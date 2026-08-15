@@ -44,7 +44,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | Característica | Descripción |
 |----------------|-------------|
 | 🔐 Cifrado de extremo a extremo | ECDH sin estado + XSalsa20-Poly1305 — claves efímeras por mensaje, forward secrecy, verificación de número de seguridad estilo Signal |
-| 🗝️ Servidor de conocimiento cero | El servidor solo almacena texto cifrado; las claves privadas nunca abandonan el dispositivo |
+| 🗝️ Cifrado de conocimiento cero | Para las conversaciones cifradas, el servidor almacena texto cifrado, aunque sigue procesando los metadatos esenciales de cuenta, contactos/grupos, enrutamiento y notificaciones push. Las claves privadas de identidad y las Sender Keys permanecen locales: Web usa IndexedDB protegido con AES-GCM, mientras que Android, iOS, Windows y macOS usan el almacenamiento seguro del sistema operativo |
 | 📹 Llamadas de vídeo y voz | SFU LiveKit para llamadas 1:1 y reuniones (hasta 100 participantes), silenciar a todos y modo clase |
 | 🎙️ Modificador de voz | Efectos de voz en tiempo real para mensajes de voz, llamadas 1:1 y llamadas grupales — 3 modos (0.8x grave / 1.0x normal / 1.2x agudo), basado en Web Audio API |
 | 📱 Persistencia de sesión | Tokens de acceso de 30 minutos con sesiones de actualización de dispositivo de 90 días; recupera cambios de red, IP, VPN o proxy sin pedir la contraseña |
@@ -105,7 +105,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 - Los mensajes privados salientes guardan el texto cifrado en el objeto optimista justo después del cifrado de extremo a extremo, evitando persistir texto plano mientras llega la confirmación del servidor.
 - Los mensajes de voz se detienen automáticamente a los 120 segundos; el audio con cambio de voz usa el mismo límite.
 - La pantalla permanece activa durante grabaciones y llamadas, y al salir se liberan de forma fiable dispositivos y temporizadores.
-- Android protege además claves y cachés con Android Keystore y AES-256-GCM; el cliente Web conserva el almacenamiento del navegador.
+- Los clientes Android, iOS, Windows y macOS protegen las claves privadas de identidad y las Sender Keys locales con el almacenamiento seguro del sistema operativo; Web usa IndexedDB protegido con AES-GCM. La caché de chats y el almacenamiento de claves privadas son límites de seguridad distintos, lo que reemplaza la antigua descripción de «persistencia en cuatro capas».
 
 ---
 
@@ -143,8 +143,8 @@ Frontend (client/)
 
 Capa criptográfica
   ECDH sin estado + XSalsa20-Poly1305 — par de claves efímero por mensaje
-  Persistencia de claves en cuatro niveles: memoria → localStorage → sessionStorage → IndexedDB
-  Todas las claves privadas almacenadas solo en el dispositivo — nunca enviadas al servidor
+  Protección local de claves: IndexedDB protegido con AES-GCM en Web; almacenamiento seguro del sistema en Android/iOS/Windows/macOS
+  Las claves privadas de identidad y las Sender Keys permanecen locales y nunca se envían al servidor
 ```
 
 ---

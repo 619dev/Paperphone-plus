@@ -44,7 +44,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | Feature | Description |
 |---------|-------------|
 | 🔐 End-to-End Encryption | Stateless ECDH + XSalsa20-Poly1305 — ephemeral keys per message, forward secrecy, Signal-style safety number verification |
-| 🗝️ Zero-Knowledge Server | Server stores only ciphertext; private keys never leave the device |
+| 🗝️ Zero-knowledge encryption | For encrypted conversations, the server stores ciphertext while still processing essential account, contact/group, routing, and push metadata. Identity private keys and Sender Keys remain local: Web uses AES-GCM-wrapped IndexedDB, while Android, iOS, Windows, and macOS clients use operating-system secure storage |
 | 📹 Video & Voice Calls | LiveKit SFU for 1:1 calls and meetings (up to 100 participants), host mute-all and lecture mode |
 | 🎙️ Voice Changer | Real-time voice effects for voice messages, 1:1 calls, and group calls — 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API |
 | 📱 Session Persistence | 30-minute access tokens with silently renewed 90-day device refresh tokens; reconnects after network/IP/VPN/proxy changes and asks for credentials only when the durable session expires or is revoked |
@@ -105,7 +105,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 - Outgoing private messages populate the optimistic message object with ciphertext immediately after end-to-end encryption, preventing plaintext from being briefly persisted while awaiting the server acknowledgement.
 - Voice messages stop automatically at 120 seconds; voice-changed output follows the same limit.
 - Voice recording and active calls keep the screen awake, while page cleanup reliably releases recording devices and timers.
-- Android additionally protects keys and chat caches with Android Keystore and AES-256-GCM; the Web client retains its browser storage model.
+- Android, iOS, Windows, and macOS clients protect local identity private keys and Sender Keys with operating-system secure storage; Web uses AES-GCM-wrapped IndexedDB. Chat caches and private-key storage are separate security boundaries, replacing the old "four-layer persistence" description.
 
 ---
 
@@ -143,8 +143,8 @@ Frontend (client/)
 
 Cryptographic Layer
   Stateless ECDH + XSalsa20-Poly1305 — ephemeral keypair per message
-  Four-tier key persistence: memory → localStorage → sessionStorage → IndexedDB
-  All private keys stored on-device only — never sent to the server
+  Local key protection: AES-GCM-wrapped IndexedDB on Web; operating-system secure storage on Android/iOS/Windows/macOS
+  Identity private keys and Sender Keys remain local and are never sent to the server
 ```
 
 ---

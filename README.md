@@ -44,7 +44,7 @@
 | 功能 | 说明 |
 |------|------|
 | 🔐 端对端加密 | 无状态 ECDH + XSalsa20-Poly1305，逐消息临时密钥，前向保密，Signal 风格安全号码验证 |
-| 🗝️ 零知识服务器 | 服务器只存储密文，私钥仅在设备本地（四层持久化） |
+| 🗝️ 零知识加密保护 | 对加密会话内容，服务器只存储密文，但仍会处理账号、好友/群组、路由和推送等必要元数据。身份私钥与 Sender Key 仅在本地保存：Web 使用 AES-GCM 包装的 IndexedDB，Android、iOS、Windows 和 macOS 客户端使用操作系统安全存储 |
 | 📹 视频/语音通话 | 1:1 私聊和群会议统一使用 LiveKit SFU（最多100人），主席全员静音、讲课模式 |
 | 🎙️ 变声功能 | 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链 |
 | 📱 会话保持 | 30 分钟 Access Token + 90 天设备 Refresh Token 自动续期；网络/IP/VPN/代理变化时自动重建连接，仅在设备会话被撤销或长期凭证失效时要求重新登录 |
@@ -105,7 +105,7 @@
 - 私聊消息完成端到端加密后立即把密文写入发送中的乐观消息对象，避免等待服务器确认期间将明文短暂持久化到离线缓存。
 - 语音消息最长 120 秒，到达上限后自动停止；变声处理后的音频同样限制为 120 秒。
 - 录制语音和通话期间保持屏幕唤醒，离开页面时可靠释放录音设备与计时器。
-- Android 原生版另使用 Android Keystore 与 AES-256-GCM 保护密钥和聊天缓存；Web 版继续使用浏览器存储模型。
+- Android、iOS、Windows 和 macOS 客户端使用操作系统安全存储保护本地身份私钥与 Sender Key；Web 版使用 AES-GCM 包装的 IndexedDB。聊天缓存与私钥存储是不同的安全边界，不再使用旧的“四层持久化”描述。
 
 ---
 
@@ -143,8 +143,8 @@ PaperPhonePlus 将“本地账号状态”“实时连接状态”和“消息�
 
 加密层
   无状态 ECDH + XSalsa20-Poly1305 — 逐消息临时 ECDH 密钥对，前向保密
-  私钥四层持久化: 内存 → localStorage → sessionStorage → IndexedDB
-  私钥全程存储在设备本地，从不上传服务器
+  本地密钥保护: Web 使用 AES-GCM 包装的 IndexedDB；Android/iOS/Windows/macOS 使用系统安全存储
+  身份私钥与 Sender Key 仅在本地保存，不上传服务器
 ```
 
 ---
@@ -611,7 +611,8 @@ paperphoneplus/
         │   └── locales/             # zh/en/ja/ko/fr/de/ru/es
         ├── crypto/
         │   ├── ratchet.ts           # ECDH + XSalsa20-Poly1305 加密
-        │   └── keystore.ts          # 四层私钥持久化
+        │   ├── browserSecretStore.ts # AES-GCM 包装的 Web 安全存储
+        │   └── keystore.ts          # 按账号隔离的本地私钥管理
         ├── hooks/
         │   ├── useAuth.ts
         │   ├── useI18n.ts
@@ -672,7 +673,7 @@ paperphoneplus/
 ```
 注册时:
   设备本地生成 IK（身份密钥）+ SPK（签名预密钥）+ 20x OPK（一次性预密钥）
-  公钥上传服务器，私钥四层持久化，永不离开设备
+  公钥上传服务器；身份私钥在本地安全存储中按账号隔离，不上传服务器
 
 发送消息时:
   发送方下载接收方 IK 公钥

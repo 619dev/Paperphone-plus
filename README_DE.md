@@ -44,7 +44,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | Funktion | Beschreibung |
 |----------|--------------|
 | 🔐 Ende-zu-Ende-Verschlüsselung | Zustandsloses ECDH + XSalsa20-Poly1305 — Einmalschlüssel pro Nachricht, Forward Secrecy, Signal-ähnliche Sicherheitsnummernverifizierung |
-| 🗝️ Zero-Knowledge-Server | Server speichert nur Chiffretext; private Schlüssel verlassen niemals das Gerät |
+| 🗝️ Zero-Knowledge-Verschlüsselung | Bei verschlüsselten Unterhaltungen speichert der Server Chiffretext, verarbeitet jedoch weiterhin notwendige Konto-, Kontakt-/Gruppen-, Routing- und Push-Metadaten. Private Identitätsschlüssel und Sender Keys bleiben lokal: Web nutzt mit AES-GCM geschütztes IndexedDB, Android-, iOS-, Windows- und macOS-Clients den sicheren Speicher des Betriebssystems |
 | 📹 Video- & Audioanrufe | LiveKit-SFU für 1:1-Anrufe und Konferenzen (bis zu 100 Teilnehmer), Alle stummschalten und Vortragsmodus |
 | 🎙️ Stimmverzerrer | Echtzeit-Stimmeffekte für Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe — 3 Modi (0.8x tief / 1.0x normal / 1.2x hoch), basierend auf Web Audio API |
 | 📱 Sitzungspersistenz | 30-minütige Access Tokens mit automatisch verlängerten 90-Tage-Geräte-Refresh-Sitzungen; Netzwerk-, IP-, VPN- und Proxywechsel werden ohne Passworteingabe wiederhergestellt |
@@ -105,7 +105,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 - Ausgehende Privatnachrichten werden direkt nach der Ende-zu-Ende-Verschlüsselung als Chiffretext im optimistischen Nachrichtenobjekt gespeichert; beim Warten auf die Serverbestätigung landet kein Klartext im Offline-Cache.
 - Sprachnachrichten stoppen automatisch nach 120 Sekunden; die Ausgabe mit Stimmeffekt hat dasselbe Limit.
 - Bei Aufnahmen und Anrufen bleibt der Bildschirm wach; beim Verlassen werden Aufnahmegeräte und Timer zuverlässig freigegeben.
-- Android schützt Schlüssel und Chat-Caches zusätzlich mit Android Keystore und AES-256-GCM; der Web-Client verwendet weiterhin Browser-Speicher.
+- Android-, iOS-, Windows- und macOS-Clients schützen lokale private Identitätsschlüssel und Sender Keys mit dem sicheren Speicher des Betriebssystems; Web nutzt mit AES-GCM geschütztes IndexedDB. Chat-Caches und die Speicherung privater Schlüssel sind getrennte Sicherheitsbereiche; dies ersetzt die alte Beschreibung einer „vierstufigen Persistenz“.
 
 ---
 
@@ -143,8 +143,8 @@ Frontend (client/)
 
 Kryptographische Schicht
   Zustandsloses ECDH + XSalsa20-Poly1305 — Einmal-Schlüsselpaar pro Nachricht
-  Vierstufige Schlüsselpersistenz: Speicher → localStorage → sessionStorage → IndexedDB
-  Alle privaten Schlüssel nur auf dem Gerät gespeichert — niemals an den Server gesendet
+  Lokaler Schlüsselschutz: AES-GCM-geschütztes IndexedDB im Web; sicherer Betriebssystemspeicher unter Android/iOS/Windows/macOS
+  Private Identitätsschlüssel und Sender Keys bleiben lokal und werden nie an den Server gesendet
 ```
 
 ---
