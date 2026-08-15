@@ -6,7 +6,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.4-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.6-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -75,6 +75,15 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
 | 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
 | 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
+
+---
+
+## What's New in v2.4.6
+
+- Fully documented the two-layer text-appearance flow: the shared extra password encrypts and renders the body first, followed by the existing private-chat E2EE or group Sender Key encryption.
+- Clarified that both private-chat participants, or every group member, must agree on the same extra password; it is never uploaded or synchronized.
+- With different passwords, E2EE and delivery still work, but recipients see only styled ciphertext. This feature is extra insurance above E2EE and never replaces, bypasses, or downgrades it.
+- Updated the Profile > Message privacy explanation in all eight UI languages.
 
 ---
 
@@ -218,13 +227,15 @@ Voice messages, 1:1 calls, and group calls all support real-time voice changing 
 
 ## Text Appearance and Extra Encryption
 
-Under **Profile > Message privacy**, you can enable an extra password for every chat on this device. Message bodies are encrypted with that password and then rendered using one of eight appearances: **Buddhist text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, or letters and numbers**.
+Under **Profile > Message privacy**, you can enable an extra password for every chat on this device. Before sending, the body is encrypted with that password and rendered in the selected appearance, then passed through the existing private-chat E2EE (X25519 / ML-KEM-768) or group Sender Key encryption. It is therefore a second content-protection layer on top of the original E2EE, not a replacement. Appearances include **Buddhist text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, and letters and numbers**.
 
-- Both parties must configure the same extra password on their own devices; it is not synchronized automatically.
+- The password is never uploaded or synchronized. Both private-chat participants, or every member of a group, must agree on and configure the same extra password on their own devices.
+- Text appearances do not need to match. Each message carries its appearance identifier, so the recipient automatically detects and decodes the sender's chosen appearance. For example, one person may use Buddhist text and the other Hangul; with the same extra password, both can still decrypt normally. Each person's setting controls only the ciphertext appearance of messages they send.
+- If passwords differ, the original E2EE and message delivery still work, but the extra layer cannot be opened: the recipient sees only styled ciphertext and cannot read the original body.
 - The password must contain at least eight characters and stays in memory only while unlocked. Only the salt and password verifier are persisted locally.
 - Lock immediately or auto-lock **5 / 15 / 30 / 60 minutes** after leaving the foreground. While locked or when the password is wrong, only styled ciphertext is shown.
 - Disabling extra encryption always requires the correct password again, even when currently unlocked.
-- Text appearance is an additional local privacy layer; it **does not replace end-to-end encryption**.
+- Text appearance is extra insurance on top of the original E2EE; it **does not replace, bypass, or downgrade E2EE**.
 
 ---
 

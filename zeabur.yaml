@@ -6,7 +6,7 @@ metadata:
 
 spec:
   description: >-
-    PaperPhonePlus v2.4.4, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
+    PaperPhonePlus v2.4.6, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
     featuring hybrid X25519 + ML-KEM-768 E2EE, group E2E encryption (Signal-style Sender Keys),
     LiveKit SFU voice/video calls (1:1 and meetings up to 100 participants), real-time voice changer,
     reliable cursor-based message synchronization, durable device sessions, eight password-protected text appearances, SOCKS5/HTTP/HTTPS proxy support,
@@ -23,17 +23,17 @@ spec:
     Rewritten with **React 19 + TypeScript + Vite** frontend and **Rust (Axum)** backend
     for maximum performance and type safety.
 
-    ## Security — v2.4.4
+    ## Security — v2.4.6
     - **Hybrid X25519 + ML-KEM-768 + XSalsa20-Poly1305** — message headers identify the actual `PQ v2`, downgraded `X25519 ↓`, or group `SK vN` protocol
     - **Fail-closed encrypted sending** — encryption, key-distribution, and secure-storage failures stop the send instead of falling back to plaintext
     - **Zero-knowledge encryption scope** — encrypted conversation bodies are stored as ciphertext; the server still processes essential account, contact/group, routing, and push metadata
     - **Protected local secrets** — the Web client uses AES-GCM-wrapped IndexedDB; Android, iOS, Windows, and macOS clients use operating-system secure storage for identity private keys and Sender Keys
-    - **Global history privacy layer** — configured in Profile > Message privacy and applied to every chat on the device; a memory-only extra password, eight fully encoded text appearances, and 5/15/30/60-minute background auto-lock prevent plaintext and protocol-metadata exposure; disabling always requires fresh password verification
+    - **Extra text-appearance insurance above E2EE** — the body is first encrypted with the shared extra password and rendered in one of eight appearances, then protected again by the existing private-chat E2EE or group Sender Key encryption; the password is never uploaded or synchronized
 
     ## Features
     - 📹 **Video & Voice Calls** — LiveKit SFU for both 1:1 calls and meetings (up to 100 participants, host mute-all and lecture mode)
     - 🎙️ **Voice Changer** — real-time voice effects for voice messages, 1:1 calls & group calls with 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API
-    - 🎭 **Text Appearance & Extra Encryption** — configure one extra password under Profile > Message privacy for every chat on the device; choose Buddhist text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, or letters and numbers; supports immediate lock and 5/15/30/60-minute background auto-lock. Both parties need the same password, which is not synchronized; this privacy layer does not replace E2EE
+    - 🎭 **Text Appearance & Extra Encryption** — configure one extra password under Profile > Message privacy for every chat on the device; choose Buddhist text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, or letters and numbers; supports immediate lock and 5/15/30/60-minute background auto-lock. Both private-chat participants, or every group member, need the same password. If passwords differ, E2EE and delivery still work, but recipients see only styled ciphertext. This extra insurance does not replace, bypass, or downgrade E2EE
     - ⏱️ **Safe Voice Recording** — 120-second automatic limit, wake lock while recording, and reliable microphone cleanup on page exit
     - 📱 **Session Persistence** — 30-minute access tokens with 90-day device refresh sessions; VPN/IP/network changes reconnect without asking for a password
     - 📨 **Reliable Message Sync** — bidirectional heartbeat, persistent outbox, idempotent message IDs, and server-sequence cursor catch-up
@@ -67,7 +67,7 @@ spec:
     5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
     7. After an upgrade, inspect the **server** logs and confirm it becomes healthy before updating clients. Test a VPN/network switch and an offline send to verify automatic recovery and exactly-once storage.
-    8. For v2.4.4, test an encrypted send with key delivery unavailable and confirm it fails without transmitting plaintext; verify the protocol badge matches the actual envelope.
+    8. For v2.4.6, test an encrypted send with key delivery unavailable and confirm it fails without transmitting plaintext; verify the protocol badge matches the actual envelope.
     9. Lock extra message encryption, select unlock, and confirm the dialog asks for the unlock password rather than asking users to set a password; spot-check all required UI languages.
     10. Enable the optional history password, select each text appearance, background the app past the selected timeout, and confirm only presentation ciphertext is visible until the correct password is entered. Then try to disable it and confirm the correct extra password must be re-entered even while unlocked.
 
@@ -624,7 +624,7 @@ spec:
 localization:
   zh-CN:
     description: >-
-      PaperPhonePlus v2.4.4 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
+      PaperPhonePlus v2.4.6 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
       消息游标可靠同步与长期设备会话、LiveKit SFU 单聊与百人会议、实时变声、8 种额外密码保护的文本外观、SOCKS5/HTTP/HTTPS 代理、
       Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
     readme: |-
@@ -634,17 +634,17 @@ localization:
       使用 **React 19 + TypeScript + Vite** 前端和 **Rust (Axum)** 后端重写，
       获得极致性能和类型安全。
 
-      ## 安全模型 — v2.4.4
+      ## 安全模型 — v2.4.6
       - **X25519 + ML-KEM-768 + XSalsa20-Poly1305 混合加密** — 消息准确标示实际采用的 `PQ v2`、降级后的 `X25519 ↓` 或群聊 `SK vN` 协议
       - **加密发送失败即停止** — 加密、密钥分发或安全存储失败时不会回退为明文发送
       - **零知识加密范围** — 加密会话正文以密文存储；服务器仍会处理账号、好友/群组、路由和推送等必要元数据
       - **本地秘密保护** — Web 使用 AES-GCM 包装的 IndexedDB；Android、iOS、Windows 和 macOS 客户端使用操作系统安全存储保存身份私钥与 Sender Key
-      - **全局聊天记录隐私层** — 在“个人信息 > 消息隐私”统一配置并应用于本设备所有聊天；额外密码仅保存在内存中，8 种文本外观会完整隐藏原文及协议元数据，并支持离开前台 5/15/30/60 分钟自动锁定；关闭时始终要求重新验证密码
+      - **E2EE 之上的文本外观额外保险** — 正文先用共享额外密码加密并转换为 8 种外观之一，然后再由原有私聊 E2EE 或群聊 Sender Key 加密；密码不上传也不自动同步
 
       ## 功能亮点
       - 📹 **视频/语音通话** — 1:1 私聊和群会议统一使用 LiveKit SFU（最多 100 人，支持主席全员静音和讲课模式）
       - 🎙️ **变声功能** — 语音消息 / 1v1 通话 / 群组通话均支持实时变声，3 档可选（0.8x 低沉 / 1.0x 正常 / 1.2x 尖锐），基于 Web Audio API 音频处理链
-      - 🎭 **文本外观与额外加密** — 在“个人信息 > 消息隐私”中为本设备所有聊天设置额外密码，可选与佛论禅、随机中文、易经符号、韩文、埃及象形文字、楔形文字、核心价值观文本或英数字；支持立即锁定与 5/15/30/60 分钟后台自动锁定。双方需使用相同且不会自动同步的密码；该隐私层不替代端对端加密
+      - 🎭 **文本外观与额外加密** — 在“个人信息 > 消息隐私”中为本设备所有聊天设置额外密码，可选与佛论禅、随机中文、易经符号、韩文、埃及象形文字、楔形文字、核心价值观文本或英数字；支持立即锁定与 5/15/30/60 分钟后台自动锁定。私聊双方或群内所有成员需设置相同密码；密码不一致时 E2EE 和消息送达仍正常，但只能看到文本外观密文。该额外保险不替代、不绕过也不降级 E2EE
       - ⏱️ **安全语音录制** — 最长 120 秒自动停止，录音期间保持屏幕唤醒，离开页面时可靠释放麦克风
       - 📱 **会话保持** — 30 分钟访问令牌与 90 天设备刷新会话，VPN/IP/网络变化时自动重连且无需输入密码
       - 📨 **可靠消息同步** — 双向心跳、持久化发件箱、消息幂等 ID 与服务端序号游标补偿
@@ -678,7 +678,7 @@ localization:
       5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。
       7. 升级后先检查 **server** 日志并确认健康检查通过，再更新客户端；切换一次 VPN/网络并进行一次断网发送，验证自动恢复且消息只入库一次。
-      8. v2.4.4 升级后模拟密钥获取失败，确认加密消息明确发送失败且不会传输明文，并核对协议标签与实际信封一致。
+      8. v2.4.6 升级后模拟密钥获取失败，确认加密消息明确发送失败且不会传输明文，并核对协议标签与实际信封一致。
       9. 锁定额外消息加密后点击解锁，确认密码框提示“输入解锁密码”而不是“设置密码”，并抽查所需界面语言。
       10. 在“个人信息 > 消息隐私”开启额外聊天记录密码，依次检查 8 种文本外观，确认设置对所有聊天生效；等待所选后台锁定时间后返回，确认输入正确密码前只显示完整文本外观密文，不暴露原文、协议前缀、盐值或 IV；随后尝试关闭，确认即使当前已解锁也必须重新输入正确的额外密码。
 

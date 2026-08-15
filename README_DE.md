@@ -6,7 +6,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.4-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.6-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -75,6 +75,15 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🌐 Proxy-Einstellungen | SOCKS5 / HTTP / HTTPS Proxy-Unterstützung — konfigurierbar auf Login- und Einstellungsseiten mit Serveradresse, Port, Benutzername und Passwort für eingeschränkte Netzwerkumgebungen |
 | 🛡️ Inhaltsmoderation | Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung von Beiträgen/Nachrichten) + Nutzungsbedingungen (EULA) |
 | 🔧 Admin-Panel | Eingebettetes Web-Admin-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen |
+
+---
+
+## Neu in v2.4.6
+
+- Der zweistufige Ablauf der Textdarstellung ist nun vollständig dokumentiert: Das gemeinsame Zusatzpasswort verschlüsselt und formatiert den Inhalt zuerst; danach verschlüsselt die bestehende E2EE oder der Gruppen-Sender-Key ihn erneut.
+- Beide Teilnehmer eines privaten Chats bzw. alle Gruppenmitglieder müssen dasselbe Passwort verwenden; es wird weder hochgeladen noch synchronisiert.
+- Bei unterschiedlichen Passwörtern funktionieren E2EE und Zustellung weiterhin, aber nur der formatierte Geheimtext ist sichtbar. Die Funktion ist eine zusätzliche Absicherung und ersetzt, umgeht oder schwächt E2EE nicht.
+- Die Erklärung unter Profil > Nachrichtenschutz wurde in allen acht UI-Sprachen aktualisiert.
 
 ---
 
@@ -218,13 +227,15 @@ Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe unterstützen Echtzeit-Stimmverz
 
 ## Textdarstellung und Zusatzverschlüsselung
 
-Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf diesem Gerät aktiviert werden. Inhalte werden zusätzlich verschlüsselt und als **buddhistischer Text, zufälliges Chinesisch, I-Ging-Symbole, Hangul, ägyptische Hieroglyphen, Keilschrift, Grundwerte-Text oder Buchstaben und Zahlen** dargestellt.
+Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf diesem Gerät aktiviert werden. Vor dem Senden wird der Inhalt verschlüsselt und in die gewählte Textdarstellung umgewandelt; danach schützt ihn erneut die bestehende E2EE für private Chats (X25519 / ML-KEM-768) oder die Sender-Key-Verschlüsselung für Gruppen. Dies ist eine zweite Schutzschicht oberhalb der bestehenden E2EE. Zur Wahl stehen **buddhistischer Text, zufälliges Chinesisch, I-Ging-Symbole, Hangul, ägyptische Hieroglyphen, Keilschrift, Grundwerte-Text und Buchstaben und Zahlen**.
 
-- Beide Seiten müssen dasselbe Zusatzpasswort auf ihren Geräten einrichten; es wird nicht automatisch synchronisiert.
+- Das Passwort wird weder hochgeladen noch synchronisiert. Beide Teilnehmer eines privaten Chats bzw. alle Gruppenmitglieder müssen dasselbe Zusatzpasswort auf ihren Geräten einrichten.
+- Die Textdarstellungen müssen nicht übereinstimmen. Jede Nachricht enthält ihre Darstellungskennung, sodass die Empfängerseite die vom Absender gewählte Darstellung automatisch erkennt und dekodiert. Beispielsweise kann eine Person buddhistischen Text und die andere Hangul verwenden; bei identischem Zusatzpasswort können beide die Nachrichten normal entschlüsseln. Die eigene Einstellung bestimmt nur die Darstellung der selbst gesendeten Geheimtexte.
+- Bei unterschiedlichen Passwörtern funktionieren E2EE und Zustellung weiterhin, aber nur der formatierte Geheimtext ist sichtbar; der Originaltext bleibt unlesbar.
 - Das Passwort muss mindestens acht Zeichen lang sein und verbleibt nur im entsperrten Zustand im Arbeitsspeicher. Lokal werden nur Salt und Prüfinformation gespeichert.
 - Sofort sperren oder **5 / 15 / 30 / 60 Minuten** nach Verlassen des Vordergrunds automatisch sperren. Gesperrt wird nur der formatierte Geheimtext angezeigt.
 - Zum Deaktivieren muss das korrekte Passwort immer erneut eingegeben werden, auch im entsperrten Zustand.
-- Die Textdarstellung ist eine zusätzliche lokale Datenschutzschicht und **ersetzt keine Ende-zu-Ende-Verschlüsselung**.
+- Die Textdarstellung ist eine zusätzliche Absicherung oberhalb der E2EE und **ersetzt, umgeht oder schwächt sie nicht**.
 
 ---
 

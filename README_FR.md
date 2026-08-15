@@ -6,7 +6,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.4-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.6-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -75,6 +75,15 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🌐 Paramètres de proxy | Support proxy SOCKS5 / HTTP / HTTPS — configurable sur les pages de connexion et de paramètres avec adresse serveur, port, identifiant et mot de passe pour les environnements réseau restreints |
 | 🛡️ Modération de contenu | Signalements utilisateurs (6 catégories) + blocage d'utilisateurs (masquage instantané des publications/messages) + Conditions d'utilisation (EULA) |
 | 🔧 Panneau d'administration | Dashboard web d'administration intégré (`/admin`, chemin configurable), protégé par mot de passe, examiner les signalements, supprimer le contenu problématique, bannir des utilisateurs — 8 langues |
+
+---
+
+## Nouveautés de la v2.4.6
+
+- Documentation complète du double chiffrement de l’apparence du texte : le mot de passe supplémentaire partagé chiffre et transforme d’abord le contenu, puis l’E2EE existant ou les Sender Keys du groupe le chiffrent de nouveau.
+- Les deux correspondants, ou tous les membres d’un groupe, doivent utiliser le même mot de passe ; il n’est jamais envoyé ni synchronisé.
+- Si les mots de passe diffèrent, l’E2EE et la livraison fonctionnent toujours, mais seul le texte chiffré stylisé apparaît. Cette fonction est une assurance supplémentaire et ne remplace, ne contourne ni ne dégrade l’E2EE.
+- Mise à jour de l’explication Profil > Confidentialité des messages dans les huit langues de l’interface.
 
 ---
 
@@ -218,13 +227,15 @@ Les messages vocaux, les appels 1:1 et les appels de groupe supportent la modifi
 
 ## Apparence du texte et chiffrement supplémentaire
 
-Dans **Profil > Confidentialité des messages**, activez un mot de passe supplémentaire pour toutes les conversations de cet appareil. Le contenu est chiffré puis affiché comme **texte bouddhique, chinois aléatoire, symboles du Yi Jing, hangul, hiéroglyphes égyptiens, cunéiforme, texte des valeurs fondamentales ou lettres et chiffres**.
+Dans **Profil > Confidentialité des messages**, activez un mot de passe supplémentaire pour toutes les conversations de cet appareil. Avant l’envoi, le contenu est chiffré et converti dans l’apparence choisie, puis protégé de nouveau par l’E2EE des conversations privées (X25519 / ML-KEM-768) ou les Sender Keys des groupes. C’est donc une seconde couche au-dessus de l’E2EE existant. Les huit apparences sont : **texte bouddhique, chinois aléatoire, symboles du Yi Jing, hangul, hiéroglyphes égyptiens, cunéiforme, texte des valeurs fondamentales et lettres et chiffres**.
 
-- Les deux correspondants doivent configurer le même mot de passe sur leurs appareils ; il n'est pas synchronisé automatiquement.
+- Le mot de passe n’est ni envoyé ni synchronisé. Les deux correspondants, ou tous les membres d’un groupe, doivent configurer le même mot de passe sur leurs appareils.
+- Les apparences de texte n’ont pas besoin d’être identiques. Chaque message transporte l’identifiant de son apparence ; le destinataire reconnaît et décode donc automatiquement celle choisie par l’expéditeur. Par exemple, l’un peut utiliser le texte bouddhique et l’autre le hangul : avec le même mot de passe supplémentaire, tous deux déchiffrent normalement. Le réglage de chacun détermine uniquement l’apparence du texte chiffré qu’il envoie.
+- Si les mots de passe diffèrent, l’E2EE et la livraison fonctionnent toujours, mais seul le texte chiffré stylisé est visible et le texte original reste illisible.
 - Le mot de passe comporte au moins huit caractères et reste en mémoire uniquement pendant le déverrouillage. Seuls le sel et le vérificateur sont conservés localement.
 - Verrouillez immédiatement ou automatiquement **5 / 15 / 30 / 60 minutes** après le passage en arrière-plan. Verrouillé, seul le texte chiffré stylisé apparaît.
 - La désactivation exige toujours de saisir à nouveau le mot de passe correct, même si la fonction est déverrouillée.
-- L'apparence du texte est une couche locale supplémentaire ; elle **ne remplace pas le chiffrement de bout en bout**.
+- L’apparence du texte est une assurance supplémentaire au-dessus de l’E2EE ; elle **ne le remplace pas, ne le contourne pas et ne le dégrade pas**.
 
 ---
 

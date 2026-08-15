@@ -6,7 +6,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Versión-2.4.4-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.4.6-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -75,6 +75,15 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🌐 Configuración de proxy | Soporte de proxy SOCKS5 / HTTP / HTTPS — configurable en páginas de inicio de sesión y ajustes con dirección del servidor, puerto, usuario y contraseña para entornos de red restringidos |
 | 🛡️ Moderación de contenido | Reportes de usuarios (6 categorías) + bloqueo de usuarios (oculta instantáneamente publicaciones/mensajes) + Términos de uso (EULA) |
 | 🔧 Panel de administración | Dashboard de administración web integrado (`/admin`, ruta configurable), protegido por contraseña, revisar reportes, eliminar contenido infractor, banear usuarios — 8 idiomas |
+
+---
+
+## Novedades de v2.4.6
+
+- Se documentó por completo el flujo de dos capas: la contraseña adicional compartida cifra y transforma primero el contenido; después, el E2EE existente o las Sender Keys del grupo vuelven a cifrarlo.
+- Ambos participantes del chat privado, o todos los miembros del grupo, deben usar la misma contraseña; nunca se sube ni se sincroniza.
+- Si las contraseñas son distintas, el E2EE y la entrega siguen funcionando, pero solo se muestra el texto cifrado con el aspecto elegido. Esta función es una protección adicional y no sustituye, evita ni degrada el E2EE.
+- Se actualizó la explicación de Perfil > Privacidad de los mensajes en los ocho idiomas de la interfaz.
 
 ---
 
@@ -218,13 +227,15 @@ Los mensajes de voz, las llamadas 1:1 y las llamadas grupales admiten modificaci
 
 ## Aspecto del texto y cifrado adicional
 
-En **Perfil > Privacidad de los mensajes**, puedes activar una contraseña adicional para todos los chats de este dispositivo. El contenido se cifra y se muestra como **texto budista, chino aleatorio, símbolos del I Ching, hangul, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales o letras y números**.
+En **Perfil > Privacidad de los mensajes**, puedes activar una contraseña adicional para todos los chats de este dispositivo. Antes de enviar, el contenido se cifra y se convierte al aspecto elegido; después vuelve a protegerse con el E2EE del chat privado (X25519 / ML-KEM-768) o las Sender Keys del grupo. Es una segunda capa de protección sobre el E2EE existente. Puedes elegir **texto budista, chino aleatorio, símbolos del I Ching, hangul, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales o letras y números**.
 
-- Ambas partes deben configurar la misma contraseña en sus dispositivos; no se sincroniza automáticamente.
+- La contraseña nunca se sube ni se sincroniza. Ambos participantes del chat privado, o todos los miembros del grupo, deben configurar la misma contraseña.
+- Los aspectos de texto no tienen que coincidir. Cada mensaje incluye el identificador de su aspecto, por lo que el receptor reconoce y decodifica automáticamente el aspecto elegido por el remitente. Por ejemplo, una persona puede usar texto budista y la otra hangul; con la misma contraseña adicional, ambas pueden descifrar normalmente. La configuración de cada persona solo determina el aspecto del texto cifrado que envía.
+- Si las contraseñas son distintas, el E2EE y la entrega siguen funcionando, pero solo se muestra el texto cifrado con el aspecto elegido y no puede leerse el original.
 - La contraseña debe tener al menos ocho caracteres y solo permanece en memoria mientras está desbloqueada. Localmente solo se guardan la sal y el verificador.
 - Bloquea de inmediato o automáticamente **5 / 15 / 30 / 60 minutos** después de pasar a segundo plano. Bloqueado, solo se muestra el texto cifrado con el aspecto elegido.
 - Desactivar el cifrado adicional siempre exige volver a introducir la contraseña correcta, incluso si está desbloqueado.
-- El aspecto del texto es una capa local adicional de privacidad; **no sustituye el cifrado de extremo a extremo**.
+- El aspecto del texto es una protección adicional sobre el E2EE; **no lo sustituye, evita ni degrada**.
 
 ---
 
