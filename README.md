@@ -6,7 +6,7 @@
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.4.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.4.3-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,8 +77,9 @@
 
 ---
 
-## v2.4.2 更新
+## v2.4.3 更新
 
+- 修复关闭额外文本外观加密时未验证密码的安全问题；现在即使已解锁，也必须重新输入正确的额外密码才能关闭。
 - 文本外观现在会隐藏协议前缀、盐值和 IV，发送中的本地缓存也不再保留原始正文。
 - 额外聊天记录加密已移至个人信息 > 消息隐私，并全局应用于本设备的所有聊天。
 

@@ -151,6 +151,7 @@ export const fr: Record<string, string> = {
   "chat.presentation_enable": "Activer le chiffrement supplémentaire",
   "chat.presentation_password_prompt": "Saisissez un mot de passe supplémentaire (8 caractères minimum)",
   "chat.presentation_password_confirm": "Saisissez de nouveau le mot de passe",
+  "chat.presentation_disable_password_prompt": "Saisissez le mot de passe supplémentaire pour désactiver le chiffrement",
   "chat.presentation_wrong_password": "Mot de passe incorrect. Seul le texte chiffré stylisé peut être affiché.",
   "chat.presentation_unlock": "Saisir le mot de passe pour déverrouiller",
   "chat.presentation_lock_now": "Verrouiller maintenant",

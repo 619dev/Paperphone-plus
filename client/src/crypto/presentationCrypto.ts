@@ -109,12 +109,16 @@ export async function unlockPresentationCrypto(candidate: string): Promise<boole
   }
 }
 
-export async function disablePresentationCrypto(): Promise<void> {
+export async function disablePresentationCrypto(candidate: string): Promise<boolean> {
+  // Disabling removes the verifier and makes protected history inaccessible to
+  // this layer, so require a fresh password check even when already unlocked.
+  if (!(await unlockPresentationCrypto(candidate))) return false
   const id = account()
   if (id) await deleteBrowserSecret(id, LEGACY_SECRET_NAME).catch(() => {})
   lockPresentationCrypto()
   const settings = getPresentationSettings()
   saveSettings({ enabled: false, codec: settings.codec, lockMinutes: settings.lockMinutes })
+  return true
 }
 
 export function lockPresentationCrypto(): void {

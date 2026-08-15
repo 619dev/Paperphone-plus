@@ -149,6 +149,7 @@ export const ja: Record<string, string> = {
   "chat.presentation_enable": "追加暗号化を有効にする",
   "chat.presentation_password_prompt": "追加パスワードを入力（8文字以上）",
   "chat.presentation_password_confirm": "パスワードをもう一度入力",
+  "chat.presentation_disable_password_prompt": "追加暗号化を無効にするには追加パスワードを入力してください",
   "chat.presentation_wrong_password": "パスワードが正しくありません。文字表現の暗号文のみ表示されます。",
   "chat.presentation_unlock": "パスワードを入力してロック解除",
   "chat.presentation_lock_now": "今すぐロック",

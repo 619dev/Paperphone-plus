@@ -483,6 +483,7 @@ export const en: Record<string, string> = {
   'chat.presentation_enable': 'Enable extra encryption',
   'chat.presentation_password_prompt': 'Set an extra password (at least 8 characters)',
   'chat.presentation_password_confirm': 'Enter the password again',
+  'chat.presentation_disable_password_prompt': 'Enter the extra password to disable encryption',
   'chat.presentation_wrong_password': 'Incorrect password. Only the styled ciphertext can be shown.',
   'chat.presentation_unlock': 'Enter password to unlock',
   'chat.presentation_lock_now': 'Lock now',

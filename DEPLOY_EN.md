@@ -469,9 +469,9 @@ Nginx automatically routes API requests (`/api/*`) and WebSocket connections (`/
 - **Docker Compose**: Run `docker compose pull && docker compose up -d`
 - **Vercel Frontend**: Push to GitHub and Vercel will automatically trigger redeployment
 
-After upgrading to **v2.4.2**, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.
+After upgrading to **v2.4.3**, test Chinese username search at least once and refresh the Web/PWA client so the new Service Worker becomes active. The Web client keeps account-isolated offline copies of contacts, groups, chats, Moments, Timeline posts, and media; users can remove them under **Profile → Clear Local Cache**. If the frontend and backend use different domains, the media server must permit browser cross-origin media fetches before those responses can be stored offline.
 
-In v2.4.2, extra message-history encryption is configured under **Profile → Message privacy** and applies globally to every chat on that device. The selected text appearance encodes the complete protected envelope, so message bubbles and optimistic local caches do not expose the original body, protocol prefix, salt, IV, or Base64 metadata. Existing `ppx1` messages remain readable for backward compatibility.
+In v2.4.3, extra message-history encryption is configured under **Profile → Message privacy** and applies globally to every chat on that device. The selected text appearance encodes the complete protected envelope, so message bubbles and optimistic local caches do not expose the original body, protocol prefix, salt, IV, or Base64 metadata. Existing `ppx1` messages remain readable for backward compatibility. Disabling this layer always requires re-entering the correct extra password, including while it is already unlocked.
 
 For releases containing reliable sessions and message synchronization, also verify:
 

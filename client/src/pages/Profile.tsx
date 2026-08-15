@@ -16,7 +16,7 @@ import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/present
 import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy'
-const APP_VERSION = '2.4.2'
+const APP_VERSION = '2.4.3'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -453,6 +453,17 @@ function MessagePrivacySettings({ onBack, t }: { onBack: () => void; t: (k: stri
       refresh()
     } catch (err: any) { alert(err?.message || t('common.error')) }
   }
+  const disableEncryption = async () => {
+    const pass = prompt(t('chat.presentation_disable_password_prompt')) || ''
+    if (!pass) return
+    try {
+      if (!(await disablePresentationCrypto(pass))) {
+        alert(t('chat.presentation_wrong_password'))
+        return
+      }
+      refresh()
+    } catch (err: any) { alert(err?.message || t('common.error')) }
+  }
   return <div className="page">
     <div className="page-header"><button className="back-btn" onClick={onBack}><ChevronLeft size={20} /></button><h1>{t('profile.message_privacy')}</h1></div>
     <div className="page-body">
@@ -474,7 +485,7 @@ function MessagePrivacySettings({ onBack, t }: { onBack: () => void; t: (k: stri
             style={{ padding: 6, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
             {[5, 15, 30, 60].map(minutes => <option key={minutes} value={minutes}>{minutes === 60 ? t('chat.presentation_1_hour') : `${minutes} ${t('chat.presentation_minutes')}`}</option>)}</select>
         </div>
-        <div className="settings-item" onClick={async () => { await disablePresentationCrypto(); refresh() }} style={{ cursor: 'pointer', color: 'var(--danger)' }}><span className="label">{t('chat.presentation_disable')}</span></div>
+        <div className="settings-item" onClick={disableEncryption} style={{ cursor: 'pointer', color: 'var(--danger)' }}><span className="label">{t('chat.presentation_disable')}</span></div>
       </>}
     </div>
   </div>

@@ -149,6 +149,7 @@ export const ko: Record<string, string> = {
   "chat.presentation_enable": "추가 암호화 사용",
   "chat.presentation_password_prompt": "추가 비밀번호 입력(8자 이상)",
   "chat.presentation_password_confirm": "비밀번호 다시 입력",
+  "chat.presentation_disable_password_prompt": "추가 암호화를 끄려면 추가 비밀번호를 입력하세요",
   "chat.presentation_wrong_password": "비밀번호가 올바르지 않습니다. 텍스트 모양의 암호문만 표시됩니다.",
   "chat.presentation_unlock": "비밀번호를 입력하여 잠금 해제",
   "chat.presentation_lock_now": "지금 잠그기",
