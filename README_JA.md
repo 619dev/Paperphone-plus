@@ -6,7 +6,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.4.3-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.4.4-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,9 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 ---
 
-## v2.4.3 の更新内容
+## v2.4.4 の更新内容
+
+- 追加暗号化のロック中にパスワード設定を求める誤った表示を修正し、8 言語すべてでロック解除パスワードの入力を明確に案内するようにしました。
 
 - 追加の文字表現暗号化をパスワード確認なしで無効化できたセキュリティ問題を修正しました。ロック解除中でも、無効化には正しい追加パスワードの再入力が必要です。
 - 文字表現がプロトコル接頭辞、ソルト、IV を隠し、送信中のローカルキャッシュにも原文を保持しなくなりました。

@@ -6,7 +6,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/버전-2.4.3-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.4.4-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,9 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 ---
 
-## v2.4.3 업데이트
+## v2.4.4 업데이트
+
+- 추가 암호화가 잠긴 상태에서 비밀번호 설정을 잘못 안내하던 문제를 수정하고, 8개 언어 모두에서 잠금 해제 비밀번호 입력을 명확히 안내합니다.
 
 - 비밀번호 확인 없이 추가 텍스트 모양 암호화를 끌 수 있던 보안 문제를 수정했습니다. 잠금이 해제된 상태에서도 올바른 추가 비밀번호를 다시 입력해야 암호화를 끌 수 있습니다.
 - 텍스트 모양이 프로토콜 접두사, 솔트, IV를 숨기며 전송 중 로컬 캐시에 원문을 보관하지 않습니다.

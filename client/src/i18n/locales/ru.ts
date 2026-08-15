@@ -150,6 +150,7 @@ export const ru: Record<string, string> = {
   "chat.presentation_codec": "Оформление текста",
   "chat.presentation_enable": "Включить дополнительное шифрование",
   "chat.presentation_password_prompt": "Введите дополнительный пароль (не менее 8 символов)",
+  "chat.presentation_unlock_password_prompt": "Введите пароль разблокировки",
   "chat.presentation_password_confirm": "Введите пароль ещё раз",
   "chat.presentation_disable_password_prompt": "Введите дополнительный пароль, чтобы отключить шифрование",
   "chat.presentation_wrong_password": "Неверный пароль. Доступно только стилизованное представление шифротекста.",

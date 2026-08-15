@@ -6,7 +6,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.3-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.4-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -77,7 +77,9 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 ---
 
-## Neu in v2.4.3
+## Neu in v2.4.4
+
+- Der fehlerhafte Dialog, der bei gesperrter Zusatzverschlüsselung zum Festlegen eines Passworts aufforderte, wurde korrigiert; nun wird in allen acht Sprachen nach dem Entsperrpasswort gefragt.
 
 - Eine Sicherheitslücke wurde behoben, durch die sich die zusätzliche Textdarstellungsverschlüsselung ohne Passwortprüfung deaktivieren ließ; nun muss das korrekte Zusatzpasswort auch im entsperrten Zustand erneut eingegeben werden.
 - Die Textdarstellung verbirgt nun Protokollpräfixe, Salt und IV; lokale Nachrichtenentwürfe speichern keinen Originaltext mehr.

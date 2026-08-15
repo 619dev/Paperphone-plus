@@ -496,6 +496,7 @@ export const zh: Record<string, string> = {
   'chat.presentation_codec': '文本外观',
   'chat.presentation_enable': '启用额外加密',
   'chat.presentation_password_prompt': '设置额外加密密码（至少 8 位）',
+  'chat.presentation_unlock_password_prompt': '输入解锁密码',
   'chat.presentation_password_confirm': '再次输入密码',
   'chat.presentation_disable_password_prompt': '请输入额外加密密码以关闭加密',
   'chat.presentation_wrong_password': '密码错误，只能显示文本外观密文。',

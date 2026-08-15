@@ -16,7 +16,7 @@ import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/present
 import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy'
-const APP_VERSION = '2.4.3'
+const APP_VERSION = '2.4.4'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -440,7 +440,7 @@ function MessagePrivacySettings({ onBack, t }: { onBack: () => void; t: (k: stri
   }, [])
   const toggleLock = async () => {
     if (settings.enabled && isPresentationUnlocked()) { lockPresentationCrypto(); return }
-    const pass = prompt(t('chat.presentation_password_prompt')) || ''
+    const pass = prompt(t(settings.enabled ? 'chat.presentation_unlock_password_prompt' : 'chat.presentation_password_prompt')) || ''
     if (!pass) return
     try {
       if (settings.enabled) {

@@ -150,6 +150,7 @@ export const es: Record<string, string> = {
   "chat.presentation_codec": "Aspecto del texto",
   "chat.presentation_enable": "Activar cifrado adicional",
   "chat.presentation_password_prompt": "Introduce una contraseña adicional (mínimo 8 caracteres)",
+  "chat.presentation_unlock_password_prompt": "Introduce la contraseña de desbloqueo",
   "chat.presentation_password_confirm": "Vuelve a introducir la contraseña",
   "chat.presentation_disable_password_prompt": "Introduce la contraseña adicional para desactivar el cifrado",
   "chat.presentation_wrong_password": "Contraseña incorrecta. Solo se puede mostrar el texto cifrado con el aspecto elegido.",
