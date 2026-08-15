@@ -45,6 +45,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 |---------|-------------|
 | 🔐 End-to-End Encryption | Stateless ECDH + XSalsa20-Poly1305 — ephemeral keys per message, forward secrecy, Signal-style safety number verification |
 | 🗝️ Zero-knowledge encryption | For encrypted conversations, the server stores ciphertext while still processing essential account, contact/group, routing, and push metadata. Identity private keys and Sender Keys remain local: Web uses AES-GCM-wrapped IndexedDB, while Android, iOS, Windows, and macOS clients use operating-system secure storage |
+| 🎭 Text appearance & extra encryption | In Profile > Message privacy, set an extra password for every chat on this device and render message bodies in one of eight text appearances; supports manual locking and automatic locking after leaving the foreground |
 | 📹 Video & Voice Calls | LiveKit SFU for 1:1 calls and meetings (up to 100 participants), host mute-all and lecture mode |
 | 🎙️ Voice Changer | Real-time voice effects for voice messages, 1:1 calls, and group calls — 3 modes (0.8x deep / 1.0x normal / 1.2x high-pitched), powered by Web Audio API |
 | 📱 Session Persistence | 30-minute access tokens with silently renewed 90-day device refresh tokens; reconnects after network/IP/VPN/proxy changes and asks for credentials only when the durable session expires or is revoked |
@@ -212,6 +213,18 @@ Voice messages, 1:1 calls, and group calls all support real-time voice changing 
 - **1:1 / Group calls**: Tap the voice changer button during a call to cycle through modes. The processed audio track replaces the published LiveKit microphone track.
 
 > No server-side configuration is required. The voice changer runs entirely on the client side.
+
+---
+
+## Text Appearance and Extra Encryption
+
+Under **Profile > Message privacy**, you can enable an extra password for every chat on this device. Message bodies are encrypted with that password and then rendered using one of eight appearances: **Buddhist text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, or letters and numbers**.
+
+- Both parties must configure the same extra password on their own devices; it is not synchronized automatically.
+- The password must contain at least eight characters and stays in memory only while unlocked. Only the salt and password verifier are persisted locally.
+- Lock immediately or auto-lock **5 / 15 / 30 / 60 minutes** after leaving the foreground. While locked or when the password is wrong, only styled ciphertext is shown.
+- Disabling extra encryption always requires the correct password again, even when currently unlocked.
+- Text appearance is an additional local privacy layer; it **does not replace end-to-end encryption**.
 
 ---
 

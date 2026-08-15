@@ -45,6 +45,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 |----------|--------------|
 | 🔐 Ende-zu-Ende-Verschlüsselung | Zustandsloses ECDH + XSalsa20-Poly1305 — Einmalschlüssel pro Nachricht, Forward Secrecy, Signal-ähnliche Sicherheitsnummernverifizierung |
 | 🗝️ Zero-Knowledge-Verschlüsselung | Bei verschlüsselten Unterhaltungen speichert der Server Chiffretext, verarbeitet jedoch weiterhin notwendige Konto-, Kontakt-/Gruppen-, Routing- und Push-Metadaten. Private Identitätsschlüssel und Sender Keys bleiben lokal: Web nutzt mit AES-GCM geschütztes IndexedDB, Android-, iOS-, Windows- und macOS-Clients den sicheren Speicher des Betriebssystems |
+| 🎭 Textdarstellung und Zusatzverschlüsselung | Unter Profil > Nachrichtenschutz ein Zusatzpasswort für alle Chats auf diesem Gerät festlegen und Inhalte in einer von acht Textdarstellungen anzeigen; manuelle und automatische Sperre |
 | 📹 Video- & Audioanrufe | LiveKit-SFU für 1:1-Anrufe und Konferenzen (bis zu 100 Teilnehmer), Alle stummschalten und Vortragsmodus |
 | 🎙️ Stimmverzerrer | Echtzeit-Stimmeffekte für Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe — 3 Modi (0.8x tief / 1.0x normal / 1.2x hoch), basierend auf Web Audio API |
 | 📱 Sitzungspersistenz | 30-minütige Access Tokens mit automatisch verlängerten 90-Tage-Geräte-Refresh-Sitzungen; Netzwerk-, IP-, VPN- und Proxywechsel werden ohne Passworteingabe wiederhergestellt |
@@ -212,6 +213,18 @@ Sprachnachrichten, 1:1-Anrufe und Gruppenanrufe unterstützen Echtzeit-Stimmverz
 - **1:1 / Gruppenanrufe**: Tippen Sie während eines Anrufs auf die Stimmverzerrer-Taste, um durch die Modi zu wechseln. Die verarbeitete Audiospur ersetzt das Original über `LiveKit LocalAudioTrack.replaceTrack()`
 
 > Keine serverseitige Konfiguration erforderlich. Der Stimmverzerrer läuft vollständig clientseitig.
+
+---
+
+## Textdarstellung und Zusatzverschlüsselung
+
+Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf diesem Gerät aktiviert werden. Inhalte werden zusätzlich verschlüsselt und als **buddhistischer Text, zufälliges Chinesisch, I-Ging-Symbole, Hangul, ägyptische Hieroglyphen, Keilschrift, Grundwerte-Text oder Buchstaben und Zahlen** dargestellt.
+
+- Beide Seiten müssen dasselbe Zusatzpasswort auf ihren Geräten einrichten; es wird nicht automatisch synchronisiert.
+- Das Passwort muss mindestens acht Zeichen lang sein und verbleibt nur im entsperrten Zustand im Arbeitsspeicher. Lokal werden nur Salt und Prüfinformation gespeichert.
+- Sofort sperren oder **5 / 15 / 30 / 60 Minuten** nach Verlassen des Vordergrunds automatisch sperren. Gesperrt wird nur der formatierte Geheimtext angezeigt.
+- Zum Deaktivieren muss das korrekte Passwort immer erneut eingegeben werden, auch im entsperrten Zustand.
+- Die Textdarstellung ist eine zusätzliche lokale Datenschutzschicht und **ersetzt keine Ende-zu-Ende-Verschlüsselung**.
 
 ---
 

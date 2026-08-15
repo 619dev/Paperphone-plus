@@ -45,6 +45,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 |----------------|-------------|
 | 🔐 Cifrado de extremo a extremo | ECDH sin estado + XSalsa20-Poly1305 — claves efímeras por mensaje, forward secrecy, verificación de número de seguridad estilo Signal |
 | 🗝️ Cifrado de conocimiento cero | Para las conversaciones cifradas, el servidor almacena texto cifrado, aunque sigue procesando los metadatos esenciales de cuenta, contactos/grupos, enrutamiento y notificaciones push. Las claves privadas de identidad y las Sender Keys permanecen locales: Web usa IndexedDB protegido con AES-GCM, mientras que Android, iOS, Windows y macOS usan el almacenamiento seguro del sistema operativo |
+| 🎭 Aspecto del texto y cifrado adicional | En Perfil > Privacidad de los mensajes, establece una contraseña adicional para todos los chats de este dispositivo y muestra el contenido con uno de ocho aspectos; admite bloqueo manual y automático |
 | 📹 Llamadas de vídeo y voz | SFU LiveKit para llamadas 1:1 y reuniones (hasta 100 participantes), silenciar a todos y modo clase |
 | 🎙️ Modificador de voz | Efectos de voz en tiempo real para mensajes de voz, llamadas 1:1 y llamadas grupales — 3 modos (0.8x grave / 1.0x normal / 1.2x agudo), basado en Web Audio API |
 | 📱 Persistencia de sesión | Tokens de acceso de 30 minutos con sesiones de actualización de dispositivo de 90 días; recupera cambios de red, IP, VPN o proxy sin pedir la contraseña |
@@ -212,6 +213,18 @@ Los mensajes de voz, las llamadas 1:1 y las llamadas grupales admiten modificaci
 - **Llamadas 1:1 / Grupales**: Tocar el botón de modificador de voz durante una llamada para alternar entre modos. La pista de audio procesada reemplaza la original mediante `LiveKit LocalAudioTrack.replaceTrack()`
 
 > No se requiere configuración del lado del servidor. El modificador de voz funciona completamente en el lado del cliente.
+
+---
+
+## Aspecto del texto y cifrado adicional
+
+En **Perfil > Privacidad de los mensajes**, puedes activar una contraseña adicional para todos los chats de este dispositivo. El contenido se cifra y se muestra como **texto budista, chino aleatorio, símbolos del I Ching, hangul, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales o letras y números**.
+
+- Ambas partes deben configurar la misma contraseña en sus dispositivos; no se sincroniza automáticamente.
+- La contraseña debe tener al menos ocho caracteres y solo permanece en memoria mientras está desbloqueada. Localmente solo se guardan la sal y el verificador.
+- Bloquea de inmediato o automáticamente **5 / 15 / 30 / 60 minutos** después de pasar a segundo plano. Bloqueado, solo se muestra el texto cifrado con el aspecto elegido.
+- Desactivar el cifrado adicional siempre exige volver a introducir la contraseña correcta, incluso si está desbloqueado.
+- El aspecto del texto es una capa local adicional de privacidad; **no sustituye el cifrado de extremo a extremo**.
 
 ---
 

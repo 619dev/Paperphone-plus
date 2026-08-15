@@ -45,6 +45,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 |----------------|-------------|
 | 🔐 Chiffrement de bout en bout | ECDH sans état + XSalsa20-Poly1305 — clés éphémères par message, forward secrecy, vérification du numéro de sécurité style Signal |
 | 🗝️ Chiffrement à connaissance nulle | Pour les conversations chiffrées, le serveur stocke le texte chiffré tout en traitant les métadonnées indispensables de compte, de contacts/groupes, de routage et de notifications. Les clés privées d'identité et les Sender Keys restent locales : le Web utilise IndexedDB enveloppé par AES-GCM, tandis que les clients Android, iOS, Windows et macOS utilisent le stockage sécurisé du système |
+| 🎭 Apparence du texte et chiffrement supplémentaire | Dans Profil > Confidentialité des messages, définissez un mot de passe supplémentaire pour toutes les conversations de cet appareil et affichez le contenu avec l'une des huit apparences ; verrouillage manuel et automatique pris en charge |
 | 📹 Appels vidéo et audio | SFU LiveKit pour les appels 1:1 et les réunions (jusqu’à 100 participants), mise en sourdine globale et mode cours |
 | 🎙️ Modificateur de voix | Effets vocaux en temps réel pour les messages vocaux, appels 1:1 et appels de groupe — 3 modes (0.8x grave / 1.0x normal / 1.2x aigu), basé sur Web Audio API |
 | 📱 Persistance de session | Jetons d’accès de 30 minutes avec sessions de rafraîchissement d’appareil de 90 jours ; récupération automatique après changement de réseau, IP, VPN ou proxy sans mot de passe |
@@ -212,6 +213,18 @@ Les messages vocaux, les appels 1:1 et les appels de groupe supportent la modifi
 - **Appels 1:1 / Groupe** : Appuyer sur le bouton modificateur de voix pendant un appel pour alterner entre les modes. La piste audio traitée remplace l'originale via `LiveKit LocalAudioTrack.replaceTrack()`
 
 > Aucune configuration côté serveur requise. Le modificateur de voix fonctionne entièrement côté client.
+
+---
+
+## Apparence du texte et chiffrement supplémentaire
+
+Dans **Profil > Confidentialité des messages**, activez un mot de passe supplémentaire pour toutes les conversations de cet appareil. Le contenu est chiffré puis affiché comme **texte bouddhique, chinois aléatoire, symboles du Yi Jing, hangul, hiéroglyphes égyptiens, cunéiforme, texte des valeurs fondamentales ou lettres et chiffres**.
+
+- Les deux correspondants doivent configurer le même mot de passe sur leurs appareils ; il n'est pas synchronisé automatiquement.
+- Le mot de passe comporte au moins huit caractères et reste en mémoire uniquement pendant le déverrouillage. Seuls le sel et le vérificateur sont conservés localement.
+- Verrouillez immédiatement ou automatiquement **5 / 15 / 30 / 60 minutes** après le passage en arrière-plan. Verrouillé, seul le texte chiffré stylisé apparaît.
+- La désactivation exige toujours de saisir à nouveau le mot de passe correct, même si la fonction est déverrouillée.
+- L'apparence du texte est une couche locale supplémentaire ; elle **ne remplace pas le chiffrement de bout en bout**.
 
 ---
 
