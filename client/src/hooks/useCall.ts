@@ -36,7 +36,8 @@ export function useCall(userId: string | undefined) {
 
   const roomRef = useRef<Room | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
-  const remoteStreamRef = useRef<MediaStream | null>(null)
+  const remoteVideoTrackRef = useRef<RemoteTrack | null>(null)
+  const remoteAudioTrackRef = useRef<RemoteTrack | null>(null)
   const originalAudioTrackRef = useRef<MediaStreamTrack | null>(null)
   const localVideoElementRef = useRef<HTMLVideoElement | null>(null)
   const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null)
@@ -52,28 +53,60 @@ export function useCall(userId: string | undefined) {
   const getCallState = () => callStateRef.current
 
   const startDurationTimer = useCallback(() => {
-    if (durationTimer.current) clearInterval(durationTimer.current)
+    // LiveKit can report ParticipantConnected, ConnectionState.Connected and
+    // the signaling answer in different orders. Start exactly once so a later
+    // event cannot reset or accidentally skip the timer.
+    if (durationTimer.current) return
     setCallDuration(0)
     durationTimer.current = setInterval(() => setCallDuration(d => d + 1), 1000)
   }, [])
 
-  const attachRemoteStream = useCallback((room: Room) => {
-    const tracks: MediaStreamTrack[] = []
+  const markConnected = useCallback(() => {
+    callStateRef.current = 'connected'
+    setCallState('connected')
+    startDurationTimer()
+  }, [startDurationTimer])
+
+  const attachRemoteTracks = useCallback((room: Room) => {
+    let videoTrack: RemoteTrack | null = null
+    let audioTrack: RemoteTrack | null = null
     room.remoteParticipants.forEach(participant => {
       participant.trackPublications.forEach(publication => {
-        if (publication.track?.mediaStreamTrack) tracks.push(publication.track.mediaStreamTrack)
+        const track = publication.track
+        if (!track || publication.isMuted) return
+        if (publication.kind === Track.Kind.Video && !videoTrack) videoTrack = track
+        if (publication.kind === Track.Kind.Audio && !audioTrack) audioTrack = track
       })
     })
-    const stream = tracks.length ? new MediaStream(tracks) : new MediaStream()
-    remoteStreamRef.current = stream
-    if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = stream
-    if (remoteAudioElementRef.current) {
-      remoteAudioElementRef.current.srcObject = stream
-      if (stream.getAudioTracks().length) {
-        remoteAudioElementRef.current.play().catch(err => {
-          console.warn('[Call] Remote audio playback failed:', err)
-        })
-      }
+    // TypeScript does not carry assignments made inside the SDK collection
+    // callbacks into its control-flow narrowing below.
+    const selectedVideoTrack = videoTrack as RemoteTrack | null
+    const selectedAudioTrack = audioTrack as RemoteTrack | null
+
+    const videoElement = remoteVideoElementRef.current
+    if (remoteVideoTrackRef.current !== selectedVideoTrack) {
+      if (videoElement) remoteVideoTrackRef.current?.detach(videoElement)
+      remoteVideoTrackRef.current = selectedVideoTrack
+    }
+    if (videoElement && selectedVideoTrack) {
+      selectedVideoTrack.attach(videoElement)
+      // Explicit play is needed by some iOS/WKWebView versions when srcObject
+      // changes after the element has already mounted.
+      videoElement.play().catch(err => console.warn('[Call] Remote video playback failed:', err))
+    } else if (videoElement) {
+      videoElement.srcObject = null
+    }
+
+    const audioElement = remoteAudioElementRef.current
+    if (remoteAudioTrackRef.current !== selectedAudioTrack) {
+      if (audioElement) remoteAudioTrackRef.current?.detach(audioElement)
+      remoteAudioTrackRef.current = selectedAudioTrack
+    }
+    if (audioElement && selectedAudioTrack) {
+      selectedAudioTrack.attach(audioElement)
+      audioElement.play().catch(err => console.warn('[Call] Remote audio playback failed:', err))
+    } else if (audioElement) {
+      audioElement.srcObject = null
     }
   }, [])
 
@@ -93,7 +126,10 @@ export function useCall(userId: string | undefined) {
     localStreamRef.current?.getTracks().forEach(track => track.stop())
     originalAudioTrackRef.current?.stop()
     localStreamRef.current = null
-    remoteStreamRef.current = null
+    if (remoteVideoElementRef.current) remoteVideoTrackRef.current?.detach(remoteVideoElementRef.current)
+    if (remoteAudioElementRef.current) remoteAudioTrackRef.current?.detach(remoteAudioElementRef.current)
+    remoteVideoTrackRef.current = null
+    remoteAudioTrackRef.current = null
     originalAudioTrackRef.current = null
     if (localVideoElementRef.current) localVideoElementRef.current.srcObject = null
     if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = null
@@ -130,7 +166,7 @@ export function useCall(userId: string | undefined) {
     })
     roomRef.current = room
 
-    const refreshRemote = () => attachRemoteStream(room)
+    const refreshRemote = () => attachRemoteTracks(room)
     room.on(RoomEvent.TrackSubscribed, (
       _track: RemoteTrack,
       _publication: RemoteTrackPublication,
@@ -141,11 +177,7 @@ export function useCall(userId: string | undefined) {
     room.on(RoomEvent.TrackUnmuted, refreshRemote)
     room.on(RoomEvent.ParticipantConnected, () => {
       refreshRemote()
-      if (callStateRef.current !== 'connected') {
-        callStateRef.current = 'connected'
-        setCallState('connected')
-        startDurationTimer()
-      }
+      markConnected()
     })
     room.on(RoomEvent.ParticipantDisconnected, () => {
       refreshRemote()
@@ -157,8 +189,7 @@ export function useCall(userId: string | undefined) {
         setCallState('connecting')
       }
       if (state === ConnectionState.Connected && room.remoteParticipants.size > 0) {
-        callStateRef.current = 'connected'
-        setCallState('connected')
+        markConnected()
       }
       if (
         state === ConnectionState.Disconnected
@@ -184,7 +215,7 @@ export function useCall(userId: string | undefined) {
     if (localVideoElementRef.current) localVideoElementRef.current.srcObject = localStreamRef.current
     refreshRemote()
     return room
-  }, [attachRemoteStream, cleanup, startDurationTimer])
+  }, [attachRemoteTracks, cleanup, markConnected])
 
   const startCall = useCallback(async (peerId: string, isVideo: boolean) => {
     if (callStateRef.current !== 'idle') return
@@ -231,16 +262,12 @@ export function useCall(userId: string | undefined) {
         return
       }
       sendWs({ type: 'call_answer', to: info.peerId, call_id: info.callId })
-      if (roomRef.current?.remoteParticipants.size && getCallState() !== 'connected') {
-        callStateRef.current = 'connected'
-        setCallState('connected')
-        startDurationTimer()
-      }
+      if (roomRef.current?.remoteParticipants.size) markConnected()
     } catch (error) {
       sendWs({ type: 'call_reject', to: info.peerId, call_id: info.callId })
       failCall(error)
     }
-  }, [connectToCall, failCall, startDurationTimer])
+  }, [connectToCall, failCall, markConnected])
 
   const rejectCall = useCallback(() => {
     const info = callInfoRef.current
@@ -365,10 +392,8 @@ export function useCall(userId: string | undefined) {
     })
     const unsubAnswer = onWs('call_answer', data => {
       if (data.call_id !== callInfoRef.current?.callId) return
-      if (roomRef.current?.remoteParticipants.size && callStateRef.current !== 'connected') {
-        callStateRef.current = 'connected'
-        setCallState('connected')
-        startDurationTimer()
+      if (roomRef.current?.remoteParticipants.size) {
+        markConnected()
       } else if (!roomRef.current?.remoteParticipants.size) {
         callStateRef.current = 'connecting'
         setCallState('connecting')
@@ -387,7 +412,7 @@ export function useCall(userId: string | undefined) {
       unsubCancel()
       unsubEnd()
     }
-  }, [cleanup, startDurationTimer, userId])
+  }, [cleanup, markConnected, userId])
 
   useEffect(() => () => cleanup(), [cleanup])
 
@@ -396,16 +421,17 @@ export function useCall(userId: string | undefined) {
     if (element) element.srcObject = localStreamRef.current
   }, [])
   const remoteVideoRef = useCallback((element: HTMLVideoElement | null) => {
+    const previous = remoteVideoElementRef.current
+    if (previous && previous !== element) remoteVideoTrackRef.current?.detach(previous)
     remoteVideoElementRef.current = element
-    if (element) element.srcObject = remoteStreamRef.current
-  }, [])
+    if (element && roomRef.current) attachRemoteTracks(roomRef.current)
+  }, [attachRemoteTracks])
   const remoteAudioRef = useCallback((element: HTMLAudioElement | null) => {
+    const previous = remoteAudioElementRef.current
+    if (previous && previous !== element) remoteAudioTrackRef.current?.detach(previous)
     remoteAudioElementRef.current = element
-    if (element) {
-      element.srcObject = remoteStreamRef.current
-      if (remoteStreamRef.current?.getAudioTracks().length) element.play().catch(() => {})
-    }
-  }, [])
+    if (element && roomRef.current) attachRemoteTracks(roomRef.current)
+  }, [attachRemoteTracks])
 
   return {
     callState, callInfo, callDuration, callError, isMuted, isCameraOff, voiceMode,

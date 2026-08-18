@@ -162,4 +162,5 @@ export const ru: Record<string, string> = {
   "chat.presentation_minutes": "мин",
   "chat.presentation_1_hour": "1 час",
   "chat.presentation_disable": "Отключить дополнительное шифрование",
+  'chat.image_limit': 'За один раз можно выбрать не более 20 изображений. Отправлены первые 20.',
 }

@@ -11,7 +11,7 @@ import { encryptHybrid, decryptHybrid, inspectHybridProtocol } from '../crypto/r
 import { getPresentationSettings, protectPresentationText, unprotectPresentationText } from '../crypto/presentationCrypto'
 import { getMySenderKey, getSenderKey, generateSenderKey, encryptWithSenderKey, decryptWithSenderKey, distributeSenderKey, storeSenderKey, receiveSenderKey, isSenderKeyDistributed, markSenderKeyDistributed, removeSenderKey } from '../crypto/groupCrypto'
 import { Shield } from 'lucide-react'
-import { ChevronLeft, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronDown, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
 import StickerMedia from '../components/StickerMedia'
 import { decodeMessagePayload, encodeMessagePayload, type ReplyReference } from '../utils/messagePayload'
 import { cacheSticker, cacheStickerPack } from '../utils/stickerCache'
@@ -43,6 +43,7 @@ const RECENT_EMOJI_KEY = 'pp_recent_emoji'
 const STICKER_PACKS_CACHE_KEY = 'sticker-packs'
 const STICKER_PACK_CACHE_PREFIX = 'sticker-pack:'
 const MAX_VOICE_DURATION_SECONDS = 120
+const MAX_IMAGES_PER_SEND = 20
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
@@ -343,6 +344,8 @@ export default function Chat() {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false)
   const [viewingImage, setViewingImage] = useState<string | null>(null)
   const [showAttachPanel, setShowAttachPanel] = useState(false)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
+  const [showJumpToBottom, setShowJumpToBottom] = useState(false)
   const [replyingTo, setReplyingTo] = useState<ReplyReference | null>(null)
   const [messageMenu, setMessageMenu] = useState<{ reply: ReplyReference; x: number; y: number } | null>(null)
   const [emojiTab, setEmojiTab] = useState<'emoji' | 'sticker'>('emoji')
@@ -366,6 +369,9 @@ export default function Chat() {
   const [recordVoiceMode, setRecordVoiceMode] = useState<'normal'|'slow'|'fast'>('normal')
 
   const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const scrollRestoredRef = useRef(false)
+  const isNearBottomRef = useRef(true)
   const typingTimer = useRef<any>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -413,6 +419,25 @@ export default function Chat() {
   const chatName = isGroup ? (group?.name || id) : (friend?.nickname || id)
   const isOwner = isGroup && group?.owner_id === user?.id
   const currentAutoDelete = isGroup ? (group?.auto_delete ?? 0) : (friend?.auto_delete ?? 0)
+  const scrollStorageKey = `pp_chat_scroll_v1:${user?.id || 'anonymous'}:${isGroup ? 'group' : 'private'}:${id || ''}`
+
+  const updateScrollState = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container || !scrollRestoredRef.current) return
+    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80
+    isNearBottomRef.current = nearBottom
+    setShowJumpToBottom(!nearBottom)
+    try { localStorage.setItem(scrollStorageKey, String(container.scrollTop)) } catch {}
+  }, [scrollStorageKey])
+
+  const jumpToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    container.scrollTo({ top: container.scrollHeight, behavior })
+    isNearBottomRef.current = true
+    setShowJumpToBottom(false)
+    try { localStorage.setItem(scrollStorageKey, String(container.scrollHeight)) } catch {}
+  }, [scrollStorageKey])
 
   const messagePreview = useCallback((msgType: string, body: string) => {
     if (msgType === 'text') return body.replace(/\s+/g, ' ').trim().slice(0, 100)
@@ -526,6 +551,10 @@ export default function Chat() {
 
   useEffect(() => {
     if (!id) return
+    setHistoryLoaded(false)
+    scrollRestoredRef.current = false
+    isNearBottomRef.current = true
+    setShowJumpToBottom(false)
     const path = isGroup ? `/api/messages/group/${id}?limit=50000` : `/api/messages/private/${id}?limit=50000`
 
     const loadMessages = async () => {
@@ -619,12 +648,32 @@ export default function Chat() {
       setMessages(id, merged)
     }
 
-    loadMessages().catch(() => {})
+    loadMessages().catch(() => {}).finally(() => setHistoryLoaded(true))
   }, [id, presentationStateVersion])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!historyLoaded || scrollRestoredRef.current) return
+    requestAnimationFrame(() => {
+      const container = messagesContainerRef.current
+      if (!container) return
+      const stored = localStorage.getItem(scrollStorageKey)
+      if (stored !== null && Number.isFinite(Number(stored))) {
+        container.scrollTop = Math.min(Number(stored), container.scrollHeight - container.clientHeight)
+      } else {
+        container.scrollTop = container.scrollHeight
+      }
+      scrollRestoredRef.current = true
+      updateScrollState()
+    })
+  }, [historyLoaded, scrollStorageKey, updateScrollState])
 
+  useEffect(() => {
+    if (!scrollRestoredRef.current) return
+    if (isNearBottomRef.current) requestAnimationFrame(() => jumpToBottom('auto'))
+    else setShowJumpToBottom(true)
+  }, [messages.length, jumpToBottom])
+
+  useEffect(() => {
     // Send read receipts for unread incoming private messages
     if (!isGroup && id && user) {
       const unreadIds = messages
@@ -634,7 +683,7 @@ export default function Chat() {
         sendWs({ type: 'msg_read', msg_ids: unreadIds })
       }
     }
-  }, [messages.length])
+  }, [messages.length, id, isGroup, user])
 
   useEffect(() => {
     const unsub = onWs('typing', (data: any) => {
@@ -822,15 +871,26 @@ export default function Chat() {
 
   // ── Media upload handlers ──
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const selectedFiles = Array.from(e.target.files || [])
     e.target.value = ''
-    try {
-      const { url } = await uploadWithProgress(file, t('chat.uploading_image'))
-      sendMessage(url, 'image', { url })
-    } catch {
-      alert(t('chat.upload_failed'))
+    if (!selectedFiles.length) return
+    setShowAttachPanel(false)
+
+    const files = selectedFiles.slice(0, MAX_IMAGES_PER_SEND)
+    if (selectedFiles.length > MAX_IMAGES_PER_SEND) alert(t('chat.image_limit'))
+
+    let failed = false
+    // Preserve the selection order and reuse the existing per-file progress UI.
+    for (let index = 0; index < files.length; index++) {
+      try {
+        const label = `${t('chat.uploading_image')} (${index + 1}/${files.length})`
+        const { url } = await uploadWithProgress(files[index], label)
+        sendMessage(url, 'image', { url })
+      } catch {
+        failed = true
+      }
     }
+    if (failed) alert(t('chat.upload_failed'))
   }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1280,7 +1340,7 @@ export default function Chat() {
       )}
 
       {/* Hidden file inputs */}
-      <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+      <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageUpload} />
       <input ref={videoInputRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={handleVideoUpload} />
       <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileUpload} />
 
@@ -1352,7 +1412,8 @@ export default function Chat() {
         </div>
       )}
 
-      <div className="chat-messages">
+      <div className="chat-messages-shell">
+      <div ref={messagesContainerRef} className="chat-messages" onScroll={updateScrollState}>
         {messages.map((msg, i) => {
           const isMe = msg.from === user?.id
           const rawDisplayText = msg.decrypted || msg.ciphertext
@@ -1455,6 +1516,18 @@ export default function Chat() {
           </div>
         )}
         <div ref={bottomRef} />
+      </div>
+      {showJumpToBottom && (
+        <button
+          type="button"
+          className="chat-jump-bottom"
+          onClick={() => jumpToBottom()}
+          title={t('chat.jump_to_bottom')}
+          aria-label={t('chat.jump_to_bottom')}
+        >
+          <ChevronDown size={22} />
+        </button>
+      )}
       </div>
 
       {/* ═══ Emoji / Sticker Panel ═══ */}

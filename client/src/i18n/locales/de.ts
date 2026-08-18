@@ -162,4 +162,5 @@ export const de: Record<string, string> = {
   "chat.presentation_minutes": "Minuten",
   "chat.presentation_1_hour": "1 Stunde",
   "chat.presentation_disable": "Zusätzliche Verschlüsselung deaktivieren",
+  'chat.image_limit': 'Du kannst höchstens 20 Bilder gleichzeitig auswählen. Die ersten 20 wurden gesendet.',
 }

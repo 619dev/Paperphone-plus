@@ -6,7 +6,7 @@ metadata:
 
 spec:
   description: >-
-    PaperPhonePlus v2.4.6, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
+    PaperPhonePlus v2.4.7, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
     featuring hybrid X25519 + ML-KEM-768 E2EE, group E2E encryption (Signal-style Sender Keys),
     LiveKit SFU voice/video calls (1:1 and meetings up to 100 participants), real-time voice changer,
     reliable cursor-based message synchronization, durable device sessions, eight password-protected text appearances, SOCKS5/HTTP/HTTPS proxy support,
@@ -23,7 +23,7 @@ spec:
     Rewritten with **React 19 + TypeScript + Vite** frontend and **Rust (Axum)** backend
     for maximum performance and type safety.
 
-    ## Security — v2.4.6
+    ## Security — v2.4.7
     - **Hybrid X25519 + ML-KEM-768 + XSalsa20-Poly1305** — message headers identify the actual `PQ v2`, downgraded `X25519 ↓`, or group `SK vN` protocol
     - **Fail-closed encrypted sending** — encryption, key-distribution, and secure-storage failures stop the send instead of falling back to plaintext
     - **Zero-knowledge encryption scope** — encrypted conversation bodies are stored as ciphertext; the server still processes essential account, contact/group, routing, and push metadata
@@ -624,7 +624,7 @@ spec:
 localization:
   zh-CN:
     description: >-
-      PaperPhonePlus v2.4.6 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
+      PaperPhonePlus v2.4.7 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
       消息游标可靠同步与长期设备会话、LiveKit SFU 单聊与百人会议、实时变声、8 种额外密码保护的文本外观、SOCKS5/HTTP/HTTPS 代理、
       Cloudflare R2 文件存储、8 种语言与 iOS PWA 部署，完全可自建。
     readme: |-
@@ -634,7 +634,7 @@ localization:
       使用 **React 19 + TypeScript + Vite** 前端和 **Rust (Axum)** 后端重写，
       获得极致性能和类型安全。
 
-      ## 安全模型 — v2.4.6
+      ## 安全模型 — v2.4.7
       - **X25519 + ML-KEM-768 + XSalsa20-Poly1305 混合加密** — 消息准确标示实际采用的 `PQ v2`、降级后的 `X25519 ↓` 或群聊 `SK vN` 协议
       - **加密发送失败即停止** — 加密、密钥分发或安全存储失败时不会回退为明文发送
       - **零知识加密范围** — 加密会话正文以密文存储；服务器仍会处理账号、好友/群组、路由和推送等必要元数据

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { get, post, put, del, normalizeFileUrl } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { getKeys } from '../crypto/keystore'
+import { deriveSafetyNumber } from '../crypto/safetyNumber'
 import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Fingerprint, Lock, MessageCircle, Pencil, Phone, ShieldCheck, Flag, Ban } from 'lucide-react'
 
 export default function UserProfile() {
@@ -68,63 +68,23 @@ export default function UserProfile() {
     setLoading(false)
   }, [id])
 
-  // Compute safety number when user data is loaded
+  // Compute the number from both public keys as published by the server. Using
+  // a local key on one side and a published key on the other made the two views
+  // disagree whenever a restored long-lived session had stale local key state.
   useEffect(() => {
     if (!user?.ik_pub) return
-    computeSafetyNumber(user.ik_pub)
+    let cancelled = false
+    get('/api/users/me')
+      .then((currentUser: any) => {
+        if (!cancelled && currentUser?.ik_pub) computeSafetyNumber(currentUser.ik_pub, user.ik_pub)
+      })
+      .catch(() => { if (!cancelled) setSafetyNumber('—') })
+    return () => { cancelled = true }
   }, [user?.ik_pub])
 
-  const computeSafetyNumber = async (theirIkPub: string) => {
+  const computeSafetyNumber = async (myIkPub: string, theirIkPub: string) => {
     try {
-      const keys = getKeys()
-      const myIkPub = keys?.ik_pub || me?.ik_pub
-      if (!myIkPub || !theirIkPub) {
-        setSafetyNumber('—')
-        return
-      }
-
-      // Decode base64 to bytes
-      const decode = (b64: string) => {
-        const raw = atob(b64.replace(/-/g, '+').replace(/_/g, '/'))
-        const bytes = new Uint8Array(raw.length)
-        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
-        return bytes
-      }
-
-      const myBytes = decode(myIkPub)
-      const theirBytes = decode(theirIkPub)
-
-      // Sort keys lexicographically for deterministic order
-      // (so both parties compute the same result)
-      let first: Uint8Array, second: Uint8Array
-      const myHex = Array.from(myBytes).map(b => b.toString(16).padStart(2, '0')).join('')
-      const theirHex = Array.from(theirBytes).map(b => b.toString(16).padStart(2, '0')).join('')
-      if (myHex <= theirHex) {
-        first = myBytes
-        second = theirBytes
-      } else {
-        first = theirBytes
-        second = myBytes
-      }
-
-      // Concatenate sorted keys
-      const combined = new Uint8Array(first.length + second.length)
-      combined.set(first, 0)
-      combined.set(second, first.length)
-
-      // SHA-256 hash
-      const hashBuffer = await crypto.subtle.digest('SHA-256', combined)
-      const hashArray = new Uint8Array(hashBuffer)
-
-      // Format as 5-digit decimal groups (Signal-style)
-      // Convert 32 bytes to 12 groups of 5 digits
-      const groups: string[] = []
-      for (let i = 0; i < 12; i++) {
-        const offset = i * 2
-        const val = (hashArray[offset % 32] << 8) | hashArray[(offset + 1) % 32]
-        groups.push(String(val * 3 + i).padStart(5, '0').slice(-5))
-      }
-      setSafetyNumber(groups.join(' '))
+      setSafetyNumber(await deriveSafetyNumber(myIkPub, theirIkPub))
     } catch {
       setSafetyNumber('—')
     }

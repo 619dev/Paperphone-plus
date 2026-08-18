@@ -6,7 +6,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.4.6-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.4.7-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)

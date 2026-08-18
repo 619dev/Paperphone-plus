@@ -160,4 +160,5 @@ export const ja: Record<string, string> = {
   "chat.presentation_minutes": "分",
   "chat.presentation_1_hour": "1時間",
   "chat.presentation_disable": "追加暗号化を無効にする",
+  'chat.image_limit': '一度に選択できる画像は20枚までです。最初の20枚を送信しました。',
 }

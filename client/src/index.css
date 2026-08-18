@@ -538,6 +538,13 @@ textarea.input {
 /* ═══════════════════════════════════════════════════════════════
    Chat Bubbles — Glass Message Capsules
    ═══════════════════════════════════════════════════════════════ */
+.chat-messages-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -545,6 +552,24 @@ textarea.input {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.chat-jump-bottom {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 8;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.22);
 }
 
 .msg-row {

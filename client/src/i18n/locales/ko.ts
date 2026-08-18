@@ -160,4 +160,5 @@ export const ko: Record<string, string> = {
   "chat.presentation_minutes": "분",
   "chat.presentation_1_hour": "1시간",
   "chat.presentation_disable": "추가 암호화 끄기",
+  'chat.image_limit': '한 번에 최대 20장의 이미지만 선택할 수 있습니다. 처음 20장을 전송했습니다.',
 }
