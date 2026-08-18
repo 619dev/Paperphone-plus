@@ -78,44 +78,9 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 ---
 
-## What's New in v2.4.6
+## Changelog
 
-- Fully documented the two-layer text-appearance flow: the shared extra password encrypts and renders the body first, followed by the existing private-chat E2EE or group Sender Key encryption.
-- Clarified that both private-chat participants, or every group member, must agree on the same extra password; it is never uploaded or synchronized.
-- With different passwords, E2EE and delivery still work, but recipients see only styled ciphertext. This feature is extra insurance above E2EE and never replaces, bypasses, or downgrades it.
-- Updated the Profile > Message privacy explanation in all eight UI languages.
-
----
-
-## What's New in v2.4.4
-
-- Fixed the extra-encryption unlock dialog incorrectly asking users to set a password while locked; it now requests the unlock password in all eight languages.
-
-- Fixed a security issue that allowed extra text-appearance encryption to be disabled without password verification; the correct extra password must now be re-entered even while unlocked.
-- Text appearance now hides protocol prefixes, salts, and IVs; optimistic local messages no longer retain the original body.
-- Extra message-history encryption moved to Profile > Message privacy and now applies globally to every chat on the device.
-
-- Encrypted chats now fail closed: encryption, key-distribution, or secure-storage errors can no longer fall back to plaintext; message bubbles report the actual `PQ v2`, `X25519 ↓`, or `SK vN` protocol.
-- Added an optional chat-history password and eight independent presentation codecs: Buddha text, random Chinese, I Ching symbols, Hangul, Egyptian hieroglyphs, Cuneiform, Core Values text, and alphanumeric.
-- Without the correct extra password, only presentation ciphertext is shown; the app can auto-lock 5/15/30/60 minutes after leaving the foreground. The password remains memory-only and only a verifier is persisted.
-- Hardened local identity private-key and Sender Key protection with AES-GCM-wrapped IndexedDB on Web and system secure storage on native clients; completed UI copy for all eight languages.
-
----
-
-## What's New in v2.3.9
-
-- Fixed legacy one-way friendship records causing an “Already friends” message while the contact remained invisible and unavailable for chat; adding the user again now repairs both directions and refreshes the contact list immediately.
-
----
-
-## What's New in v2.3.8
-
-- Fixed the unresponsive back button after the QR scanner starts the camera; closing now stops and releases the camera immediately.
-- Fixed duplicate friend requests to existing friends corrupting the friendship; search results now clearly show “Already friends.”
-- Outgoing private messages populate the optimistic message object with ciphertext immediately after end-to-end encryption, preventing plaintext from being briefly persisted while awaiting the server acknowledgement.
-- Voice messages stop automatically at 120 seconds; voice-changed output follows the same limit.
-- Voice recording and active calls keep the screen awake, while page cleanup reliably releases recording devices and timers.
-- Android, iOS, Windows, and macOS clients protect local identity private keys and Sender Keys with operating-system secure storage; Web uses AES-GCM-wrapped IndexedDB. Chat caches and private-key storage are separate security boundaries, replacing the old "four-layer persistence" description.
+The complete release history has moved to [changelog.md](changelog.md).
 
 ---
 

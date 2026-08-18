@@ -78,44 +78,9 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 ---
 
-## Neu in v2.4.6
+## Änderungsprotokoll
 
-- Der zweistufige Ablauf der Textdarstellung ist nun vollständig dokumentiert: Das gemeinsame Zusatzpasswort verschlüsselt und formatiert den Inhalt zuerst; danach verschlüsselt die bestehende E2EE oder der Gruppen-Sender-Key ihn erneut.
-- Beide Teilnehmer eines privaten Chats bzw. alle Gruppenmitglieder müssen dasselbe Passwort verwenden; es wird weder hochgeladen noch synchronisiert.
-- Bei unterschiedlichen Passwörtern funktionieren E2EE und Zustellung weiterhin, aber nur der formatierte Geheimtext ist sichtbar. Die Funktion ist eine zusätzliche Absicherung und ersetzt, umgeht oder schwächt E2EE nicht.
-- Die Erklärung unter Profil > Nachrichtenschutz wurde in allen acht UI-Sprachen aktualisiert.
-
----
-
-## Neu in v2.4.4
-
-- Der fehlerhafte Dialog, der bei gesperrter Zusatzverschlüsselung zum Festlegen eines Passworts aufforderte, wurde korrigiert; nun wird in allen acht Sprachen nach dem Entsperrpasswort gefragt.
-
-- Eine Sicherheitslücke wurde behoben, durch die sich die zusätzliche Textdarstellungsverschlüsselung ohne Passwortprüfung deaktivieren ließ; nun muss das korrekte Zusatzpasswort auch im entsperrten Zustand erneut eingegeben werden.
-- Die Textdarstellung verbirgt nun Protokollpräfixe, Salt und IV; lokale Nachrichtenentwürfe speichern keinen Originaltext mehr.
-- Die zusätzliche Nachrichtenverschlüsselung befindet sich unter Profil > Nachrichtenschutz und gilt global für alle Chats.
-
-- Verschlüsselte Chats arbeiten jetzt fail-closed: Fehler bei Verschlüsselung, Schlüsselverteilung oder sicherer Speicherung führen nie zu einem Klartextversand. Jede Nachricht zeigt das tatsächlich verwendete Protokoll (`PQ v2`, `X25519 ↓` oder `SK vN`).
-- Optionales Zusatzpasswort für den Chatverlauf und acht Darstellungs-Codecs: Buddha-Text, zufälliges Chinesisch, I-Ging-Symbole, Koreanisch, ägyptische Hieroglyphen, Keilschrift, Kernwerte-Text und alphanumerisch.
-- Ohne korrektes Zusatzpasswort wird nur der Darstellungs-Geheimtext angezeigt; nach 5/15/30/60 Minuten im Hintergrund kann automatisch gesperrt werden. Das Passwort bleibt ausschließlich im Arbeitsspeicher.
-- Lokaler Schutz von privaten Identitäts- und Sender Keys durch AES-GCM-gekapseltes IndexedDB im Web und sicheren Systemspeicher in nativen Clients; UI-Texte für alle acht Sprachen vervollständigt.
-
----
-
-## Neu in v2.3.9
-
-- Alte einseitige Freundschaftseinträge führten zur Meldung „Bereits befreundet“, obwohl der Kontakt unsichtbar blieb und kein Chat möglich war. Beim erneuten Hinzufügen werden nun beide Richtungen automatisch repariert und die Kontaktliste sofort aktualisiert.
-
----
-
-## Neu in v2.3.8
-
-- Die nicht reagierende Zurück-Schaltfläche nach dem Start der QR-Kamera wurde behoben; beim Schließen wird die Kamera nun sofort gestoppt und freigegeben.
-- Doppelte Freundschaftsanfragen an bestehende Freunde beschädigen die Freundschaft nicht mehr; Suchergebnisse zeigen jetzt „Bereits befreundet“ an.
-- Ausgehende Privatnachrichten werden direkt nach der Ende-zu-Ende-Verschlüsselung als Chiffretext im optimistischen Nachrichtenobjekt gespeichert; beim Warten auf die Serverbestätigung landet kein Klartext im Offline-Cache.
-- Sprachnachrichten stoppen automatisch nach 120 Sekunden; die Ausgabe mit Stimmeffekt hat dasselbe Limit.
-- Bei Aufnahmen und Anrufen bleibt der Bildschirm wach; beim Verlassen werden Aufnahmegeräte und Timer zuverlässig freigegeben.
-- Android-, iOS-, Windows- und macOS-Clients schützen lokale private Identitätsschlüssel und Sender Keys mit dem sicheren Speicher des Betriebssystems; Web nutzt mit AES-GCM geschütztes IndexedDB. Chat-Caches und die Speicherung privater Schlüssel sind getrennte Sicherheitsbereiche; dies ersetzt die alte Beschreibung einer „vierstufigen Persistenz“.
+Der vollständige Versionsverlauf wurde nach [changelog.md](changelog.md) verschoben.
 
 ---
 

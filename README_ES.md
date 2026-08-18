@@ -78,44 +78,9 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 
 ---
 
-## Novedades de v2.4.6
+## Registro de cambios
 
-- Se documentó por completo el flujo de dos capas: la contraseña adicional compartida cifra y transforma primero el contenido; después, el E2EE existente o las Sender Keys del grupo vuelven a cifrarlo.
-- Ambos participantes del chat privado, o todos los miembros del grupo, deben usar la misma contraseña; nunca se sube ni se sincroniza.
-- Si las contraseñas son distintas, el E2EE y la entrega siguen funcionando, pero solo se muestra el texto cifrado con el aspecto elegido. Esta función es una protección adicional y no sustituye, evita ni degrada el E2EE.
-- Se actualizó la explicación de Perfil > Privacidad de los mensajes en los ocho idiomas de la interfaz.
-
----
-
-## Novedades de v2.4.4
-
-- Se corrigió el diálogo de cifrado adicional bloqueado que pedía configurar una contraseña; ahora solicita la contraseña de desbloqueo en los ocho idiomas.
-
-- Se corrigió un problema de seguridad que permitía desactivar el cifrado adicional de apariencia de texto sin verificar la contraseña; ahora es obligatorio volver a introducir la contraseña adicional correcta incluso si está desbloqueado.
-- La apariencia de texto ahora oculta prefijos de protocolo, sal e IV; la caché local ya no conserva el texto original.
-- El cifrado adicional se trasladó a Perfil > Privacidad de los mensajes y se aplica globalmente a todos los chats.
-
-- Los chats cifrados ahora fallan de forma segura: los errores de cifrado, distribución de claves o almacenamiento seguro nunca provocan un envío en texto claro. Cada mensaje muestra el protocolo realmente utilizado (`PQ v2`, `X25519 ↓` o `SK vN`).
-- Se añadió una contraseña opcional para el historial y ocho códecs de presentación: texto budista, chino aleatorio, símbolos del I Ching, coreano, jeroglíficos egipcios, cuneiforme, texto de valores fundamentales y alfanumérico.
-- Sin la contraseña adicional correcta solo se muestra el texto cifrado de presentación; puede bloquearse automáticamente tras 5/15/30/60 minutos en segundo plano. La contraseña permanece únicamente en memoria.
-- Se reforzó la protección local de claves privadas y Sender Keys con IndexedDB envuelto en AES-GCM en Web y almacenamiento seguro del sistema en clientes nativos; se completó la interfaz en los ocho idiomas.
-
----
-
-## Novedades de v2.3.9
-
-- Se corrigieron registros antiguos de amistad unidireccionales que mostraban «Ya son amigos» aunque el contacto seguía invisible y no se podía chatear; al volver a añadirlo ahora se reparan ambas direcciones y se actualiza inmediatamente la lista de contactos.
-
----
-
-## Novedades de v2.3.8
-
-- Se corrigió el botón Atrás que no respondía después de iniciar la cámara del escáner QR; al cerrar, la cámara se detiene y libera inmediatamente.
-- Se corrigieron las solicitudes duplicadas a amigos existentes que dañaban la relación; los resultados ahora muestran «Ya son amigos».
-- Los mensajes privados salientes guardan el texto cifrado en el objeto optimista justo después del cifrado de extremo a extremo, evitando persistir texto plano mientras llega la confirmación del servidor.
-- Los mensajes de voz se detienen automáticamente a los 120 segundos; el audio con cambio de voz usa el mismo límite.
-- La pantalla permanece activa durante grabaciones y llamadas, y al salir se liberan de forma fiable dispositivos y temporizadores.
-- Los clientes Android, iOS, Windows y macOS protegen las claves privadas de identidad y las Sender Keys locales con el almacenamiento seguro del sistema operativo; Web usa IndexedDB protegido con AES-GCM. La caché de chats y el almacenamiento de claves privadas son límites de seguridad distintos, lo que reemplaza la antigua descripción de «persistencia en cuatro capas».
+El historial completo de versiones se trasladó a [changelog.md](changelog.md).
 
 ---
 

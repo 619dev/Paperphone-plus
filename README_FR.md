@@ -78,44 +78,9 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 ---
 
-## Nouveautés de la v2.4.6
+## Journal des modifications
 
-- Documentation complète du double chiffrement de l’apparence du texte : le mot de passe supplémentaire partagé chiffre et transforme d’abord le contenu, puis l’E2EE existant ou les Sender Keys du groupe le chiffrent de nouveau.
-- Les deux correspondants, ou tous les membres d’un groupe, doivent utiliser le même mot de passe ; il n’est jamais envoyé ni synchronisé.
-- Si les mots de passe diffèrent, l’E2EE et la livraison fonctionnent toujours, mais seul le texte chiffré stylisé apparaît. Cette fonction est une assurance supplémentaire et ne remplace, ne contourne ni ne dégrade l’E2EE.
-- Mise à jour de l’explication Profil > Confidentialité des messages dans les huit langues de l’interface.
-
----
-
-## Nouveautés de la v2.4.4
-
-- Correction de la boîte de dialogue du chiffrement supplémentaire verrouillé qui demandait à tort de définir un mot de passe ; elle demande désormais le mot de passe de déverrouillage dans les huit langues.
-
-- Correction d’une faille permettant de désactiver le chiffrement supplémentaire de l’apparence du texte sans vérifier le mot de passe ; le bon mot de passe supplémentaire doit désormais être saisi à nouveau, même lorsque le contenu est déverrouillé.
-- L’apparence du texte masque désormais préfixes de protocole, sel et IV ; le cache local ne conserve plus le texte original.
-- Le chiffrement supplémentaire se trouve dans Profil > Confidentialité des messages et s’applique globalement à tous les chats.
-
-- Les conversations chiffrées échouent désormais de façon sûre : aucune erreur de chiffrement, de distribution de clé ou de stockage sécurisé ne peut entraîner un envoi en clair. Chaque message affiche le protocole réellement utilisé (`PQ v2`, `X25519 ↓` ou `SK vN`).
-- Ajout d'un mot de passe facultatif pour l'historique et de huit codecs de présentation : texte bouddhique, chinois aléatoire, symboles du Yi Jing, coréen, hiéroglyphes égyptiens, cunéiforme, valeurs fondamentales et alphanumérique.
-- Sans le bon mot de passe, seul le texte d'apparence chiffrée est visible ; verrouillage automatique possible après 5/15/30/60 minutes en arrière-plan. Le mot de passe reste uniquement en mémoire.
-- Protection renforcée des clés privées et Sender Keys via IndexedDB enveloppé par AES-GCM sur le Web et le stockage sécurisé du système sur les clients natifs ; interface finalisée dans les huit langues.
-
----
-
-## Nouveautés de la v2.3.9
-
-- Correction des anciennes relations d’amitié à sens unique qui affichaient « Déjà amis » alors que le contact restait invisible et indisponible pour discuter ; un nouvel ajout répare désormais les deux sens et actualise immédiatement la liste des contacts.
-
----
-
-## Nouveautés de la v2.3.8
-
-- Correction du bouton Retour inactif après le démarrage de la caméra du scanner QR ; la fermeture arrête et libère désormais immédiatement la caméra.
-- Correction des demandes d’ami répétées à un ami existant qui endommageaient la relation ; les résultats indiquent désormais « Déjà amis ».
-- Les messages privés sortants placent le texte chiffré dans l’objet optimiste dès la fin du chiffrement de bout en bout, sans persister temporairement le texte en clair avant l’accusé du serveur.
-- Les messages vocaux s’arrêtent automatiquement à 120 secondes ; la sortie avec changement de voix suit la même limite.
-- L’écran reste actif pendant les enregistrements et appels, et les périphériques ainsi que les minuteurs sont libérés en quittant la page.
-- Les clients Android, iOS, Windows et macOS protègent les clés privées d'identité et les Sender Keys locales avec le stockage sécurisé du système ; le Web utilise IndexedDB enveloppé par AES-GCM. Le cache des conversations et le stockage des clés privées constituent des périmètres de sécurité distincts, ce qui remplace l'ancienne description de « persistance à quatre couches ».
+L’historique complet des versions a été déplacé vers [changelog.md](changelog.md).
 
 ---
 
