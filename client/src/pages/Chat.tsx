@@ -27,6 +27,33 @@ const AUTO_DELETE_OPTIONS = [
   { value: 2592000, key: 'auto_delete.30d' },
 ]
 
+const MAX_BATCH_DOWNLOADS = 20
+const DOWNLOADABLE_MESSAGE_TYPES = new Set(['image', 'video', 'voice', 'file'])
+
+interface DownloadableMessage {
+  url: string
+  fileName: string
+}
+
+function downloadableMessage(msgType: string, text: string): DownloadableMessage | null {
+  if (!DOWNLOADABLE_MESSAGE_TYPES.has(msgType) || !text) return null
+  let url = text
+  let fileName = ''
+  if (msgType === 'video' || msgType === 'file') {
+    try {
+      const meta = JSON.parse(text)
+      url = meta.url || ''
+      fileName = meta.fileName || ''
+    } catch { /* Backward-compatible messages may contain a plain URL. */ }
+  }
+  if (!url) return null
+  if (!fileName) {
+    try { fileName = decodeURIComponent(new URL(normalizeFileUrl(url)).pathname.split('/').pop() || '') } catch {}
+  }
+  const fallbackExtension = msgType === 'image' ? 'jpg' : msgType === 'video' ? 'mp4' : msgType === 'voice' ? 'wav' : 'bin'
+  return { url: normalizeFileUrl(url), fileName: fileName || `${msgType}.${fallbackExtension}` }
+}
+
 // Emoji data
 const EMOJI_CATEGORIES = [
   { icon: '😊', label: 'Smileys', emojis: ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🫡','🤫','🤔','🫠','🤐','🤨','😐','😑','😶','🫥','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥴','😵','🤯','🥶','🥵','😱','😨','😰','😥','😢','😭','😤','😠','😡','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'] },
@@ -348,6 +375,9 @@ export default function Chat() {
   const [showJumpToBottom, setShowJumpToBottom] = useState(false)
   const [replyingTo, setReplyingTo] = useState<ReplyReference | null>(null)
   const [messageMenu, setMessageMenu] = useState<{ reply: ReplyReference; x: number; y: number } | null>(null)
+  const [downloadSelectionMode, setDownloadSelectionMode] = useState(false)
+  const [selectedDownloads, setSelectedDownloads] = useState<Map<string, DownloadableMessage>>(new Map())
+  const [downloadProgress, setDownloadProgress] = useState<{ completed: number; total: number } | null>(null)
   const [emojiTab, setEmojiTab] = useState<'emoji' | 'sticker'>('emoji')
   const [emojiCat, setEmojiCat] = useState(-1)
   const [stickerPacks, setStickerPacks] = useState<any[]>(() => readOfflineData(STICKER_PACKS_CACHE_KEY, []))
@@ -494,6 +524,60 @@ export default function Chat() {
     longPressTimerRef.current = null
     longPressOriginRef.current = null
   }, [])
+
+  const exitDownloadSelection = useCallback(() => {
+    if (downloadProgress) return
+    setDownloadSelectionMode(false)
+    setSelectedDownloads(new Map())
+  }, [downloadProgress])
+
+  const toggleDownloadSelection = useCallback((key: string, item: DownloadableMessage) => {
+    setSelectedDownloads(previous => {
+      const next = new Map(previous)
+      if (next.has(key)) next.delete(key)
+      else if (next.size < MAX_BATCH_DOWNLOADS) next.set(key, item)
+      else alert(t('chat.batch_download_limit'))
+      return next
+    })
+  }, [t])
+
+  const downloadSelectedFiles = useCallback(async () => {
+    if (!selectedDownloads.size || downloadProgress) return
+    const items = Array.from(selectedDownloads.values()).slice(0, MAX_BATCH_DOWNLOADS)
+    setDownloadProgress({ completed: 0, total: items.length })
+    let failed = 0
+    const usedNames = new Set<string>()
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index]
+      try {
+        const response = await fetch(item.url)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const blobUrl = URL.createObjectURL(await response.blob())
+        let fileName = item.fileName.replace(/[\\/:*?"<>|]/g, '_')
+        if (usedNames.has(fileName)) {
+          const dot = fileName.lastIndexOf('.')
+          fileName = dot > 0 ? `${fileName.slice(0, dot)}_${index + 1}${fileName.slice(dot)}` : `${fileName}_${index + 1}`
+        }
+        usedNames.add(fileName)
+        const anchor = document.createElement('a')
+        anchor.href = blobUrl
+        anchor.download = fileName
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000)
+      } catch (error) {
+        failed += 1
+        console.warn('[Chat] Batch download failed:', item.url, error)
+      }
+      setDownloadProgress({ completed: index + 1, total: items.length })
+      await new Promise(resolve => setTimeout(resolve, 120))
+    }
+    setDownloadProgress(null)
+    setDownloadSelectionMode(false)
+    setSelectedDownloads(new Map())
+    alert(failed ? t('chat.batch_download_partial').replace('{count}', String(failed)) : t('chat.batch_download_complete'))
+  }, [downloadProgress, selectedDownloads, t])
 
   const moveMessageLongPress = useCallback((event: React.TouchEvent) => {
     const touch = event.touches[0]
@@ -1345,14 +1429,27 @@ export default function Chat() {
       <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileUpload} />
 
       <div className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)}><ChevronLeft size={20} /></button>
+        <button className="back-btn" onClick={() => downloadSelectionMode ? exitDownloadSelection() : navigate(-1)}>
+          {downloadSelectionMode ? <X size={20} /> : <ChevronLeft size={20} />}
+        </button>
+        {downloadSelectionMode ? (
+          <h1>{t('chat.batch_download_selected').replace('{count}', String(selectedDownloads.size)).replace('{max}', String(MAX_BATCH_DOWNLOADS))}</h1>
+        ) : (
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
           onClick={() => isGroup ? navigate(`/group/${id}`) : navigate(`/user/${id}`)}>
           {chatName}
           {!isGroup && <span style={{ fontSize: 14, opacity: 0.7 }} title={t('chat.e2e_enabled')}><Lock size={16} /></span>}
           {isGroup && group?.encrypted && <span style={{ fontSize: 14, opacity: 0.7, color: 'var(--accent)' }} title={t('group.encryption_on')}><Shield size={16} /></span>}
         </h1>
+        )}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+          {downloadSelectionMode ? (
+            <button className="icon-btn" disabled={!selectedDownloads.size || !!downloadProgress}
+              onClick={downloadSelectedFiles} title={t('chat.batch_download')} style={{ fontSize: 18, opacity: selectedDownloads.size ? 1 : 0.45 }}>
+              <Download size={18} />
+            </button>
+          ) : (
+          <>
           {!isGroup && (
             <>
               <button className="icon-btn" title={t('call.voice')}
@@ -1374,8 +1471,18 @@ export default function Chat() {
             </>
           )}
           <button className="icon-btn" onClick={() => setShowSettings(true)} style={{ fontSize: 18 }} title={t('chat.settings')}><Settings size={18} /></button>
+          <button className="icon-btn" onClick={() => { setDownloadSelectionMode(true); setShowAttachPanel(false); setShowEmojiPanel(false); setMessageMenu(null) }}
+            style={{ fontSize: 18 }} title={t('chat.batch_download')}><Download size={18} /></button>
+          </>
+          )}
         </div>
       </div>
+
+      {downloadProgress && (
+        <div style={{ padding: '6px 12px', textAlign: 'center', fontSize: 12, color: 'var(--accent)', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+          {t('chat.batch_downloading').replace('{completed}', String(downloadProgress.completed)).replace('{total}', String(downloadProgress.total))}
+        </div>
+      )}
 
       {!wsConnected && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px', fontSize: 12, color: '#fff', background: '#ef4444', animation: 'fade-in .3s ease' }}>
@@ -1428,27 +1535,44 @@ export default function Chat() {
           const replyReference = isEncFailed
             ? { ...buildReplyReference(msg, rawDisplayText), preview: t('chat.decrypt_failed') }
             : buildReplyReference(msg, rawDisplayText)
+          const downloadItem = isEncFailed ? null : downloadableMessage(msg.msg_type, displayText)
+          const downloadKey = String(msg.id || msg.client_msg_id || `${i}-${msg.ts || ''}`)
+          const downloadSelected = selectedDownloads.has(downloadKey)
           return (
             <div
               key={msg.id || i}
               id={msg.id ? `message-${msg.id}` : undefined}
               className={`msg-row ${isMe ? 'outgoing' : ''}`}
-              style={{ WebkitTouchCallout: 'none' }}
-              onTouchStart={event => startMessageLongPress(event, replyReference)}
+              style={{ WebkitTouchCallout: 'none', cursor: downloadSelectionMode && downloadItem ? 'pointer' : undefined, opacity: downloadSelectionMode && !downloadItem ? 0.48 : 1 }}
+              onTouchStart={event => { if (!downloadSelectionMode) startMessageLongPress(event, replyReference) }}
               onTouchMove={moveMessageLongPress}
               onTouchEnd={cancelMessageLongPress}
               onTouchCancel={cancelMessageLongPress}
               onContextMenu={event => {
                 event.preventDefault()
-                openMessageMenu(replyReference, event.clientX, event.clientY)
+                if (!downloadSelectionMode) openMessageMenu(replyReference, event.clientX, event.clientY)
               }}
               onClickCapture={event => {
+                if (downloadSelectionMode) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  if (downloadItem) toggleDownloadSelection(downloadKey, downloadItem)
+                  return
+                }
                 if (suppressMessageClickRef.current) {
                   event.preventDefault()
                   event.stopPropagation()
                 }
               }}
             >
+              {downloadSelectionMode && (
+                <div aria-hidden="true" style={{
+                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0, alignSelf: 'center',
+                  border: `2px solid ${downloadSelected ? 'var(--accent)' : 'var(--text-muted)'}`,
+                  background: downloadSelected ? 'var(--accent)' : 'transparent', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{downloadSelected && <Check size={14} />}</div>
+              )}
               {!isMe && isGroup && (
                 <div className="avatar avatar-sm">
                   {msg.from_avatar ? <img src={msg.from_avatar} alt="" /> : (msg.from_nickname?.[0] || '?')}
@@ -1702,6 +1826,7 @@ export default function Chat() {
       )}
 
       {/* ═══ Input Bar ═══ */}
+      {!downloadSelectionMode && (<>
       {replyingTo && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -1757,6 +1882,7 @@ export default function Chat() {
             style={{ color: showAttachPanel ? 'var(--accent)' : undefined }}><Plus size={22} /></button>
         )}
       </div>
+      </>)}
     </div>
   )
 }

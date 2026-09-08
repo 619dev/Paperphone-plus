@@ -1,12 +1,12 @@
 🌐 **Другие языки:** [中文](README.md) · [English](README_EN.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [Español](README_ES.md)
 
-Мессенджер со сквозным шифрованием в стиле WeChat. Бессостоянный ECDH + XSalsa20-Poly1305 шифрование для каждого сообщения, видеозвонки в реальном времени, хранение файлов Cloudflare R2, поддержка нескольких языков и нативные клиенты Android, iOS, Windows и macOS.
+Мессенджер со сквозным шифрованием в стиле WeChat. Бессостоянный ECDH + XSalsa20-Poly1305 шифрование для каждого сообщения, видеозвонки в реальном времени, локальное постоянное хранение файлов, поддержка нескольких языков и нативные клиенты Android, iOS, Windows и macOS.
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Версия-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -63,12 +63,12 @@
 | 🖥️ Десктопный клиент Windows | Нативное настольное приложение для Windows, [скачать здесь](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Десктопный клиент Mac | Нативное настольное приложение для Mac, [скачать здесь](https://github.com/619dev/ppp-mac/releases) |
 | 💬 Расширенные сообщения | Текст, изображения, видео, документы, голосовые сообщения, 200+ эмодзи, стикер-паки Telegram, отчёты о доставке, индикаторы набора текста |
-| 📤 Загрузка файлов | До 500 МБ на файл, Cloudflare R2 или локальное хранилище, с анимацией прогресса |
+| 📤 Загрузка файлов | До 500 МБ; постоянные медиа профиля/лент и временные вложения чатов |
 | 🌐 Моменты | Социальная лента в стиле WeChat: текст + до 9 фото или 1 видео (≤ 10 мин), лайки, комментарии, видимость по тегам |
 | 👤 Профиль пользователя | Страница контактного профиля с двусторонним управлением приватностью Моментов |
 | 📰 Лента | Публичная лента в стиле Xiaohongshu — двухколоночная кладка, анонимные публикации, лайки и комментарии |
 | 🏷️ Теги друзей | Назначение нескольких тегов друзьям (палитра из 12 цветов), фильтрация контактов по тегу |
-| 🗂️ Объектное хранилище R2 | Cloudflare R2 для изображений/голосовых файлов — опциональный публичный CDN URL |
+| 🗂️ Локальное хранилище | Постоянный том с раздельными постоянными и временными каталогами |
 | 🔑 Двухфакторная аутентификация (2FA) | TOTP совместимый с Google Authenticator, 8 кодов восстановления, проверка при входе |
 | 📷 Сканирование и обмен QR-кодами | Сканируйте QR-коды для добавления друзей или вступления в группы с настраиваемым сроком действия |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ PaperPhonePlus раздельно обрабатывает локальное с
   Rust (Axum 0.8) — Высокопроизводительный асинхронный веб-фреймворк
   sqlx + MySQL 8.0 — Хранение данных пользователей/сообщений
   deadpool-redis + Redis 7 — Онлайн-статус + маршрутизация между узлами
-  aws-sdk-s3 — Файловое хранилище Cloudflare R2 (S3-совместимый API)
+  aws-sdk-s3 — только для миграции устаревших данных Cloudflare R2 в режиме чтения
   argon2 + jsonwebtoken аутентификация
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ cd client && npm install && npm run dev  # shared frontend source only
 | `JWT_SECRET` | Ключ подписи JWT (**измените в продакшене**) | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | Подключение к MySQL | — |
 | `REDIS_HOST` / `REDIS_PASS` | Подключение к Redis | — |
-| `R2_ACCOUNT_ID` | ID аккаунта Cloudflare | — |
-| `R2_ACCESS_KEY_ID` | Ключ доступа API-токена R2 | — |
-| `R2_SECRET_ACCESS_KEY` | Секретный ключ API-токена R2 | — |
-| `R2_BUCKET` | Название бакета R2 | — |
-| `R2_PUBLIC_URL` | Публичный базовый URL R2 (опционально) | — |
+| `UPLOAD_DIR` | Локальный постоянный каталог файлов | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | Хранение вложений чата; `0` отключает очистку | `14` |
+| `R2_*` | Миграция старых данных; удалить после уведомления при следующем запуске | — |
 | `LIVEKIT_URL` | Публичный WebSocket URL LiveKit для всех звонков | — |
 | `LIVEKIT_API_KEY` | API Key, общий для сервера и LiveKit | — |
 | `LIVEKIT_API_SECRET` | API Secret, общий для сервера и LiveKit | — |

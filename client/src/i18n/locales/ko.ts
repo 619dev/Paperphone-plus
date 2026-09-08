@@ -20,6 +20,7 @@ export const ko: Record<string, string> = {
   'chat.no_recent_emoji': '최근 이모지 없음', 'chat.loading_stickers': '로딩 중...', 'chat.no_stickers': '이 팩에 스티커가 없습니다',
   'chat.uploading_image': '이미지 업로드 중...', 'chat.uploading_video': '동영상 업로드 중...', 'chat.uploading_file': '파일 업로드 중...', 'chat.uploading_voice': '음성 업로드 중...', 'chat.upload_failed': '업로드 실패',
   'chat.attach_image': '이미지 전송', 'chat.attach_video': '동영상', 'chat.attach_file': '파일', 'chat.attach_voice': '음성', 'chat.attach_more': '더보기', 'chat.file': '파일',
+  'chat.batch_download': '일괄 다운로드', 'chat.batch_download_selected': '{count}/{max}개 선택', 'chat.batch_download_limit': '한 번에 최대 20개 파일을 선택할 수 있습니다.', 'chat.batch_downloading': '다운로드 중 {completed}/{total}', 'chat.batch_download_complete': '선택한 파일을 다운로드했습니다.', 'chat.batch_download_partial': '다운로드 완료, {count}개 파일 실패.',
   'chat.recording': '녹음 중...', 'chat.stop_recording': '중지', 'chat.voice_speed': '배속', 'chat.mic_failed': '마이크에 접근할 수 없습니다',
   'chat.group_unencrypted_warning': '그룹 채팅은 암호화되지 않습니다. 봇을 추가할 수 있습니다. 개인 정보를 공유하지 마세요.',
 

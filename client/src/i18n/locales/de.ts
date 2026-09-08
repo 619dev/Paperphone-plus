@@ -21,6 +21,7 @@ export const de: Record<string, string> = {
   'chat.no_recent_emoji': 'Keine kürzlichen Emojis', 'chat.loading_stickers': 'Laden...', 'chat.no_stickers': 'Keine Sticker in diesem Pack',
   'chat.uploading_image': 'Bild wird hochgeladen...', 'chat.uploading_video': 'Video wird hochgeladen...', 'chat.uploading_file': 'Datei wird hochgeladen...', 'chat.uploading_voice': 'Sprachnachricht wird hochgeladen...', 'chat.upload_failed': 'Hochladen fehlgeschlagen',
   'chat.attach_image': 'Bild senden', 'chat.attach_video': 'Video', 'chat.attach_file': 'Datei', 'chat.attach_voice': 'Sprache', 'chat.attach_more': 'Mehr', 'chat.file': 'Datei',
+  'chat.batch_download': 'Stapel-Download', 'chat.batch_download_selected': '{count}/{max} ausgewählt', 'chat.batch_download_limit': 'Es können höchstens 20 Dateien ausgewählt werden.', 'chat.batch_downloading': 'Download {completed}/{total}', 'chat.batch_download_complete': 'Ausgewählte Dateien wurden heruntergeladen.', 'chat.batch_download_partial': 'Download abgeschlossen; {count} Dateien fehlgeschlagen.',
   'chat.recording': 'Aufnahme...', 'chat.stop_recording': 'Stopp', 'chat.voice_speed': 'Tempo', 'chat.mic_failed': 'Kein Zugriff auf Mikrofon',
   'chat.group_unencrypted_warning': 'Der Gruppenchat ist nicht verschlüsselt. Bots können hinzugefügt werden. Teilen Sie keine persönlichen privaten Informationen.',
 

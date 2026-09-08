@@ -20,6 +20,7 @@ export const ja: Record<string, string> = {
   'chat.no_recent_emoji': '最近の絵文字なし', 'chat.loading_stickers': '読み込み中...', 'chat.no_stickers': 'このパックにスタンプはありません',
   'chat.uploading_image': '画像をアップロード中...', 'chat.uploading_video': '動画をアップロード中...', 'chat.uploading_file': 'ファイルをアップロード中...', 'chat.uploading_voice': '音声をアップロード中...', 'chat.upload_failed': 'アップロードに失敗しました',
   'chat.attach_image': '画像を送信', 'chat.attach_video': '動画', 'chat.attach_file': 'ファイル', 'chat.attach_voice': '音声', 'chat.attach_more': 'その他', 'chat.file': 'ファイル',
+  'chat.batch_download': '一括ダウンロード', 'chat.batch_download_selected': '{count}/{max} 件選択', 'chat.batch_download_limit': '一度に選択できるファイルは20件までです。', 'chat.batch_downloading': 'ダウンロード中 {completed}/{total}', 'chat.batch_download_complete': '選択したファイルをダウンロードしました。', 'chat.batch_download_partial': 'ダウンロード完了。{count} 件失敗しました。',
   'chat.recording': '録音中...', 'chat.stop_recording': '停止', 'chat.voice_speed': '倍速', 'chat.mic_failed': 'マイクにアクセスできません',
   'chat.group_unencrypted_warning': 'グループチャットは暗号化されていません。ボットを追加できます。個人のプライバシー情報を共有しないでください。',
 

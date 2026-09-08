@@ -1,12 +1,12 @@
 🌐 **其他语言 / Other Languages:** [English](README_EN.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [Русский](README_RU.md) · [Español](README_ES.md)
 
-一款微信风格的端对端加密即时通讯应用，采用无状态 ECDH + XSalsa20-Poly1305 逐消息加密，支持 Android、iOS、Windows、macOS 原生客户端与 Cloudflare R2 文件存储。
+一款微信风格的端对端加密即时通讯应用，采用无状态 ECDH + XSalsa20-Poly1305 逐消息加密，支持 Android、iOS、Windows、macOS 原生客户端与服务器本地文件存储。
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -62,13 +62,13 @@
 | 📱 iOS 原生 App | 已上架 [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178)，支持 APNS 推送通知 |
 | 🖥️ Windows 桌面客户端 | 原生 Windows 桌面应用，[点击下载](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac 桌面客户端 | 原生 Mac 桌面应用，[点击下载](https://github.com/619dev/ppp-mac/releases) |
-| 💬 消息功能 | 文字、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音消息、Emoji 面板（200+，8 分类）、Telegram 贴纸包、已读状态 |
-| 📤 文件上传 | 单文件最大 500MB，支持 Cloudflare R2 或本地存储，带进度条动画 |
+| 💬 消息功能 | 文字、图片、视频、文档、语音、Emoji、Telegram 贴纸包和已读状态；支持一次选择最多 20 条文件消息批量下载 |
+| 📤 文件上传 | 单文件最大 500MB，本地持久化存储，聊天附件默认保留 14 天，带进度条动画 |
 | 🌐 朋友圈 | 发动态（文字+最多9张图或1个视频≤10分钟）、点赞（显示好友头像）、评论、标签可见性控制 |
 | 👤 个人资料 | 联系人资料页（头像/昵称/朋友圈动态），支持「不看此人朋友圈」与「不让他看我的朋友圈」双向隐私控制 |
 | 📰 时间线 | 小红书风格公开发帖区——双列瀑布流布局，图片/视频+文字（最多50个媒体、2000字），支持匿名发帖、点赞、评论 |
 | 🏷️ 好友标签 | 为好友设置多个标签（12色预设调色板），按标签分类筛选通讯录 |
-| 🗂️ R2 对象存储 | Cloudflare R2 存储图片/语音，可选公开 CDN 直链 |
+| 🗂️ 文件存储 | 头像、朋友圈和时间线媒体永久保存；聊天附件独立存放并定期清理 |
 | 🔑 两步验证 (2FA) | Google Authenticator 兼容 TOTP 验证，8 个一次性恢复码，登录时强制验证 |
 | 📷 扫码加好友/入群 | 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1 周/1 月/3 月） |
 | 🏗️ 可自托管 | Docker Compose 或 Zeabur 部署后端，使用官方原生客户端连接 |
@@ -105,7 +105,7 @@ PaperPhonePlus 将“本地账号状态”“实时连接状态”和“消息�
   Rust (Axum 0.8) — 高性能异步 Web 框架
   sqlx + MySQL 8.0 — 用户/消息持久化
   deadpool-redis + Redis 7 — 在线状态 + 跨节点路由
-  aws-sdk-s3 — Cloudflare R2 文件存储（S3 兼容 API）
+  aws-sdk-s3 — 仅用于旧 Cloudflare R2 数据的一次性只读迁移
   argon2 + jsonwebtoken 认证
 
 共享前端代码 (client/，不独立部署)
@@ -428,8 +428,8 @@ paperphoneplus/
 │       │   ├── friends.rs           # 好友申请 / 接受
 │       │   ├── groups.rs            # 群组管理
 │       │   ├── messages.rs          # 消息历史分页与 server_seq 增量同步
-│       │   ├── upload.rs            # Cloudflare R2 文件上传
-│       │   ├── files.rs             # 文件代理（R2_PUBLIC_URL 未设时）
+│       │   ├── upload.rs            # 本地文件上传（永久区/聊天临时区）
+│       │   ├── files.rs             # 安全的本地文件读取
 │       │   ├── moments.rs           # 朋友圈（动态/点赞/评论/隐私控制）
 │       │   ├── timeline.rs          # 时间线（公开发帖/点赞/评论/匿名）
 │       │   ├── calls.rs             # LiveKit 私聊/会议令牌
@@ -550,11 +550,9 @@ paperphoneplus/
 | `JWT_SECRET` | JWT 签名密钥（**生产必改**） | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | MySQL 连接配置 | — |
 | `REDIS_HOST` / `REDIS_PASS` | Redis 连接配置 | — |
-| `R2_ACCOUNT_ID` | Cloudflare 账号 ID | — |
-| `R2_ACCESS_KEY_ID` | R2 API Token 的 Access Key | — |
-| `R2_SECRET_ACCESS_KEY` | R2 API Token 的 Secret Key | — |
-| `R2_BUCKET` | R2 Bucket 名称 | — |
-| `R2_PUBLIC_URL` | R2 公开 URL（可选），设置后文件走 CDN 直链 | — |
+| `UPLOAD_DIR` | 本地文件持久化目录 | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | 私聊及群聊附件保留天数；设为 `0` 禁用清理 | `14` |
+| `R2_ACCOUNT_ID` 等 `R2_*` | 旧 R2 数据只读迁移参数；迁移完成并在下次启动看到提示后可删除 | — |
 | `LIVEKIT_URL` | 所有音视频通话使用的 LiveKit 公网 WebSocket 地址 | — |
 | `LIVEKIT_API_KEY` | 服务端与 LiveKit 共享的 API Key | — |
 | `LIVEKIT_API_SECRET` | 服务端与 LiveKit 共享的 API Secret | — |

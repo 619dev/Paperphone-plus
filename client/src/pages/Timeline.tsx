@@ -479,7 +479,7 @@ function PostComposer({ t, onBack, onPublished }: {
   const videoInputRef = useRef<HTMLInputElement>(null)
 
   const uploadOneFile = async (file: File): Promise<string> => {
-    const res = await httpUploadFile(file)
+    const res = await httpUploadFile(file, 'permanent')
     return res.url
   }
 

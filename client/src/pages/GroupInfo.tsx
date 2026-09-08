@@ -80,7 +80,7 @@ export default function GroupInfo() {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const res = await uploadFileWithProgress(file, (pct) => setUploadProgress(pct))
+      const res = await uploadFileWithProgress(file, (pct) => setUploadProgress(pct), 'permanent')
       await put(`/api/groups/${id}`, { avatar: res.url })
       setGroup((prev: any) => ({ ...prev, avatar: res.url }))
       // Also refresh groups in global store

@@ -1,12 +1,12 @@
 🌐 **Otros idiomas:** [中文](README.md) · [English](README_EN.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [Русский](README_RU.md)
 
-Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo WeChat, con cifrado ECDH + XSalsa20-Poly1305 sin estado por mensaje, videollamadas en tiempo real, almacenamiento de archivos Cloudflare R2, soporte multilingüe y clientes nativos para Android, iOS, Windows y macOS.
+Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo WeChat, con cifrado ECDH + XSalsa20-Poly1305 sin estado por mensaje, videollamadas en tiempo real, almacenamiento local persistente, soporte multilingüe y clientes nativos para Android, iOS, Windows y macOS.
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Versión-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -63,12 +63,12 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🖥️ Cliente de escritorio Windows | Aplicación de escritorio Windows nativa, [descargar aquí](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Cliente de escritorio Mac | Aplicación de escritorio Mac nativa, [descargar aquí](https://github.com/619dev/ppp-mac/releases) |
 | 💬 Mensajería enriquecida | Texto, imágenes, video, archivos de documentos, mensajes de voz, 200+ emojis, paquetes de stickers de Telegram, confirmaciones de lectura, indicadores de escritura |
-| 📤 Subida de archivos | Hasta 500 MB por archivo, Cloudflare R2 o almacenamiento local, con animación de progreso |
+| 📤 Subida de archivos | Hasta 500 MB; multimedia social permanente y adjuntos de chat con caducidad |
 | 🌐 Momentos | Feed social estilo WeChat: texto + hasta 9 fotos o 1 video (≤ 10 min), likes, comentarios, visibilidad por etiquetas |
 | 👤 Perfil de usuario | Página de perfil de contacto con controles de privacidad bidireccionales de Momentos |
 | 📰 Línea de tiempo | Feed público estilo Xiaohongshu — diseño masonry de dos columnas, publicaciones anónimas, likes y comentarios |
 | 🏷️ Etiquetas de amigos | Asignar múltiples etiquetas a amigos (paleta de 12 colores), filtrar contactos por etiqueta |
-| 🗂️ Almacenamiento de objetos R2 | Cloudflare R2 para archivos de imagen/voz — URL CDN pública opcional |
+| 🗂️ Almacenamiento local | Volumen persistente con directorios permanentes y temporales separados |
 | 🔑 Autenticación de dos factores (2FA) | TOTP compatible con Google Authenticator, 8 códigos de recuperación, obligatorio al iniciar sesión |
 | 📷 Escanear y compartir código QR | Escanear códigos QR para agregar amigos o unirse a grupos con expiración configurable |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ Backend (server/)
   Rust (Axum 0.8) — Framework web asíncrono de alto rendimiento
   sqlx + MySQL 8.0 — Persistencia de usuarios/mensajes
   deadpool-redis + Redis 7 — Presencia en línea + enrutamiento entre nodos
-  aws-sdk-s3 — Almacenamiento de archivos Cloudflare R2 (API compatible con S3)
+  aws-sdk-s3 — solo para migración de solo lectura desde Cloudflare R2 heredado
   Autenticación argon2 + jsonwebtoken
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ En **Perfil > Privacidad de los mensajes**, puedes activar una contraseña adici
 | `JWT_SECRET` | Clave de firma JWT (**cambiar en producción**) | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | Conexión MySQL | — |
 | `REDIS_HOST` / `REDIS_PASS` | Conexión Redis | — |
-| `R2_ACCOUNT_ID` | ID de cuenta de Cloudflare | — |
-| `R2_ACCESS_KEY_ID` | Access Key del token API de R2 | — |
-| `R2_SECRET_ACCESS_KEY` | Secret Key del token API de R2 | — |
-| `R2_BUCKET` | Nombre del bucket R2 | — |
-| `R2_PUBLIC_URL` | URL base pública de R2 (opcional) | — |
+| `UPLOAD_DIR` | Directorio local persistente de archivos | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | Retención de adjuntos de chat; `0` desactiva la limpieza | `14` |
+| `R2_*` | Migración heredada; eliminar tras el aviso del siguiente arranque | — |
 | `LIVEKIT_URL` | URL WebSocket pública de LiveKit para todas las llamadas | — |
 | `LIVEKIT_API_KEY` | Clave API compartida por el servidor y LiveKit | — |
 | `LIVEKIT_API_SECRET` | Secreto API compartido por el servidor y LiveKit | — |

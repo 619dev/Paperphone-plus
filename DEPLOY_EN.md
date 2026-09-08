@@ -4,6 +4,8 @@ A self-hosted PaperPhonePlus deployment contains only `server`, MySQL, Redis, an
 
 Users enter the public **server backend URL** in a native client. The server-provided `LIVEKIT_URL` is used for all direct and group audio/video calls.
 
+Uploads live on the server's persistent volume. Avatars and social/timeline media are permanent; private and group chat attachments default to 14 days via `CHAT_FILE_RETENTION_DAYS`. On the first upgrade startup, legacy R2 objects are copied read-only to local storage. A later startup logs when `R2_*` variables can be removed; remote objects are never deleted.
+
 ## Method 1: Zeabur Template
 
 1. Deploy the [Zeabur template](https://zeabur.com/templates/SK6T93?referralCode=619dev).

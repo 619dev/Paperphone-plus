@@ -2578,7 +2578,7 @@ dependencies = [
 
 [[package]]
 name = "paperphone-plus-server"
-version = "2.5.1"
+version = "2.5.2"
 dependencies = [
  "argon2",
  "aws-config",

@@ -1,6 +1,6 @@
 [package]
 name = "paperphone-plus-server"
-version = "2.5.1"
+version = "2.5.2"
 edition = "2021"
 description = "PaperPhonePlus IM Backend — Secure messaging server in Rust"
 
@@ -42,7 +42,7 @@ chrono = { version = "0.4", features = ["serde"] }
 # Environment
 dotenvy = "0.15"
 
-# AWS S3 (R2)
+# AWS S3 (legacy R2 read-only migration only)
 aws-sdk-s3 = "1"
 aws-config = "1"
 aws-credential-types = "1"

@@ -21,6 +21,7 @@ export const fr: Record<string, string> = {
   'chat.no_recent_emoji': 'Aucun emoji récent', 'chat.loading_stickers': 'Chargement...', 'chat.no_stickers': 'Aucun sticker dans ce pack',
   'chat.uploading_image': 'Envoi de l\'image...', 'chat.uploading_video': 'Envoi de la vidéo...', 'chat.uploading_file': 'Envoi du fichier...', 'chat.uploading_voice': 'Envoi du message vocal...', 'chat.upload_failed': 'Échec de l\'envoi',
   'chat.attach_image': 'Envoyer une image', 'chat.attach_video': 'Vidéo', 'chat.attach_file': 'Fichier', 'chat.attach_voice': 'Vocal', 'chat.attach_more': 'Plus', 'chat.file': 'Fichier',
+  'chat.batch_download': 'Téléchargement groupé', 'chat.batch_download_selected': '{count}/{max} sélectionnés', 'chat.batch_download_limit': 'Vous pouvez sélectionner jusqu’à 20 fichiers.', 'chat.batch_downloading': 'Téléchargement {completed}/{total}', 'chat.batch_download_complete': 'Fichiers sélectionnés téléchargés.', 'chat.batch_download_partial': 'Téléchargement terminé ; {count} fichiers ont échoué.',
   'chat.recording': 'Enregistrement...', 'chat.stop_recording': 'Arrêter', 'chat.voice_speed': 'Vitesse', 'chat.mic_failed': 'Impossible d\'accéder au micro',
   'chat.group_unencrypted_warning': 'Le chat de groupe n\'est pas chiffré. Les bots peuvent être ajoutés. Ne partagez pas d\'informations personnelles privées.',
 

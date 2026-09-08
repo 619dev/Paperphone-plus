@@ -21,6 +21,7 @@ export const es: Record<string, string> = {
   'chat.no_recent_emoji': 'Sin emojis recientes', 'chat.loading_stickers': 'Cargando...', 'chat.no_stickers': 'No hay stickers en este paquete',
   'chat.uploading_image': 'Subiendo imagen...', 'chat.uploading_video': 'Subiendo vídeo...', 'chat.uploading_file': 'Subiendo archivo...', 'chat.uploading_voice': 'Subiendo nota de voz...', 'chat.upload_failed': 'Error al subir',
   'chat.attach_image': 'Enviar imagen', 'chat.attach_video': 'Vídeo', 'chat.attach_file': 'Archivo', 'chat.attach_voice': 'Voz', 'chat.attach_more': 'Más', 'chat.file': 'Archivo',
+  'chat.batch_download': 'Descarga por lotes', 'chat.batch_download_selected': '{count}/{max} seleccionados', 'chat.batch_download_limit': 'Puedes seleccionar hasta 20 archivos.', 'chat.batch_downloading': 'Descargando {completed}/{total}', 'chat.batch_download_complete': 'Archivos seleccionados descargados.', 'chat.batch_download_partial': 'Descarga terminada; fallaron {count} archivos.',
   'chat.recording': 'Grabando...', 'chat.stop_recording': 'Detener', 'chat.voice_speed': 'Velocidad', 'chat.mic_failed': 'No se puede acceder al micrófono',
   'chat.group_unencrypted_warning': 'El chat grupal no está cifrado. Se pueden agregar bots. No comparta información personal privada.',
 

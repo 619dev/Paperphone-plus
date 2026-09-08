@@ -24,6 +24,8 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_BUCKET: ${R2_BUCKET:-}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
+      UPLOAD_DIR: ./uploads
+      CHAT_FILE_RETENTION_DAYS: ${CHAT_FILE_RETENTION_DAYS:-14}
       FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
       FCM_CLIENT_EMAIL: ${FCM_CLIENT_EMAIL:-}
       FCM_PRIVATE_KEY: ${FCM_PRIVATE_KEY:-}
@@ -48,6 +50,8 @@ services:
       STICKER_PACKS: ${STICKER_PACKS:-}
       ADMIN_PATH: ${ADMIN_PATH:-/admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -65,7 +69,7 @@ services:
   # SFU media server for all direct calls and group meetings.
   livekit:
     container_name: paperphone-livekit
-    image: livekit/livekit-server:v1.9.6
+    image: livekit/livekit-server:latest
     environment:
       LIVEKIT_CONFIG: |
         port: 7880
@@ -133,3 +137,5 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  uploads:
+    name: paperphone-plus-uploads

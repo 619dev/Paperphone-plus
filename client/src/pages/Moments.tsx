@@ -305,7 +305,7 @@ function MomentComposer({ t, friends, onBack, onPublished }: {
 
   // Upload file helper (uses shared upload with URL normalization)
   const uploadOneFile = async (file: File): Promise<string> => {
-    const res = await httpUploadFile(file)
+    const res = await httpUploadFile(file, 'permanent')
     return res.url
   }
 

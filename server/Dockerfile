@@ -50,21 +50,31 @@ FROM debian:bookworm-slim AS runtime
 #   - libssl3         : OpenSSL shared library
 #   - libcurl4        : HTTP client library
 #   - curl            : CLI for healthcheck (libcurl4 already present, adds ~200KB)
+#   - gosu            : drop root after repairing persistent-volume ownership
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
          ca-certificates \
          libssl3 \
          libcurl4 \
          curl \
+         gosu \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 WORKDIR /app
 COPY --from=builder /app/target/output/paperphone-plus-server .
+COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/paperphone-entrypoint
+
+# Docker initializes a new named volume from the ownership of its mount point.
+# Run the service without root privileges while keeping the upload volume writable.
+RUN mkdir -p /app/uploads \
+    && chown -R 10001:10001 /app
 
 ENV PORT=3000
+ENV UPLOAD_DIR=./uploads
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=5 --start-period=15s \
   CMD curl -sf http://localhost:3000/health || exit 1
 
+ENTRYPOINT ["paperphone-entrypoint"]
 CMD ["./paperphone-plus-server"]

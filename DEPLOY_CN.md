@@ -4,6 +4,8 @@ PaperPhonePlus 的自托管部署只包含 `server`、MySQL、Redis 和 LiveKit�
 
 客户端登录时填写公开的 **server 后端地址**。`LIVEKIT_URL` 由 server 下发，用于 1:1 和群组音视频通话。
 
+上传文件保存在 server 的持久卷中。头像、群头像、朋友圈及时间线媒体永久保存；私聊和群聊附件由 `CHAT_FILE_RETENTION_DAYS` 控制，默认 14 天。升级自 R2 的实例第一次启动会只读复制全部对象到本地，成功后的下一次启动会提示可以删除 `R2_*` 变量；迁移程序不会删除 R2 原件。
+
 ## 方式一：Zeabur 模板
 
 1. 使用 [Zeabur 模板](https://zeabur.com/templates/SK6T93?referralCode=619dev)部署。

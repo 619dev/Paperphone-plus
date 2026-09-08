@@ -21,6 +21,7 @@ export const ru: Record<string, string> = {
   'chat.no_recent_emoji': 'Нет недавних эмодзи', 'chat.loading_stickers': 'Загрузка...', 'chat.no_stickers': 'Нет стикеров в этом наборе',
   'chat.uploading_image': 'Загрузка изображения...', 'chat.uploading_video': 'Загрузка видео...', 'chat.uploading_file': 'Загрузка файла...', 'chat.uploading_voice': 'Загрузка голосового сообщения...', 'chat.upload_failed': 'Ошибка загрузки',
   'chat.attach_image': 'Отправить изображение', 'chat.attach_video': 'Видео', 'chat.attach_file': 'Файл', 'chat.attach_voice': 'Голос', 'chat.attach_more': 'Ещё', 'chat.file': 'Файл',
+  'chat.batch_download': 'Пакетная загрузка', 'chat.batch_download_selected': 'Выбрано {count}/{max}', 'chat.batch_download_limit': 'Можно выбрать не более 20 файлов.', 'chat.batch_downloading': 'Загрузка {completed}/{total}', 'chat.batch_download_complete': 'Выбранные файлы загружены.', 'chat.batch_download_partial': 'Загрузка завершена; ошибок: {count}.',
   'chat.recording': 'Запись...', 'chat.stop_recording': 'Остановить', 'chat.voice_speed': 'Скорость', 'chat.mic_failed': 'Нет доступа к микрофону',
   'chat.group_unencrypted_warning': 'Групповой чат не зашифрован. Можно добавлять ботов. Не делитесь личной конфиденциальной информацией.',
 

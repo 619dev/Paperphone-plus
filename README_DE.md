@@ -1,12 +1,12 @@
 🌐 **Andere Sprachen:** [中文](README.md) · [English](README_EN.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Русский](README_RU.md) · [Español](README_ES.md)
 
-Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zustandslosem ECDH + XSalsa20-Poly1305 Pro-Nachricht-Verschlüsselung, Echtzeit-Videoanrufen, Cloudflare R2 Dateispeicher, Mehrsprachigkeit sowie nativen Clients für Android, iOS, Windows und macOS.
+Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zustandslosem ECDH + XSalsa20-Poly1305 Pro-Nachricht-Verschlüsselung, Echtzeit-Videoanrufen, lokalem persistentem Dateispeicher, Mehrsprachigkeit sowie nativen Clients für Android, iOS, Windows und macOS.
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -63,12 +63,12 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🖥️ Windows Desktop-Client | Native Windows-Desktopanwendung, [hier herunterladen](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac Desktop-Client | Native Mac-Desktopanwendung, [hier herunterladen](https://github.com/619dev/ppp-mac/releases) |
 | 💬 Rich-Messaging | Text, Bilder, Video, Dokumentdateien, Sprachnachrichten, 200+ Emojis, Telegram-Stickerpakete, Lesebestätigungen, Tippanzeigen |
-| 📤 Datei-Upload | Bis zu 500 MB pro Datei, Cloudflare R2 oder lokaler Speicher, mit Fortschrittsanimation |
+| 📤 Datei-Upload | Bis zu 500 MB pro Datei; permanente Profil-/Feed-Medien und ablaufende Chat-Anhänge |
 | 🌐 Momente | WeChat-ähnlicher sozialer Feed: Text + bis zu 9 Fotos oder 1 Video (≤ 10 Min.), Likes, Kommentare, Tag-basierte Sichtbarkeit |
 | 👤 Benutzerprofil | Kontaktprofilseite mit bidirektionalen Momente-Datenschutzkontrollen |
 | 📰 Timeline | Xiaohongshu-ähnlicher öffentlicher Feed — zweispaltiges Masonry-Layout, anonyme Beiträge, Likes & Kommentare |
 | 🏷️ Freund-Tags | Mehrere Tags pro Freund vergeben (12-Farben-Palette), Kontakte nach Tag filtern |
-| 🗂️ R2 Objektspeicher | Cloudflare R2 für Bild-/Sprachdateien — optionale öffentliche CDN-URL |
+| 🗂️ Lokaler Dateispeicher | Persistentes Volume mit getrennten permanenten und temporären Verzeichnissen |
 | 🔑 Zwei-Faktor-Authentifizierung (2FA) | Google Authenticator–kompatibles TOTP, 8 Wiederherstellungscodes, erzwungen bei Anmeldung |
 | 📷 QR-Code scannen & teilen | QR-Codes scannen zum Hinzufügen von Freunden oder Beitreten von Gruppen mit konfigurierbarem Ablaufdatum |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ Backend (server/)
   Rust (Axum 0.8) — Hochleistungs-Async-Web-Framework
   sqlx + MySQL 8.0 — Benutzer-/Nachrichtenpersistenz
   deadpool-redis + Redis 7 — Online-Präsenz + knotenübergreifendes Routing
-  aws-sdk-s3 — Cloudflare R2 Dateispeicher (S3-kompatible API)
+  aws-sdk-s3 — nur zur schreibgeschützten Migration alter Cloudflare-R2-Daten
   argon2 + jsonwebtoken Authentifizierung
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf
 | `JWT_SECRET` | JWT-Signierungsschlüssel (**in Produktion ändern**) | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | MySQL-Verbindung | — |
 | `REDIS_HOST` / `REDIS_PASS` | Redis-Verbindung | — |
-| `R2_ACCOUNT_ID` | Cloudflare Account-ID | — |
-| `R2_ACCESS_KEY_ID` | R2 API Token Access Key | — |
-| `R2_SECRET_ACCESS_KEY` | R2 API Token Secret Key | — |
-| `R2_BUCKET` | R2 Bucket-Name | — |
-| `R2_PUBLIC_URL` | Öffentliche R2-Basis-URL (optional) | — |
+| `UPLOAD_DIR` | Lokales persistentes Dateiverzeichnis | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | Aufbewahrung von Chat-Anhängen; `0` deaktiviert die Bereinigung | `14` |
+| `R2_*` | Altdaten-Migration; nach dem Hinweis beim Folgestart entfernen | — |
 | `LIVEKIT_URL` | Öffentliche LiveKit-WebSocket-Adresse für alle Anrufe | — |
 | `LIVEKIT_API_KEY` | Gemeinsamer API-Schlüssel für Server und LiveKit | — |
 | `LIVEKIT_API_SECRET` | Gemeinsames API-Secret für Server und LiveKit | — |

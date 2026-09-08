@@ -1,12 +1,12 @@
 🌐 **Autres langues :** [中文](README.md) · [English](README_EN.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Deutsch](README_DE.md) · [Русский](README_RU.md) · [Español](README_ES.md)
 
-Une application de messagerie instantanée chiffrée de bout en bout, style WeChat, avec chiffrement ECDH + XSalsa20-Poly1305 sans état par message, appels vidéo en temps réel, stockage de fichiers Cloudflare R2, support multilingue et clients natifs Android, iOS, Windows et macOS.
+Une application de messagerie instantanée chiffrée de bout en bout, style WeChat, avec chiffrement ECDH + XSalsa20-Poly1305 sans état par message, appels vidéo en temps réel, stockage local persistant, support multilingue et clients natifs Android, iOS, Windows et macOS.
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -63,12 +63,12 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🖥️ Client bureau Windows | Application de bureau Windows native, [télécharger ici](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Client bureau Mac | Application de bureau Mac native, [télécharger ici](https://github.com/619dev/ppp-mac/releases) |
 | 💬 Messagerie enrichie | Texte, images, vidéo, fichiers documents, messages vocaux, 200+ emojis, packs de stickers Telegram, accusés de réception, indicateurs de saisie |
-| 📤 Téléversement de fichiers | Jusqu'à 500 Mo par fichier, Cloudflare R2 ou stockage local, avec animation de progression |
+| 📤 Téléversement de fichiers | Jusqu'à 500 Mo ; médias sociaux permanents et pièces jointes de chat temporaires |
 | 🌐 Moments | Fil social style WeChat : texte + jusqu'à 9 photos ou 1 vidéo (≤ 10 min), likes, commentaires, visibilité par étiquettes |
 | 👤 Profil utilisateur | Page de profil de contact avec contrôles de confidentialité bidirectionnels des Moments |
 | 📰 Fil d'actualité | Fil public style Xiaohongshu — mise en page masonry à deux colonnes, publications anonymes, likes et commentaires |
 | 🏷️ Étiquettes d'amis | Attribuer plusieurs étiquettes par ami (palette de 12 couleurs), filtrer les contacts par étiquette |
-| 🗂️ Stockage d'objets R2 | Cloudflare R2 pour les fichiers image/audio — URL CDN publique optionnelle |
+| 🗂️ Stockage local | Volume persistant avec répertoires permanents et temporaires séparés |
 | 🔑 Authentification à deux facteurs (2FA) | TOTP compatible Google Authenticator, 8 codes de récupération, obligatoire à la connexion |
 | 📷 Scanner et partager des QR codes | Scanner des QR codes pour ajouter des amis ou rejoindre des groupes avec expiration configurable |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ Backend (server/)
   Rust (Axum 0.8) — Framework web asynchrone haute performance
   sqlx + MySQL 8.0 — Persistance des utilisateurs/messages
   deadpool-redis + Redis 7 — Présence en ligne + routage inter-nœuds
-  aws-sdk-s3 — Stockage fichiers Cloudflare R2 (API compatible S3)
+  aws-sdk-s3 — uniquement pour la migration en lecture seule des anciennes données R2
   Authentification argon2 + jsonwebtoken
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ Dans **Profil > Confidentialité des messages**, activez un mot de passe supplé
 | `JWT_SECRET` | Clé de signature JWT (**changer en production**) | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | Connexion MySQL | — |
 | `REDIS_HOST` / `REDIS_PASS` | Connexion Redis | — |
-| `R2_ACCOUNT_ID` | ID de compte Cloudflare | — |
-| `R2_ACCESS_KEY_ID` | Access Key du jeton API R2 | — |
-| `R2_SECRET_ACCESS_KEY` | Secret Key du jeton API R2 | — |
-| `R2_BUCKET` | Nom du bucket R2 | — |
-| `R2_PUBLIC_URL` | URL de base publique R2 (optionnel) | — |
+| `UPLOAD_DIR` | Répertoire local persistant des fichiers | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | Conservation des pièces jointes ; `0` désactive le nettoyage | `14` |
+| `R2_*` | Migration héritée ; supprimer après l’avis au démarrage suivant | — |
 | `LIVEKIT_URL` | URL WebSocket publique LiveKit pour tous les appels | — |
 | `LIVEKIT_API_KEY` | Clé API partagée par le serveur et LiveKit | — |
 | `LIVEKIT_API_SECRET` | Secret API partagé par le serveur et LiveKit | — |

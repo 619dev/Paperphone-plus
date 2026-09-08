@@ -7,6 +7,21 @@ function getBase(): string {
   return localStorage.getItem('serverUrl') || import.meta.env.VITE_API_URL || ''
 }
 
+function legacyFileBaseKey(): string {
+  return `legacyR2PublicUrl:${getBase()}`
+}
+
+export async function initializeLegacyFileMapping(): Promise<void> {
+  try {
+    const res = await fetch(`${getBase()}/api/files/migration-config`)
+    if (!res.ok) return
+    const data = await res.json()
+    if (data.legacy_r2_public_url) {
+      localStorage.setItem(legacyFileBaseKey(), String(data.legacy_r2_public_url).replace(/\/$/, ''))
+    }
+  } catch { /* Older/offline servers keep the last successfully learned mapping. */ }
+}
+
 export async function api<T = any>(
   path: string,
   opts: RequestInit = {}
@@ -126,10 +141,12 @@ export const del = <T = any>(path: string, body?: any) =>
     body: body ? JSON.stringify(body) : undefined,
   })
 
-export async function uploadFile(file: File): Promise<{ url: string; key: string }> {
+export type UploadStorageClass = 'temporary' | 'permanent'
+
+export async function uploadFile(file: File, storageClass: UploadStorageClass = 'temporary'): Promise<{ url: string; key: string }> {
   const form = new FormData()
   form.append('file', file)
-  const res = await post<{ url: string; key: string }>('/api/upload', form)
+  const res = await post<{ url: string; key: string }>(`/api/upload?storage_class=${storageClass}`, form)
   return { ...res, url: normalizeFileUrl(res.url) }
 }
 
@@ -139,7 +156,8 @@ export async function uploadFile(file: File): Promise<{ url: string; key: string
  */
 export function uploadFileWithProgress(
   file: File,
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  storageClass: UploadStorageClass = 'temporary'
 ): Promise<{ url: string; key: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
@@ -169,7 +187,7 @@ export function uploadFileWithProgress(
     xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')))
 
     const token = localStorage.getItem('token')
-    xhr.open('POST', `${getBase()}/api/upload`)
+    xhr.open('POST', `${getBase()}/api/upload?storage_class=${storageClass}`)
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     xhr.send(form)
   })
@@ -184,6 +202,11 @@ export function uploadFileWithProgress(
 export function normalizeFileUrl(url: string | null | undefined): string {
   if (!url) return ''
   const base = getBase()
+  const legacyBase = localStorage.getItem(legacyFileBaseKey())
+  if (legacyBase && (url === legacyBase || url.startsWith(`${legacyBase}/`))) {
+    const key = url.slice(legacyBase.length).replace(/^\//, '').replace(/^uploads\//, '')
+    return `${base}/api/files/uploads/${key}`
+  }
   if (base && url.startsWith('/')) {
     return `${base}${url}`
   }

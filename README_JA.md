@@ -1,12 +1,12 @@
 🌐 **他の言語:** [中文](README.md) · [English](README_EN.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [Русский](README_RU.md) · [Español](README_ES.md)
 
-WeChat スタイルのエンドツーエンド暗号化メッセンジャー。ステートレス ECDH + XSalsa20-Poly1305 によるメッセージごとの暗号化、リアルタイムビデオ通話、Cloudflare R2 ファイルストレージ、多言語サポート、Android・iOS・Windows・macOS ネイティブクライアントに対応。
+WeChat スタイルのエンドツーエンド暗号化メッセンジャー。ステートレス ECDH + XSalsa20-Poly1305 によるメッセージごとの暗号化、リアルタイムビデオ通話、サーバー内ローカル永続ストレージ、多言語サポート、Android・iOS・Windows・macOS ネイティブクライアントに対応。
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -63,12 +63,12 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🖥️ Windows デスクトップクライアント | ネイティブ Windows デスクトップアプリ、[ダウンロードはこちら](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac デスクトップクライアント | ネイティブ Mac デスクトップアプリ、[ダウンロードはこちら](https://github.com/619dev/ppp-mac/releases) |
 | 💬 リッチメッセージ | テキスト、画像、動画、ドキュメントファイル、音声メッセージ、200+ 絵文字、Telegram ステッカーパック、既読確認、入力中インジケーター |
-| 📤 ファイルアップロード | 1 ファイル最大 500MB、Cloudflare R2 またはローカルストレージ、進捗アニメーション付き |
+| 📤 ファイルアップロード | 1 ファイル最大 500MB。プロフィール／投稿メディアは永久保存、チャット添付は期限付き保存 |
 | 🌐 モーメンツ | WeChat スタイルのソーシャルフィード：テキスト + 最大 9 枚の写真または 1 本の動画（≤ 10 分）、いいね、コメント、タグベースの公開範囲設定 |
 | 👤 ユーザープロフィール | 連絡先プロフィールページ、モーメンツの双方向プライバシーコントロール付き |
 | 📰 タイムライン | 小紅書スタイルの公開フィード — 2 列マソンリーレイアウト、匿名投稿、いいね＆コメント |
 | 🏷️ フレンドタグ | 友達に複数タグを付与（12 色パレット）、タグでコンタクトをフィルタリング |
-| 🗂️ R2 オブジェクトストレージ | Cloudflare R2 で画像/音声ファイルを保存 — オプションの公開 CDN URL |
+| 🗂️ ローカルファイルストレージ | 永久ファイルと一時ファイルを分離した永続ボリューム |
 | 🔑 二要素認証 (2FA) | Google Authenticator 互換 TOTP、8 個のリカバリーコード、ログイン時に強制 |
 | 📷 QR コードスキャン＆共有 | QR コードをスキャンして友達追加やグループ参加、有効期限設定可能 |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ PaperPhonePlus は、ローカルのアカウント状態、リアルタイム�
   Rust (Axum 0.8) — 高性能非同期 Web フレームワーク
   sqlx + MySQL 8.0 — ユーザー/メッセージ永続化
   deadpool-redis + Redis 7 — オンラインプレゼンス + ノード間ルーティング
-  aws-sdk-s3 — Cloudflare R2 ファイルストレージ（S3 互換 API）
+  aws-sdk-s3 — 旧 Cloudflare R2 データの読み取り専用移行にのみ使用
   argon2 + jsonwebtoken 認証
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ cd client && npm install && npm run dev  # shared frontend source only
 | `JWT_SECRET` | JWT 署名キー（**本番環境では必ず変更**） | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | MySQL 接続設定 | — |
 | `REDIS_HOST` / `REDIS_PASS` | Redis 接続設定 | — |
-| `R2_ACCOUNT_ID` | Cloudflare アカウント ID | — |
-| `R2_ACCESS_KEY_ID` | R2 API トークンの Access Key | — |
-| `R2_SECRET_ACCESS_KEY` | R2 API トークンの Secret Key | — |
-| `R2_BUCKET` | R2 バケット名 | — |
-| `R2_PUBLIC_URL` | R2 公開ベース URL（オプション） | — |
+| `UPLOAD_DIR` | ローカル永続ファイルディレクトリ | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | チャット添付の保存日数。`0` で削除を無効化 | `14` |
+| `R2_*` | 旧データ移行用。次回起動の案内後に削除可能 | — |
 | `LIVEKIT_URL` | すべての通話で使用する公開 LiveKit WebSocket URL | — |
 | `LIVEKIT_API_KEY` | サーバーと LiveKit で共有する API Key | — |
 | `LIVEKIT_API_SECRET` | サーバーと LiveKit で共有する API Secret | — |

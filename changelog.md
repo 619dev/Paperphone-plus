@@ -4,6 +4,26 @@ All notable changes and new features are recorded here. Historical entries below
 
 所有重要版本改动和新特性统一记录于此。下方历史条目由仓库原有文档迁移而来。
 
+## 2.5.2
+
+- Added private/group chat batch downloads: select up to 20 image, video, voice, or file messages, preserve original filenames when available, and save them locally with progress and partial-failure reporting.
+- Replaced R2 uploads with persistent server-local storage. Avatars, group avatars, Moments, and Timeline media are permanent; private/group chat attachments are isolated and expire after `CHAT_FILE_RETENTION_DAYS` (14 days by default).
+- Added resumable, read-only startup migration from legacy R2 storage. Objects are streamed into temporary files and atomically renamed; R2 originals are never deleted, and a later startup reports when legacy variables may be removed.
+- Added persistent upload volumes to Docker Compose and Zeabur.
+- Unified `UPLOAD_DIR=./uploads` across bare-server, Docker Compose, and Zeabur deployments; the container repairs existing volume ownership at startup and then runs as an unprivileged UID.
+- Updated Docker Compose and Zeabur to track the latest stable LiveKit server image.
+- Updated the application, server, localized documentation, deployment template, and profile-page version display to `2.5.2`.
+
+- 私聊和群聊新增批量下载：可同时选择最多 20 条图片、视频、语音或普通文件消息，尽量保留原始文件名，并显示下载进度及部分失败结果。
+- 文件上传改为服务器本地持久化：用户头像、群头像、朋友圈和时间线媒体永久保存；私聊及群聊附件独立存放，并按 `CHAT_FILE_RETENTION_DAYS` 清理（默认 14 天）。
+- 新增可续跑、只读的 R2 启动迁移：对象以流式方式写入临时文件后原子改名，不删除 R2 原件；后续启动会提示何时可移除旧变量。
+- Docker Compose 与 Zeabur 均增加上传文件持久卷。
+- 裸机、Docker Compose 与 Zeabur 统一使用 `UPLOAD_DIR=./uploads`；容器启动时兼容修复新旧卷权限，随后降权运行服务。
+- Docker Compose 与 Zeabur 的 LiveKit 镜像改为跟随最新稳定版本。
+- 应用、服务端、多语言文档、部署模板及个人信息页面底部版本号统一更新为 `2.5.2`。
+
+---
+
 ## 2.5.1
 
 - Stopped publishing and deploying a standalone Web frontend. Docker Compose and the Zeabur template now deploy only the server, MySQL, Redis, and LiveKit.

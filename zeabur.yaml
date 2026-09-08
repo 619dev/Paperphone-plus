@@ -6,11 +6,11 @@ metadata:
 
 spec:
   description: >-
-    PaperPhonePlus v2.5.1, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
+    PaperPhonePlus v2.5.2, a WeChat-style end-to-end encrypted IM app built with React + Rust (Axum),
     featuring hybrid X25519 + ML-KEM-768 E2EE, group E2E encryption (Signal-style Sender Keys),
     LiveKit SFU voice/video calls (1:1 and meetings up to 100 participants), real-time voice changer,
     reliable cursor-based message synchronization, durable device sessions, eight password-protected text appearances, SOCKS5/HTTP/HTTPS proxy support,
-    Cloudflare R2 file storage, 8-language i18n, and native Android, iOS, Windows, and macOS clients — fully self-hostable.
+    persistent server-local file storage, 8-language i18n, and native Android, iOS, Windows, and macOS clients — fully self-hostable.
   icon: https://raw.githubusercontent.com/619dev/Paperphone-plus/main/client/public/icons/icon-512.png
   tags:
     - Chat
@@ -23,7 +23,7 @@ spec:
     Rewritten with **React 19 + TypeScript + Vite** frontend and **Rust (Axum)** backend
     for maximum performance and type safety.
 
-    ## Security — v2.5.1
+    ## Security — v2.5.2
     - **Hybrid X25519 + ML-KEM-768 + XSalsa20-Poly1305** — message headers identify the actual `PQ v2`, downgraded `X25519 ↓`, or group `SK vN` protocol
     - **Fail-closed encrypted sending** — encryption, key-distribution, and secure-storage failures stop the send instead of falling back to plaintext
     - **Zero-knowledge encryption scope** — encrypted conversation bodies are stored as ciphertext; the server still processes essential account, contact/group, routing, and push metadata
@@ -47,13 +47,13 @@ spec:
     - 🔔 **Native Push Notifications** — FCM + ntfy + APNS for Android and iOS clients
     - 🌐 **Multi-language** — Chinese, English, Japanese, Korean, French, German, Russian, Spanish
     - 💬 Rich messaging: text, images, video, document files (PDF/DOCX/XLSX etc. with type icons), voice, 200+ emoji (8 categories), Telegram sticker packs, delivery receipts, typing indicators
-    - 🗂️ **Cloudflare R2** file storage (images, voice & video)
+    - 🗂️ **Local persistent storage** for permanent social media and expiring chat attachments
     - 🏷️ **Friend Tags** — tag-based contact filtering & Moments visibility control
     - 🎭 **Telegram Sticker Packs** — dynamic sticker packs with configurable pack list (13 built-in defaults), unlimited quantity
     - 🔑 **Two-Factor Auth (2FA)** — Google Authenticator TOTP, 8 recovery codes
     - 📷 **QR Code Scan & Share** — scan QR to add friends or join groups; group QR codes with configurable expiry (1 week / 1 month / 3 months)
     - 👫 **Friend System** — friend requests require approval with up to 512-char message; custom nicknames; multi-tag grouping
-    - 📤 **File Upload** — up to 500MB per file, Cloudflare R2 or local storage, with progress animation
+    - 📤 **File Upload** — up to 500MB per file, stored on the server with progress animation
     - 🌐 **Proxy Settings** — SOCKS5 / HTTP / HTTPS proxy support, configurable on login and settings pages (address, port, username, password)
     - 🛡️ **Content Moderation** — User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA)
     - 🔧 **Admin Panel** — Embedded web dashboard (`/admin`, path customizable via `ADMIN_PATH`), password-protected, review reports, delete content, ban users — 8 languages
@@ -61,7 +61,7 @@ spec:
     ## After Deployment
     1. Record the public domain assigned to the **server** service and enter it in an official native client.
     2. Register an account — cryptographic keys are generated locally on your device.
-    3. (Optional) Configure Cloudflare R2 for image/voice/video uploads — set `R2_*` variables on the **server** service.
+    3. Existing R2 deployments should keep `R2_*` during the automatic read-only migration and remove them only after the later startup notice.
     4. (Optional) Enable push notifications — set `FCM_*` for native Android (Capacitor), `APNS_*` for native iOS.
     5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
@@ -108,8 +108,8 @@ spec:
 
     - key: R2_ACCOUNT_ID
       type: STRING
-      name: Cloudflare R2 Account ID
-      description: Your Cloudflare account ID (found in Cloudflare Dashboard → right sidebar).
+      name: Legacy R2 Account ID
+      description: Migration only. Keep temporarily when upgrading an existing R2 deployment.
 
     - key: R2_ACCESS_KEY_ID
       type: STRING
@@ -133,6 +133,11 @@ spec:
         Public base URL for the bucket, e.g. https://pub-xxx.r2.dev or your
         custom domain. If set, files are served directly from R2/CDN.
         Leave blank to proxy files through the server.
+
+    - key: CHAT_FILE_RETENTION_DAYS
+      type: STRING
+      name: Chat file retention days
+      description: Days to retain files sent in private or group chats. Defaults to 14; use 0 to disable cleanup.
 
     - key: MYSQL_ROOT_PASSWORD
       type: STRING
@@ -399,7 +404,7 @@ spec:
         - Redis
       spec:
         source:
-          image: livekit/livekit-server:v1.9.6
+          image: livekit/livekit-server:latest
         ports:
           - id: web
             port: 7880
@@ -443,7 +448,9 @@ spec:
           PORT:
             default: "3000"
           UPLOAD_DIR:
-            default: /app/uploads
+            default: ./uploads
+          CHAT_FILE_RETENTION_DAYS:
+            default: ${CHAT_FILE_RETENTION_DAYS}
           JWT_SECRET:
             default: ${JWT_SECRET}
           DB_HOST:
@@ -525,9 +532,9 @@ spec:
 localization:
   zh-CN:
     description: >-
-      PaperPhonePlus v2.5.1 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
+      PaperPhonePlus v2.5.2 微信风格端对端加密即时通讯 App（React + Rust），支持 X25519 + ML-KEM-768 混合加密、群聊 Sender Key 端到端加密、
       消息游标可靠同步与长期设备会话、LiveKit SFU 单聊与百人会议、实时变声、8 种额外密码保护的文本外观、SOCKS5/HTTP/HTTPS 代理、
-      Cloudflare R2 文件存储、8 种语言及 Android、iOS、Windows、macOS 原生客户端，完全可自建。
+      服务器本地持久化文件存储、8 种语言及 Android、iOS、Windows、macOS 原生客户端，完全可自建。
     readme: |-
       # PaperPhonePlus
 
@@ -535,7 +542,7 @@ localization:
       使用 **React 19 + TypeScript + Vite** 前端和 **Rust (Axum)** 后端重写，
       获得极致性能和类型安全。
 
-      ## 安全模型 — v2.5.1
+      ## 安全模型 — v2.5.2
       - **X25519 + ML-KEM-768 + XSalsa20-Poly1305 混合加密** — 消息准确标示实际采用的 `PQ v2`、降级后的 `X25519 ↓` 或群聊 `SK vN` 协议
       - **加密发送失败即停止** — 加密、密钥分发或安全存储失败时不会回退为明文发送
       - **零知识加密范围** — 加密会话正文以密文存储；服务器仍会处理账号、好友/群组、路由和推送等必要元数据
@@ -560,13 +567,13 @@ localization:
       - 🌐 **多语言** — 中文、英文、日语、韩语、法语、德语、俄语、西班牙语
       - 📱 **iOS 永久免签** — Safari「添加到主屏幕」，无需企业证书
       - 💬 富文本消息、图片、视频、文档文件（PDF/DOCX/XLSX 等带类型图标）、语音、Emoji（200+，8 分类）、Telegram 贴纸包、送达回执、打字状态
-      - 🗂️ **Cloudflare R2** 对象存储（图片、语音与视频）
+      - 🗂️ **本地持久化存储**，永久媒体与聊天临时附件分目录保存
       - 🏷️ **好友标签** — 标签分类筛选通讯录 + 朋友圈可见性控制
       - 🎭 **Telegram 贴纸包** — 动态贴纸包管理，可自定义包列表（内置 13 个默认包），数量无上限
       - 🔑 **两步验证 (2FA)** — Google Authenticator TOTP，8 个恢复码
       - 📷 **扫码加好友/入群** — 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1周/1月/3月）
       - 👫 **好友系统** — 添加好友需对方审核，支持 512 字验证消息；备注名称；好友标签分组
-      - 📤 **文件上传** — 单文件最大 500MB，支持 Cloudflare R2 或本地存储，带进度条动画
+      - 📤 **文件上传** — 单文件最大 500MB，存储于服务器持久卷，带进度条动画
       - 🌐 **代理设置** — 支持 SOCKS5 / HTTP / HTTPS 代理协议，登录页和设置页均可配置（地址、端口、用户名、密码）
       - 🛡️ **内容审核** — 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA
       - 🔧 **管理后台** — 内嵌 Web 管理面板（`/admin`，路径可通过 `ADMIN_PATH` 自定义），密码保护，审核举报、删除内容、封禁用户，支持 8 种语言
@@ -574,7 +581,7 @@ localization:
       ## 部署后操作
       1. 记录 **server** 服务的公网域名，并在官方原生客户端中填写该地址。
       2. 注册账号 — 密钥在本地设备生成。
-      3. （可选）在 **server** 服务设置 `R2_*` 变量，启用图片/语音/视频上传功能。
+      3. 旧 R2 部署升级时暂时保留 `R2_*`，自动只读迁移完成并在后续启动看到提示后再删除。
       4. （可选）设置 `FCM_*` 启用原生 Android 推送（Capacitor），`APNS_*` 启用 iOS 原生推送。
       5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。

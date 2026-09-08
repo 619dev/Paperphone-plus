@@ -1,12 +1,12 @@
 🌐 **Other Languages:** [中文](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [Русский](README_RU.md) · [Español](README_ES.md)
 
-A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + XSalsa20-Poly1305 per-message encryption, real-time video calls, Cloudflare R2 file storage, multi-language support, and native Android, iOS, Windows, and macOS clients.
+A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + XSalsa20-Poly1305 per-message encryption, real-time video calls, server-local file storage, multi-language support, and native Android, iOS, Windows, and macOS clients.
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.1-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -62,13 +62,13 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 📱 iOS Native App | Available on the [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), with APNS push notification support |
 | 🖥️ Windows Desktop Client | Native Windows desktop app, [download here](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac Desktop Client | Native Mac desktop app, [download here](https://github.com/619dev/ppp-mac/releases) |
-| 💬 Rich Messaging | Text, images, video, document files, voice messages, 200+ emoji, Telegram sticker packs, delivery receipts, typing indicators |
-| 📤 File Upload | Up to 500MB per file, Cloudflare R2 or local storage, with progress animation |
+| 💬 Rich Messaging | Text, images, video, documents, voice, emoji, Telegram stickers and receipts; batch-download up to 20 file messages |
+| 📤 File Upload | Up to 500MB per file; permanent profile/social media and expiring chat attachments |
 | 🌐 Moments | WeChat-style social feed: text + up to 9 photos or 1 video (≤ 10 min), likes, comments, tag-based visibility |
 | 👤 User Profile | Contact profile page with bidirectional Moments privacy controls |
 | 📰 Timeline | Xiaohongshu-style public feed — dual-column masonry layout, anonymous posting, likes & comments |
 | 🏷️ Friend Tags | Assign multiple tags to friends (12-color palette), filter contacts by tag |
-| 🗂️ R2 Object Storage | Cloudflare R2 for image/voice files — optional public CDN URL |
+| 🗂️ Local File Storage | Persistent media volume with isolated permanent and temporary directories |
 | 🔑 Two-Factor Auth (2FA) | Google Authenticator–compatible TOTP, 8 recovery codes, enforced at login |
 | 📷 QR Code Scan & Share | Scan QR codes to add friends or join groups with configurable expiry |
 | 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
@@ -105,7 +105,7 @@ Backend (server/)
   Rust (Axum 0.8) — High-performance async web framework
   sqlx + MySQL 8.0 — User/message persistence
   deadpool-redis + Redis 7 — Online presence + cross-node routing
-  aws-sdk-s3 — Cloudflare R2 file storage (S3-compatible API)
+  aws-sdk-s3 — read-only migration of legacy Cloudflare R2 data
   argon2 + jsonwebtoken authentication
 
 Shared frontend source (client/, not deployed independently)
@@ -189,11 +189,9 @@ Under **Profile > Message privacy**, you can enable an extra password for every 
 | `JWT_SECRET` | JWT signing key (**change in production**) | dev_secret |
 | `DB_HOST` / `DB_PASS` / `DB_NAME` | MySQL connection | — |
 | `REDIS_HOST` / `REDIS_PASS` | Redis connection | — |
-| `R2_ACCOUNT_ID` | Cloudflare account ID | — |
-| `R2_ACCESS_KEY_ID` | R2 API token access key | — |
-| `R2_SECRET_ACCESS_KEY` | R2 API token secret key | — |
-| `R2_BUCKET` | R2 bucket name | — |
-| `R2_PUBLIC_URL` | R2 public base URL (optional) | — |
+| `UPLOAD_DIR` | Persistent local file directory | `./uploads` |
+| `CHAT_FILE_RETENTION_DAYS` | Private/group chat attachment retention; `0` disables cleanup | `14` |
+| `R2_*` | Legacy read-only migration settings; remove after the post-migration startup notice | — |
 | `LIVEKIT_URL` | Public LiveKit WebSocket URL used by all calls | — |
 | `LIVEKIT_API_KEY` | API key shared by the server and LiveKit | — |
 | `LIVEKIT_API_SECRET` | API secret shared by the server and LiveKit | — |
