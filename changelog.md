@@ -6,6 +6,7 @@ All notable changes and new features are recorded here. Historical entries below
 
 ## 2.5.2
 
+- Removed preset `R2_*` variables from Docker Compose and Zeabur while retaining the server's legacy read-only migration and the client's legacy object-storage URL compatibility.
 - Added private/group chat batch downloads: select up to 20 image, video, voice, or file messages, preserve original filenames when available, and save them locally with progress and partial-failure reporting.
 - Replaced R2 uploads with persistent server-local storage. Avatars, group avatars, Moments, and Timeline media are permanent; private/group chat attachments are isolated and expire after `CHAT_FILE_RETENTION_DAYS` (14 days by default).
 - Added resumable, read-only startup migration from legacy R2 storage. Objects are streamed into temporary files and atomically renamed; R2 originals are never deleted, and a later startup reports when legacy variables may be removed.
@@ -15,6 +16,7 @@ All notable changes and new features are recorded here. Historical entries below
 - Updated the application, server, localized documentation, deployment template, and profile-page version display to `2.5.2`.
 
 - 私聊和群聊新增批量下载：可同时选择最多 20 条图片、视频、语音或普通文件消息，尽量保留原始文件名，并显示下载进度及部分失败结果。
+- 从 Docker Compose 与 Zeabur 中移除预置的 `R2_*` 变量，同时保留服务端旧 R2 只读迁移及客户端旧对象存储 URL 兼容能力。
 - 文件上传改为服务器本地持久化：用户头像、群头像、朋友圈和时间线媒体永久保存；私聊及群聊附件独立存放，并按 `CHAT_FILE_RETENTION_DAYS` 清理（默认 14 天）。
 - 新增可续跑、只读的 R2 启动迁移：对象以流式方式写入临时文件后原子改名，不删除 R2 原件；后续启动会提示何时可移除旧变量。
 - Docker Compose 与 Zeabur 均增加上传文件持久卷。

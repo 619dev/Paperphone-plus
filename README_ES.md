@@ -191,7 +191,7 @@ En **Perfil > Privacidad de los mensajes**, puedes activar una contraseña adici
 | `REDIS_HOST` / `REDIS_PASS` | Conexión Redis | — |
 | `UPLOAD_DIR` | Directorio local persistente de archivos | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | Retención de adjuntos de chat; `0` desactiva la limpieza | `14` |
-| `R2_*` | Migración heredada; eliminar tras el aviso del siguiente arranque | — |
+| `R2_*` | Solo para migrar R2 heredado; ya no se incluye en plantillas, configúrelo manualmente durante la migración y elimínelo después | — |
 | `LIVEKIT_URL` | URL WebSocket pública de LiveKit para todas las llamadas | — |
 | `LIVEKIT_API_KEY` | Clave API compartida por el servidor y LiveKit | — |
 | `LIVEKIT_API_SECRET` | Secreto API compartido por el servidor y LiveKit | — |

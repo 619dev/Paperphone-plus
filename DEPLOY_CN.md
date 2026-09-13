@@ -4,7 +4,7 @@ PaperPhonePlus 的自托管部署只包含 `server`、MySQL、Redis 和 LiveKit�
 
 客户端登录时填写公开的 **server 后端地址**。`LIVEKIT_URL` 由 server 下发，用于 1:1 和群组音视频通话。
 
-上传文件保存在 server 的持久卷中。头像、群头像、朋友圈及时间线媒体永久保存；私聊和群聊附件由 `CHAT_FILE_RETENTION_DAYS` 控制，默认 14 天。升级自 R2 的实例第一次启动会只读复制全部对象到本地，成功后的下一次启动会提示可以删除 `R2_*` 变量；迁移程序不会删除 R2 原件。
+上传文件保存在 server 的持久卷中。头像、群头像、朋友圈及时间线媒体永久保存；私聊和群聊附件由 `CHAT_FILE_RETENTION_DAYS` 控制，默认 14 天。旧 R2 实例仍可在升级时手动向 server 传入 `R2_*` 环境变量，以触发只读自动迁移；Docker Compose 和 Zeabur 模板不再预置这些变量，迁移完成后应删除。
 
 ## 方式一：Zeabur 模板
 
@@ -38,7 +38,7 @@ LIVEKIT_API_KEY=请替换为通话API密钥
 LIVEKIT_API_SECRET=请替换为至少32字节的随机密钥
 ```
 
-确保数据库、Redis 和 LiveKit 的密码/密钥与 `docker-compose.yml` 使用的值一致。R2、FCM、ntfy、APNS 等配置均为按需启用。
+确保数据库、Redis 和 LiveKit 的密码/密钥与 `docker-compose.yml` 使用的值一致。FCM、ntfy、APNS 等配置均为按需启用。
 
 ### 启动后端服务
 

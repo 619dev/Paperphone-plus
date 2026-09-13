@@ -105,7 +105,7 @@ Backend (server/)
   Rust (Axum 0.8) — High-performance async web framework
   sqlx + MySQL 8.0 — User/message persistence
   deadpool-redis + Redis 7 — Online presence + cross-node routing
-  aws-sdk-s3 — read-only migration of legacy Cloudflare R2 data
+  aws-sdk-s3 — read-only migration of legacy Cloudflare R2 data only
   argon2 + jsonwebtoken authentication
 
 Shared frontend source (client/, not deployed independently)
@@ -191,7 +191,7 @@ Under **Profile > Message privacy**, you can enable an extra password for every 
 | `REDIS_HOST` / `REDIS_PASS` | Redis connection | — |
 | `UPLOAD_DIR` | Persistent local file directory | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | Private/group chat attachment retention; `0` disables cleanup | `14` |
-| `R2_*` | Legacy read-only migration settings; remove after the post-migration startup notice | — |
+| `R2_*` | Legacy R2 migration only; no longer preset by deployment templates, supply manually while migrating and remove afterward | — |
 | `LIVEKIT_URL` | Public LiveKit WebSocket URL used by all calls | — |
 | `LIVEKIT_API_KEY` | API key shared by the server and LiveKit | — |
 | `LIVEKIT_API_SECRET` | API secret shared by the server and LiveKit | — |

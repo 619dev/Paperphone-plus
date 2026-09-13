@@ -552,7 +552,7 @@ paperphoneplus/
 | `REDIS_HOST` / `REDIS_PASS` | Redis 连接配置 | — |
 | `UPLOAD_DIR` | 本地文件持久化目录 | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | 私聊及群聊附件保留天数；设为 `0` 禁用清理 | `14` |
-| `R2_ACCOUNT_ID` 等 `R2_*` | 旧 R2 数据只读迁移参数；迁移完成并在下次启动看到提示后可删除 | — |
+| `R2_ACCOUNT_ID` 等 `R2_*` | 仅供旧 R2 实例迁移；部署模板不再预置，迁移时需手动传入，完成后删除 | — |
 | `LIVEKIT_URL` | 所有音视频通话使用的 LiveKit 公网 WebSocket 地址 | — |
 | `LIVEKIT_API_KEY` | 服务端与 LiveKit 共享的 API Key | — |
 | `LIVEKIT_API_SECRET` | 服务端与 LiveKit 共享的 API Secret | — |

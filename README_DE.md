@@ -191,7 +191,7 @@ Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf
 | `REDIS_HOST` / `REDIS_PASS` | Redis-Verbindung | — |
 | `UPLOAD_DIR` | Lokales persistentes Dateiverzeichnis | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | Aufbewahrung von Chat-Anhängen; `0` deaktiviert die Bereinigung | `14` |
-| `R2_*` | Altdaten-Migration; nach dem Hinweis beim Folgestart entfernen | — |
+| `R2_*` | Nur für die Migration alter R2-Daten; in Bereitstellungsvorlagen nicht mehr vorbelegt, während der Migration manuell setzen und danach entfernen | — |
 | `LIVEKIT_URL` | Öffentliche LiveKit-WebSocket-Adresse für alle Anrufe | — |
 | `LIVEKIT_API_KEY` | Gemeinsamer API-Schlüssel für Server und LiveKit | — |
 | `LIVEKIT_API_SECRET` | Gemeinsames API-Secret für Server und LiveKit | — |

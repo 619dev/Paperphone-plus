@@ -191,7 +191,7 @@ cd client && npm install && npm run dev  # shared frontend source only
 | `REDIS_HOST` / `REDIS_PASS` | Redis 연결 정보 | — |
 | `UPLOAD_DIR` | 로컬 영구 파일 디렉터리 | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | 채팅 첨부 보존 기간, `0`은 정리 비활성화 | `14` |
-| `R2_*` | 기존 데이터 마이그레이션용, 다음 시작 안내 후 제거 가능 | — |
+| `R2_*` | 기존 R2 마이그레이션 전용. 배포 템플릿에는 더 이상 포함되지 않으므로 마이그레이션 중 수동 설정 후 완료하면 제거 | — |
 | `LIVEKIT_URL` | 모든 통화에 사용하는 공개 LiveKit WebSocket URL | — |
 | `LIVEKIT_API_KEY` | 서버와 LiveKit이 공유하는 API Key | — |
 | `LIVEKIT_API_SECRET` | 서버와 LiveKit이 공유하는 API Secret | — |

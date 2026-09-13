@@ -61,7 +61,7 @@ spec:
     ## After Deployment
     1. Record the public domain assigned to the **server** service and enter it in an official native client.
     2. Register an account — cryptographic keys are generated locally on your device.
-    3. Existing R2 deployments should keep `R2_*` during the automatic read-only migration and remove them only after the later startup notice.
+    3. Existing R2 deployments can still migrate automatically: manually add the legacy `R2_*` variables to the server service for the migration, then remove them after the completion notice. They are no longer preset by this template.
     4. (Optional) Enable push notifications — set `FCM_*` for native Android (Capacitor), `APNS_*` for native iOS.
     5. (Optional) Enable Telegram sticker packs — set `TELEGRAM_BOT_TOKEN` and optionally `STICKER_PACKS`.
     6. (Optional) Access the admin panel at `/admin` (or custom `ADMIN_PATH`) to moderate user reports. Set `ADMIN_PASSWORD` for production security.
@@ -105,34 +105,6 @@ spec:
       type: STRING
       name: LiveKit API Secret
       description: A random secret of at least 32 characters shared by server and LiveKit.
-
-    - key: R2_ACCOUNT_ID
-      type: STRING
-      name: Legacy R2 Account ID
-      description: Migration only. Keep temporarily when upgrading an existing R2 deployment.
-
-    - key: R2_ACCESS_KEY_ID
-      type: STRING
-      name: R2 Access Key ID
-      description: R2 API token access key (R2 → Manage API tokens → Create token).
-
-    - key: R2_SECRET_ACCESS_KEY
-      type: STRING
-      name: R2 Secret Access Key
-      description: R2 API token secret key paired with the access key above.
-
-    - key: R2_BUCKET
-      type: STRING
-      name: R2 Bucket Name
-      description: Name of the R2 bucket to store uploaded files (e.g. paperphoneplus).
-
-    - key: R2_PUBLIC_URL
-      type: STRING
-      name: R2 Public URL (optional)
-      description: >-
-        Public base URL for the bucket, e.g. https://pub-xxx.r2.dev or your
-        custom domain. If set, files are served directly from R2/CDN.
-        Leave blank to proxy files through the server.
 
     - key: CHAT_FILE_RETENTION_DAYS
       type: STRING
@@ -469,16 +441,6 @@ spec:
             default: ${REDIS_PORT}
           REDIS_PASS:
             default: ${REDIS_PASS}
-          R2_ACCOUNT_ID:
-            default: ${R2_ACCOUNT_ID}
-          R2_ACCESS_KEY_ID:
-            default: ${R2_ACCESS_KEY_ID}
-          R2_SECRET_ACCESS_KEY:
-            default: ${R2_SECRET_ACCESS_KEY}
-          R2_BUCKET:
-            default: ${R2_BUCKET}
-          R2_PUBLIC_URL:
-            default: ${R2_PUBLIC_URL}
           FCM_PROJECT_ID:
             default: ${FCM_PROJECT_ID}
           FCM_CLIENT_EMAIL:
@@ -581,7 +543,7 @@ localization:
       ## 部署后操作
       1. 记录 **server** 服务的公网域名，并在官方原生客户端中填写该地址。
       2. 注册账号 — 密钥在本地设备生成。
-      3. 旧 R2 部署升级时暂时保留 `R2_*`，自动只读迁移完成并在后续启动看到提示后再删除。
+      3. 旧 R2 实例仍可自动迁移：在迁移期间手动向 server 服务添加原有 `R2_*` 变量，看到完成提示后删除；本模板不再预置这些变量。
       4. （可选）设置 `FCM_*` 启用原生 Android 推送（Capacitor），`APNS_*` 启用 iOS 原生推送。
       5. （可选）设置 `TELEGRAM_BOT_TOKEN` 和 `STICKER_PACKS` 启用 Telegram 贴纸包功能。
       6. （可选）访问 `/admin`（或自定义 `ADMIN_PATH`）进入管理后台审核举报。生产环境请设置 `ADMIN_PASSWORD`。

@@ -191,7 +191,7 @@ Dans **Profil > Confidentialité des messages**, activez un mot de passe supplé
 | `REDIS_HOST` / `REDIS_PASS` | Connexion Redis | — |
 | `UPLOAD_DIR` | Répertoire local persistant des fichiers | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | Conservation des pièces jointes ; `0` désactive le nettoyage | `14` |
-| `R2_*` | Migration héritée ; supprimer après l’avis au démarrage suivant | — |
+| `R2_*` | Migration R2 héritée uniquement ; non prédéfini dans les modèles, à fournir manuellement pendant la migration puis à supprimer | — |
 | `LIVEKIT_URL` | URL WebSocket publique LiveKit pour tous les appels | — |
 | `LIVEKIT_API_KEY` | Clé API partagée par le serveur et LiveKit | — |
 | `LIVEKIT_API_SECRET` | Secret API partagé par le serveur et LiveKit | — |

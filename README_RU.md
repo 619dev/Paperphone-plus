@@ -191,7 +191,7 @@ cd client && npm install && npm run dev  # shared frontend source only
 | `REDIS_HOST` / `REDIS_PASS` | Подключение к Redis | — |
 | `UPLOAD_DIR` | Локальный постоянный каталог файлов | `./uploads` |
 | `CHAT_FILE_RETENTION_DAYS` | Хранение вложений чата; `0` отключает очистку | `14` |
-| `R2_*` | Миграция старых данных; удалить после уведомления при следующем запуске | — |
+| `R2_*` | Только для миграции старых R2-данных; больше не задаётся шаблонами, укажите вручную на время миграции и удалите после | — |
 | `LIVEKIT_URL` | Публичный WebSocket URL LiveKit для всех звонков | — |
 | `LIVEKIT_API_KEY` | API Key, общий для сервера и LiveKit | — |
 | `LIVEKIT_API_SECRET` | API Secret, общий для сервера и LiveKit | — |
