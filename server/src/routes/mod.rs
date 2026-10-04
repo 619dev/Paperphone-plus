@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use axum::Router;
 
+pub mod home;
 pub mod auth;
 pub mod users;
 pub mod friends;

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperPhonePlus</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f3f6f8;color:#172d38}*{box-sizing:border-box}body{margin:0;padding:32px 20px}main{max-width:860px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:32px}.brand{font-size:22px;font-weight:750;color:#087e83}select{font:inherit;padding:8px;border:1px solid #bccdd2;border-radius:8px;background:#fff;color:inherit}label{font-size:14px}article{background:#fff;border:1px solid #dce6e9;border-radius:20px;padding:clamp(24px,5vw,44px)}h1{font-size:clamp(26px,4vw,36px);line-height:1.3;margin:0 0 20px}.notice{border-left:4px solid #d89624;background:#fff6e6;padding:16px 20px;border-radius:6px;line-height:1.8}p{line-height:1.7}.address{margin:24px 0}input{display:block;width:100%;font:inherit;margin-top:8px;padding:14px;border:1px solid #bccdd2;border-radius:10px;background:#f3f6f8;color:inherit}h2{font-size:22px;margin-top:36px}.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.feature{padding:18px;background:#f3f6f8;border-radius:12px}.feature h3{font-size:17px;margin:0 0 8px}.feature p{margin:0;font-size:15px;color:#506874}@media(max-width:560px){body{padding:20px 14px}.features{grid-template-columns:1fr}}@media(prefers-color-scheme:dark){:root{background:#101c24;color:#e3eef2}article,select{background:#182a34;border-color:#38505d}.notice{background:#382f20}.feature,input{background:#223640}.feature p{color:#bbced6}.brand{color:#69d7ce}}
+</style>
+</head>
+<body>
+<main>
+<header><span class="brand">PaperPhonePlus</span><label><span data-i18n="14">语言</span> <select id="language"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="ru">Русский</option><option value="es">Español</option></select></label></header>
+<article>
+<h1 data-i18n="0">使用 App 连接此服务器</h1>
+<p class="notice" data-i18n="1">您看到这个页面说明，您错误地将地址输入了浏览器。您应该将网址输入 App 来使用。</p>
+<p data-i18n="2">打开 PaperPhonePlus App，在服务器地址设置中输入以下网址，然后登录或注册。</p>
+<div class="address"><label for="server-url" data-i18n="3">服务器网址</label><input id="server-url" type="url" readonly dir="ltr"></div>
+<h2 data-i18n="4">关于 PaperPhonePlus</h2>
+<p data-i18n="5">PaperPhonePlus 是一款支持自托管的即时通讯应用，可在 Android、iOS、Windows 和 macOS 上使用。</p>
+<div class="features"><section class="feature"><h3 data-i18n="6">加密聊天</h3><p data-i18n="7">支持端对端加密私聊和加密群聊。</p></section>
+<section class="feature"><h3 data-i18n="8">丰富的消息</h3><p data-i18n="9">发送文字、图片、视频、文件、语音和贴纸。</p></section>
+<section class="feature"><h3 data-i18n="10">语音与视频通话</h3><p data-i18n="11">支持一对一通话和群组会议。</p></section>
+<section class="feature"><h3 data-i18n="12">分享与交流</h3><p data-i18n="13">通过朋友圈和公开时间线分享动态。</p></section>
+</div>
+</article>
+</main>
+<script>
+const translations = {"zh": ["使用 App 连接此服务器", "您看到这个页面说明，您错误地将地址输入了浏览器。您应该将网址输入 App 来使用。", "打开 PaperPhonePlus App，在服务器地址设置中输入以下网址，然后登录或注册。", "服务器网址", "关于 PaperPhonePlus", "PaperPhonePlus 是一款支持自托管的即时通讯应用，可在 Android、iOS、Windows 和 macOS 上使用。", "加密聊天", "支持端对端加密私聊和加密群聊。", "丰富的消息", "发送文字、图片、视频、文件、语音和贴纸。", "语音与视频通话", "支持一对一通话和群组会议。", "分享与交流", "通过朋友圈和公开时间线分享动态。", "语言"], "en": ["Connect to this server in the app", "If you see this page, you have entered the address in your browser by mistake. Enter this URL in the app to use it.", "Open PaperPhonePlus, enter the URL below in the server address settings, then sign in or register.", "Server URL", "About PaperPhonePlus", "PaperPhonePlus is a self-hostable messaging app for Android, iOS, Windows and macOS.", "Encrypted chats", "End-to-end encrypted private chats and encrypted group chats.", "Rich messaging", "Send text, photos, videos, files, voice messages and stickers.", "Voice and video calls", "Make one-to-one calls and join group meetings.", "Share and connect", "Share updates through Moments and the public timeline.", "Language"], "ja": ["アプリでこのサーバーに接続", "このページが表示された場合、誤ってブラウザーにアドレスを入力しています。利用するには、この URL をアプリに入力してください。", "PaperPhonePlus を開き、サーバーアドレスの設定に下記の URL を入力して、ログインまたは登録してください。", "サーバー URL", "PaperPhonePlus について", "PaperPhonePlus は、Android、iOS、Windows、macOS に対応したセルフホスト可能なメッセージアプリです。", "暗号化チャット", "エンドツーエンド暗号化の個人チャットと暗号化グループチャットに対応。", "多彩なメッセージ", "テキスト、写真、動画、ファイル、音声メッセージ、ステッカーを送信。", "音声・ビデオ通話", "個別通話とグループ会議に対応。", "共有と交流", "モーメンツや公開タイムラインで近況を共有。", "言語"], "ko": ["앱에서 이 서버에 연결하세요", "이 페이지가 보인다면 주소를 브라우저에 잘못 입력하신 것입니다. 이용하려면 이 URL을 앱에 입력하세요.", "PaperPhonePlus를 열고 서버 주소 설정에 아래 URL을 입력한 다음 로그인하거나 가입하세요.", "서버 URL", "PaperPhonePlus 소개", "PaperPhonePlus는 Android, iOS, Windows, macOS에서 사용할 수 있는 자체 호스팅 메신저 앱입니다.", "암호화 채팅", "종단간 암호화 개인 채팅과 암호화 그룹 채팅을 지원합니다.", "다양한 메시지", "텍스트, 사진, 동영상, 파일, 음성 메시지와 스티커를 보내세요.", "음성 및 영상 통화", "일대일 통화와 그룹 회의를 지원합니다.", "공유와 소통", "모멘트와 공개 타임라인에서 소식을 공유하세요.", "언어"], "fr": ["Connectez-vous à ce serveur dans l’application", "Si vous voyez cette page, vous avez saisi l’adresse dans votre navigateur par erreur. Saisissez cette URL dans l’application pour l’utiliser.", "Ouvrez PaperPhonePlus, saisissez l’URL ci-dessous dans les paramètres de l’adresse du serveur, puis connectez-vous ou inscrivez-vous.", "URL du serveur", "À propos de PaperPhonePlus", "PaperPhonePlus est une application de messagerie auto-hébergeable pour Android, iOS, Windows et macOS.", "Conversations chiffrées", "Discussions privées chiffrées de bout en bout et discussions de groupe chiffrées.", "Messages variés", "Envoyez des textes, photos, vidéos, fichiers, messages vocaux et autocollants.", "Appels audio et vidéo", "Passez des appels individuels et participez à des réunions de groupe.", "Partage et échanges", "Partagez des nouvelles dans Moments et le fil public.", "Langue"], "de": ["In der App mit diesem Server verbinden", "Wenn Sie diese Seite sehen, haben Sie die Adresse versehentlich im Browser eingegeben. Geben Sie diese URL in der App ein, um sie zu verwenden.", "Öffnen Sie PaperPhonePlus, geben Sie die folgende URL in den Einstellungen für die Serveradresse ein und melden Sie sich an oder registrieren Sie sich.", "Server-URL", "Über PaperPhonePlus", "PaperPhonePlus ist eine selbst hostbare Messaging-App für Android, iOS, Windows und macOS.", "Verschlüsselte Chats", "Ende-zu-Ende-verschlüsselte private Chats und verschlüsselte Gruppenchats.", "Vielfältige Nachrichten", "Senden Sie Texte, Fotos, Videos, Dateien, Sprachnachrichten und Sticker.", "Sprach- und Videoanrufe", "Führen Sie Einzelanrufe und nehmen Sie an Gruppenkonferenzen teil.", "Teilen und austauschen", "Teilen Sie Neuigkeiten über Moments und die öffentliche Timeline.", "Sprache"], "ru": ["Подключитесь к серверу через приложение", "Если вы видите эту страницу, вы по ошибке ввели адрес в браузере. Для использования введите этот URL в приложении.", "Откройте PaperPhonePlus, введите URL ниже в настройках адреса сервера, затем войдите или зарегистрируйтесь.", "URL сервера", "О PaperPhonePlus", "PaperPhonePlus — мессенджер для Android, iOS, Windows и macOS с возможностью размещения на собственном сервере.", "Зашифрованные чаты", "Личные чаты со сквозным шифрованием и зашифрованные групповые чаты.", "Разнообразные сообщения", "Отправляйте текст, фото, видео, файлы, голосовые сообщения и стикеры.", "Аудио- и видеозвонки", "Личные звонки и групповые конференции.", "Общение и публикации", "Делитесь новостями в Moments и публичной ленте.", "Язык"], "es": ["Conéctate a este servidor desde la aplicación", "Si ves esta página, has introducido la dirección en el navegador por error. Introduce esta URL en la aplicación para utilizarla.", "Abre PaperPhonePlus, introduce la URL siguiente en los ajustes de dirección del servidor e inicia sesión o regístrate.", "URL del servidor", "Acerca de PaperPhonePlus", "PaperPhonePlus es una aplicación de mensajería para Android, iOS, Windows y macOS que puedes alojar en tu propio servidor.", "Chats cifrados", "Chats privados con cifrado de extremo a extremo y chats de grupo cifrados.", "Mensajes variados", "Envía textos, fotos, vídeos, archivos, mensajes de voz y pegatinas.", "Llamadas de voz y vídeo", "Realiza llamadas individuales y participa en reuniones de grupo.", "Comparte y conecta", "Comparte novedades en Moments y en la cronología pública.", "Idioma"]};
+const languageSelect = document.getElementById('language');
+function setLanguage(language) {
+  const selected = Object.hasOwn(translations, language) ? language : 'en';
+  document.documentElement.lang = selected;
+  languageSelect.value = selected;
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    element.textContent = translations[selected][Number(element.dataset.i18n)];
+  });
+}
+const preferred = (navigator.languages || [navigator.language || 'en'])
+  .map(language => language.toLowerCase().split('-')[0])
+  .find(language => Object.hasOwn(translations, language));
+setLanguage(preferred || 'en');
+languageSelect.addEventListener('change', () => setLanguage(languageSelect.value));
+const serverUrl = document.getElementById('server-url');
+serverUrl.value = window.location.origin;
+serverUrl.addEventListener('click', () => serverUrl.select());
+</script>
+</body>
+</html>

@@ -91,6 +91,7 @@ async fn main() {
     let cleanup_state = state.clone();
 
     let app = Router::new()
+        .route("/", get(routes::home::page))
         // Health check
         .route("/health", get(|| async {
             axum::Json(serde_json::json!({ "status": "ok", "time": chrono::Utc::now().timestamp_millis() }))
