@@ -39,6 +39,7 @@ pub struct Config {
     // ntfy Push (for Chinese Android devices without GMS)
     pub ntfy_base_url: String,
     pub ntfy_token: Option<String>,
+    pub bark_allowed_hosts: Vec<String>,
 
     // Apple Push Notification Service (APNS) for iOS native push
     pub apns_team_id: Option<String>,
@@ -99,6 +100,8 @@ impl Config {
 
             ntfy_base_url: env_or("NTFY_BASE_URL", "https://ntfy.sh"),
             ntfy_token: env_opt("NTFY_TOKEN"),
+            bark_allowed_hosts: env_or("BARK_ALLOWED_HOSTS", "api.day.app")
+                .split(',').map(str::trim).filter(|v| !v.is_empty()).map(str::to_lowercase).collect(),
 
             apns_team_id: env_opt("APNS_TEAM_ID"),
             apns_key_id: env_opt("APNS_KEY_ID"),

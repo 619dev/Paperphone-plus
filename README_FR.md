@@ -4,9 +4,8 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🗂️ Stockage local | Volume persistant avec répertoires permanents et temporaires séparés |
 | 🔑 Authentification à deux facteurs (2FA) | TOTP compatible Google Authenticator, 8 codes de récupération, obligatoire à la connexion |
 | 📷 Scanner et partager des QR codes | Scanner des QR codes pour ajouter des amis ou rejoindre des groupes avec expiration configurable |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 Paramètres de proxy | Support proxy SOCKS5 / HTTP / HTTPS — configurable sur les pages de connexion et de paramètres avec adresse serveur, port, identifiant et mot de passe pour les environnements réseau restreints |
 | 🛡️ Modération de contenu | Signalements utilisateurs (6 catégories) + blocage d'utilisateurs (masquage instantané des publications/messages) + Conditions d'utilisation (EULA) |
 | 🔧 Panneau d'administration | Dashboard web d'administration intégré (`/admin`, chemin configurable), protégé par mot de passe, examiner les signalements, supprimer le contenu problématique, bannir des utilisateurs — 8 langues |
@@ -123,14 +122,9 @@ Couche cryptographique
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ Dans **Profil > Confidentialité des messages**, activez un mot de passe supplé
 
 ### Gestion des sauts de ligne de la clé privée FCM
 
-Le champ `private_key` dans le JSON du compte de service Firebase contient une clé privée RSA au format PEM, qui nécessite des **sauts de ligne réels** (`\n`, ASCII 0x0A) entre chaque ligne de 64 caractères. Cependant, de nombreuses plateformes de déploiement (Zeabur, Railway, Docker) stockent les variables d'environnement sous forme de chaînes sur une seule ligne, convertissant `\n` en la séquence littérale de deux caractères `\` + `n`.
+Le champ `private_key` dans le JSON du compte de service Firebase contient une clé privée RSA au format PEM, qui nécessite des **sauts de ligne réels** (`\n`, ASCII 0x0A) entre chaque ligne de 64 caractères. Cependant, de nombreuses plateformes de déploiement (Railway, Docker) stockent les variables d'environnement sous forme de chaînes sur une seule ligne, convertissant `\n` en la séquence littérale de deux caractères `\` + `n`.
 
 **C'est la cause la plus fréquente d'échec des notifications push FCM** — le parseur PEM échoue silencieusement et aucune notification push n'est envoyée, sans journaux d'erreur.
 
@@ -238,7 +232,6 @@ Le champ `private_key` dans le JSON du compte de service Firebase contient une c
 
 | Plateforme | Format recommandé | Notes |
 |------------|-------------------|-------|
-| **Zeabur** | Ligne unique (`\n` échappé) | Coller la valeur JSON directement dans le panneau Variables |
 | **Docker / docker-compose** | Les deux | Utiliser la syntaxe YAML `\|` pour multi-lignes ; ligne unique dans `.env` |
 | **Railway / Docker** | Ligne unique (`\n` échappé) | Les champs de saisie ne supportent généralement pas les sauts de ligne réels |
 | **Fichier .env Linux** | Multi-lignes (entre guillemets) | S'assurer que les guillemets sont correctement fermés |

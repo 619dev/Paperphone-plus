@@ -4,19 +4,19 @@ A self-hosted PaperPhonePlus deployment contains only `server`, MySQL, Redis, an
 
 Users enter the public **server backend URL** in a native client. The server-provided `LIVEKIT_URL` is used for all direct and group audio/video calls.
 
-Uploads live on the server's persistent volume. Avatars and social/timeline media are permanent; private and group chat attachments default to 14 days via `CHAT_FILE_RETENTION_DAYS`. Existing R2 deployments can still trigger the read-only automatic migration by manually passing `R2_*` variables to the server during an upgrade. Docker Compose and Zeabur no longer preset them; remove them after migration.
+Uploads live on the server's persistent volume. Avatars and social/timeline media are permanent; private and group chat attachments default to 14 days via `CHAT_FILE_RETENTION_DAYS`. Existing R2 deployments can still trigger the read-only automatic migration by manually passing `R2_*` variables to the server during an upgrade. Docker Compose no longer preset them; remove them after migration.
 
-## Method 1: Zeabur Template
+## Signed messaging upgrade (current source)
 
-1. Deploy the [Zeabur template](https://zeabur.com/templates/SK6T93?referralCode=619dev).
-2. Select a region and fill in the variables. In production, replace `JWT_SECRET`, `ADMIN_PASSWORD`, and `LIVEKIT_API_SECRET` (at least 32 bytes).
-3. Wait for the four services—`server`, `MySQL`, `Redis`, and `LiveKit`—to start. The template does not create a `client` service.
-4. Record the public HTTPS domain under the `server` service's **Networking** tab.
-5. Enter that server domain on the login screen of an official Android, iOS, Windows, or macOS client.
+Package versions are 2.6.0. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
 
-Zeabur currently does not expose UDP service ports, so LiveKit falls back to ICE/TCP 7881. For production calling, use LiveKit Cloud or host LiveKit where `7881/tcp` and `7882/udp` can be opened, then configure the matching `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` on server.
+Migration adds identity-verification messages, membership epochs, signed-group protocol state and a message commit barrier. Existing groups are migrated once to mandatory encryption and a new epoch. History is retained; already-lost keys cannot be recovered. See `client/tests/README.md` for isolated MySQL integration checks, including repeatable migration.
 
-## Method 2: Docker Compose + Nginx
+Contacts configure the same appearance password agreed only offline, then complete mutual verification in the contact profile. Group senders must privately verify every member first. Changed identity keys require an explicit offline recheck. Profile badges require both proofs and receipts; group badges indicate valid signatures, while missing keys leave content locked. The legacy `kem_pub` field holds an Ed25519 signing key; signed messaging uses X25519 and does not implement post-quantum identity registration. Uploaded file bytes retain their existing storage protection.
+
+Optional Bark: set `BARK_ALLOWED_HOSTS=api.day.app`, adding self-hosted domains as a comma-separated allowlist. Authenticated clients manage subscriptions through GET/POST/DELETE `/api/push/bark` (POST `{ "endpoint": "https://api.day.app/<device-key>", "platform": "ios" }`) and test saved settings with POST `/api/push/bark/test` and `{}`. GET returns only a redacted endpoint hint. Existing FCM/APNs/ntfy configuration is preserved.
+
+## Docker Compose + Nginx Deployment
 
 You need a Linux host, Docker, Docker Compose, at least 2 GB RAM, and two domains pointed at the host (for example, `api.example.com` and `meeting.example.com`).
 
@@ -83,7 +83,6 @@ Then enter `https://api.example.com` in an official native client and test regis
 
 | Deployment | Address entered in the client |
 |---|---|
-| Zeabur | Public HTTPS domain of the `server` service |
 | Docker Compose + Nginx | API domain, such as `https://api.example.com` |
 | Local development | `http://localhost:3000` |
 
@@ -98,7 +97,6 @@ docker compose ps
 docker compose logs -f server
 ```
 
-- Zeabur: redeploy server and wait for its health check; update MySQL, Redis, or LiveKit only when needed.
 - Docker: the only PaperPhonePlus application image currently published is `facilisvelox/paperphone-plus-server`.
-- `/client` code is released through native client builds; do not deploy it to Vercel, Nginx, Zeabur, or a standalone Docker container.
-- If a legacy environment still has a `paperphone-plus-client` container or Zeabur `client` service, it can be stopped and removed; it is no longer part of the deployment topology.
+- `/client` code is released through native client builds; do not deploy it to Vercel, Nginx, or a standalone Docker container.
+- If a legacy environment still has a `paperphone-plus-client` container, it can be stopped and removed; it is no longer part of the deployment topology.

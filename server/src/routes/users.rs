@@ -259,6 +259,8 @@ async fn update_keys(
         .execute(&state.db).await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
+    super::groups::rotate_identity_groups(&state, &auth.0.id).await?;
+
     // Replace prekeys
     if let Some(prekeys) = &body.prekeys {
         sqlx::query("DELETE FROM prekeys WHERE user_id = ?")
@@ -280,47 +282,8 @@ async fn reset_sender_keys(
     State(state): State<Arc<AppState>>,
     auth: AuthUser,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    let uid = &auth.0.id;
-
-    // 1. Delete all sender key distributions where this user is sender or recipient
-    sqlx::query("DELETE FROM group_sender_key_distributions WHERE from_id = ? OR to_id = ?")
-        .bind(uid).bind(uid)
-        .execute(&state.db).await.ok();
-
-    // 2. Delete sender key metadata for this user
-    sqlx::query("DELETE FROM group_sender_keys WHERE user_id = ?")
-        .bind(uid)
-        .execute(&state.db).await.ok();
-
-    // 3. Find all encrypted groups this user belongs to
-    let encrypted_groups: Vec<(String,)> = sqlx::query_as(
-        "SELECT gm.group_id FROM group_members gm
-         JOIN `groups` g ON g.id = gm.group_id
-         WHERE gm.user_id = ? AND g.encrypted = 1"
-    )
-    .bind(uid)
-    .fetch_all(&state.db).await.unwrap_or_default();
-
-    // 4. Notify all members of each encrypted group to discard this user's sender key
-    for (group_id,) in &encrypted_groups {
-        let members: Vec<(String,)> = sqlx::query_as(
-            "SELECT user_id FROM group_members WHERE group_id = ? AND user_id != ?"
-        )
-        .bind(group_id).bind(uid)
-        .fetch_all(&state.db).await.unwrap_or_default();
-
-        for (mid,) in &members {
-            state.ws_clients.send_to_user(mid, serde_json::json!({
-                "type": "sender_key_invalidated",
-                "group_id": group_id,
-                "user_id": uid,
-            }));
-        }
-    }
-
-    tracing::info!("🔑 Sender keys reset for user {} across {} encrypted groups", uid, encrypted_groups.len());
-
-    Ok(Json(serde_json::json!({ "ok": true })))
+    super::groups::rotate_identity_groups(&state, &auth.0.id).await?;
+    Ok(Json(serde_json::json!({"ok":true})))
 }
 
 #[derive(Deserialize)]
@@ -350,6 +313,12 @@ async fn delete_account(
         .map_err(|_| (axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid password" }))))?;
 
     let uid = &auth.0.id;
+
+    // Account deletion also revokes membership before deleting identity rows.
+    let memberships: Vec<(String,)> = sqlx::query_as("SELECT gm.group_id FROM group_members gm JOIN `groups` g ON g.id=gm.group_id WHERE gm.user_id=? AND g.owner_id<>? ORDER BY gm.group_id")
+        .bind(uid).bind(uid).fetch_all(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
+    for (group,) in memberships { super::groups::revoke_member(&state, uid, &group, uid, true).await?; }
 
     // Delete messages sent by or to this user
     sqlx::query("DELETE FROM messages WHERE from_id = ? OR (to_id = ? AND type = 'private')")

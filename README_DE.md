@@ -4,9 +4,8 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🗂️ Lokaler Dateispeicher | Persistentes Volume mit getrennten permanenten und temporären Verzeichnissen |
 | 🔑 Zwei-Faktor-Authentifizierung (2FA) | Google Authenticator–kompatibles TOTP, 8 Wiederherstellungscodes, erzwungen bei Anmeldung |
 | 📷 QR-Code scannen & teilen | QR-Codes scannen zum Hinzufügen von Freunden oder Beitreten von Gruppen mit konfigurierbarem Ablaufdatum |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 Proxy-Einstellungen | SOCKS5 / HTTP / HTTPS Proxy-Unterstützung — konfigurierbar auf Login- und Einstellungsseiten mit Serveradresse, Port, Benutzername und Passwort für eingeschränkte Netzwerkumgebungen |
 | 🛡️ Inhaltsmoderation | Benutzermeldungen (6 Kategorien) + Benutzer blockieren (sofortige Ausblendung von Beiträgen/Nachrichten) + Nutzungsbedingungen (EULA) |
 | 🔧 Admin-Panel | Eingebettetes Web-Admin-Dashboard (`/admin`, Pfad konfigurierbar), passwortgeschützt, Meldungen prüfen, Inhalte löschen, Benutzer sperren — 8 Sprachen |
@@ -123,14 +122,9 @@ Kryptographische Schicht
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ Unter **Profil > Nachrichtenschutz** kann ein Zusatzpasswort für alle Chats auf
 
 ### FCM Private Key Zeilenumbruch-Behandlung
 
-Das `private_key`-Feld in der Firebase-Dienstkonto-JSON-Datei enthält einen RSA-Privatschlüssel im PEM-Format, der **echte Zeilenumbrüche** (`\n`, ASCII 0x0A) zwischen jeder 64-Zeichen-Zeile erfordert. Viele Bereitstellungsplattformen (Zeabur, Railway, Docker) speichern Umgebungsvariablen jedoch als einzeilige Strings und konvertieren `\n` in die wörtliche Zwei-Zeichen-Sequenz `\` + `n`.
+Das `private_key`-Feld in der Firebase-Dienstkonto-JSON-Datei enthält einen RSA-Privatschlüssel im PEM-Format, der **echte Zeilenumbrüche** (`\n`, ASCII 0x0A) zwischen jeder 64-Zeichen-Zeile erfordert. Viele Bereitstellungsplattformen (Railway, Docker) speichern Umgebungsvariablen jedoch als einzeilige Strings und konvertieren `\n` in die wörtliche Zwei-Zeichen-Sequenz `\` + `n`.
 
 **Dies ist die häufigste Ursache für FCM-Push-Benachrichtigungsfehler** — der PEM-Parser schlägt stillschweigend fehl und es werden keine Push-Benachrichtigungen gesendet, ohne Fehlerprotokolle.
 
@@ -238,7 +232,6 @@ Das `private_key`-Feld in der Firebase-Dienstkonto-JSON-Datei enthält einen RSA
 
 | Plattform | Empfohlenes Format | Hinweise |
 |-----------|-------------------|----------|
-| **Zeabur** | Einzeilig (`\n` escaped) | JSON-Wert direkt im Variables-Panel einfügen |
 | **Docker / docker-compose** | Beides | YAML `\|` für mehrzeilig; einzeilig in `.env` |
 | **Railway / Docker** | Einzeilig (`\n` escaped) | Eingabefelder unterstützen typischerweise keine echten Zeilenumbrüche |
 | **Linux .env-Datei** | Mehrzeilig (in Anführungszeichen) | Sicherstellen, dass Anführungszeichen korrekt geschlossen sind |

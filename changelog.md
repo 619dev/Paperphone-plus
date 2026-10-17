@@ -4,45 +4,58 @@ All notable changes and new features are recorded here. Historical entries below
 
 所有重要版本改动和新特性统一记录于此。下方历史条目由仓库原有文档迁移而来。
 
+## 2.6.0 (Unreleased / 未发布) — 2026-10-17
+
+- Ported Lite `f5492a0` and `9bf6aaf`: Ed25519-signed private messages, mutual offline-password identity verification, identity-change revocation and localized verification badges.
+- New group messages require signed Sender Key encryption and verified private identities. Membership epochs rotate keys on join/leave/kick or identity reset; continuing members retain historical distributions. Group history and durable catch-up paginate by immutable server sequence, with cache-before-cursor persistence and a database commit barrier.
+- Included attachment presentation decoding, authenticated in-app downloads, duplicate-send/upload guards, relative avatar normalization and startup appearance-password unlock. Native Android saving uses AttachmentSaver when the host provides it, otherwise the portable save/share flow.
+- Added optional Bark subscription/test APIs and offline message push with `BARK_ALLOWED_HOSTS` (default `api.day.app`). Existing FCM/APNs/ntfy, calling, Moments, Timeline, batch downloads and legacy R2 migration are retained.
+- Added client cryptographic/sync/localization regression suites and isolated MySQL/HTTP/WebSocket integration coverage. See `client/tests/README.md` and the deployment guides for coordinated upgrades. Versions are 2.6.0; no native build or image is published by these source changes.
+
+- 吸收 Lite 的消息签名、线下密码双向身份验证、密钥变化撤销信任和八语言验证状态。
+- 新群消息强制签名与 Sender Key 加密；群成员先经私聊验证。加入、退出、移除及身份重置均推进密钥代次，留群者保留历史分发；群历史和离线追赶按不可变序号分页，并先保存密文缓存再推进游标。
+- 补入附件外观解密、应用内鉴权下载、防重复发送/上传、相对头像地址和启动密码解锁修复，以及可选 Bark 推送接口。保留 Plus 原有通话、动态、推送、批量下载与 R2 迁移能力。
+- 版本更新为 2.6.0，仅更新源码；需协调升级服务端和全部客户端，未发布原生包或镜像。
+
 ## 2.5.2
 
-- Removed preset `R2_*` variables from Docker Compose and Zeabur while retaining the server's legacy read-only migration and the client's legacy object-storage URL compatibility.
+- Removed preset `R2_*` variables from Docker Compose while retaining the server's legacy read-only migration and the client's legacy object-storage URL compatibility.
 - Added private/group chat batch downloads: select up to 20 image, video, voice, or file messages, preserve original filenames when available, and save them locally with progress and partial-failure reporting.
 - Replaced R2 uploads with persistent server-local storage. Avatars, group avatars, Moments, and Timeline media are permanent; private/group chat attachments are isolated and expire after `CHAT_FILE_RETENTION_DAYS` (14 days by default).
 - Added resumable, read-only startup migration from legacy R2 storage. Objects are streamed into temporary files and atomically renamed; R2 originals are never deleted, and a later startup reports when legacy variables may be removed.
-- Added persistent upload volumes to Docker Compose and Zeabur.
-- Unified `UPLOAD_DIR=./uploads` across bare-server, Docker Compose, and Zeabur deployments; the container repairs existing volume ownership at startup and then runs as an unprivileged UID.
-- Updated Docker Compose and Zeabur to track the latest stable LiveKit server image.
+- Added persistent upload volumes to Docker Compose.
+- Unified `UPLOAD_DIR=./uploads` across bare-server and Docker Compose deployments; the container repairs existing volume ownership at startup and then runs as an unprivileged UID.
+- Updated Docker Compose to track the latest stable LiveKit server image.
 - Updated the application, server, localized documentation, deployment template, and profile-page version display to `2.5.2`.
 
 - 私聊和群聊新增批量下载：可同时选择最多 20 条图片、视频、语音或普通文件消息，尽量保留原始文件名，并显示下载进度及部分失败结果。
-- 从 Docker Compose 与 Zeabur 中移除预置的 `R2_*` 变量，同时保留服务端旧 R2 只读迁移及客户端旧对象存储 URL 兼容能力。
+- 从 Docker Compose 中移除预置的 `R2_*` 变量，同时保留服务端旧 R2 只读迁移及客户端旧对象存储 URL 兼容能力。
 - 文件上传改为服务器本地持久化：用户头像、群头像、朋友圈和时间线媒体永久保存；私聊及群聊附件独立存放，并按 `CHAT_FILE_RETENTION_DAYS` 清理（默认 14 天）。
 - 新增可续跑、只读的 R2 启动迁移：对象以流式方式写入临时文件后原子改名，不删除 R2 原件；后续启动会提示何时可移除旧变量。
-- Docker Compose 与 Zeabur 均增加上传文件持久卷。
-- 裸机、Docker Compose 与 Zeabur 统一使用 `UPLOAD_DIR=./uploads`；容器启动时兼容修复新旧卷权限，随后降权运行服务。
-- Docker Compose 与 Zeabur 的 LiveKit 镜像改为跟随最新稳定版本。
+- Docker Compose 增加上传文件持久卷。
+- 裸机与 Docker Compose 统一使用 `UPLOAD_DIR=./uploads`；容器启动时兼容修复新旧卷权限，随后降权运行服务。
+- Docker Compose 的 LiveKit 镜像改为跟随最新稳定版本。
 - 应用、服务端、多语言文档、部署模板及个人信息页面底部版本号统一更新为 `2.5.2`。
 
 ---
 
 ## 2.5.1
 
-- Stopped publishing and deploying a standalone Web frontend. Docker Compose and the Zeabur template now deploy only the server, MySQL, Redis, and LiveKit.
+- Stopped publishing and deploying a standalone Web frontend. Docker Compose now deploys only the server, MySQL, Redis, and LiveKit.
 - Reclassified `/client` as shared frontend source for the native Android, iOS, Windows, and macOS clients; removed its Docker, Nginx, and Vercel deployment files.
 - Updated both Docker build scripts to build and publish only the PaperPhonePlus server image.
 - Removed Web Push/VAPID and OneSignal end to end, including client SDK integration, server APIs and delivery services, relay endpoints, database tables, dependencies, environment variables, and deployment settings.
 - Native notifications now use FCM, ntfy, and APNS only.
 - Reworked deployment guides and all localized README files so new self-hosters are no longer instructed to deploy or visit a Web frontend.
-- Updated the application, server, documentation, Zeabur template, and profile-page version display to `2.5.1`.
+- Updated the application, server, documentation, and profile-page version display to `2.5.1`.
 
-- 停止发布和部署独立 Web 前端；Docker Compose 与 Zeabur 模板现在只部署 server、MySQL、Redis 和 LiveKit。
+- 停止发布和部署独立 Web 前端；Docker Compose 现在只部署 server、MySQL、Redis 和 LiveKit。
 - 将 `/client` 明确调整为 Android、iOS、Windows、macOS 原生客户端共享的前端代码，并删除 Docker、Nginx、Vercel 部署文件。
 - 两个 Docker 构建脚本现在只构建并发布 PaperPhonePlus server 镜像。
 - 完整移除 Web Push/VAPID 与 OneSignal，包括客户端 SDK、服务端 API 与发送服务、推送中继端点、数据库表、依赖、环境变量和部署配置。
 - 原生通知现在仅保留 FCM、ntfy 和 APNS。
 - 重写部署指南并更新所有多语言 README，避免新手继续部署或访问 Web 前端。
-- 应用、服务端、说明文档、Zeabur 模板及个人信息页面底部版本号统一更新为 `2.5.1`。
+- 应用、服务端、说明文档及个人信息页面底部版本号统一更新为 `2.5.1`。
 
 ---
 

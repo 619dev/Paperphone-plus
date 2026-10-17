@@ -13,6 +13,9 @@ function loadCachedMessages(): Record<string, ChatMessage[]> {
     const parsed = JSON.parse(raw)
     if (parsed._v !== MSG_CACHE_VERSION) return {}
     const { _v, ...msgs } = parsed
+    for (const messages of Object.values(msgs) as ChatMessage[][]) {
+      for (const message of messages) delete message.signature_valid
+    }
     return msgs
   } catch { return {} }
 }
@@ -25,7 +28,7 @@ function persistMessages(messages: Record<string, ChatMessage[]>) {
       // Keep a deep offline history for every conversation.
       const trimmed: Record<string, ChatMessage[]> = { _v: MSG_CACHE_VERSION } as any
       for (const [chatId, msgs] of Object.entries(messages)) {
-        trimmed[chatId] = msgs.slice(-2000).map(({ decrypted: _plaintext, ...stored }) => stored as ChatMessage)
+        trimmed[chatId] = msgs.slice(-2000).map(({ decrypted: _plaintext, signature_valid: _signature, ...stored }) => stored as ChatMessage)
       }
       localStorage.setItem(MSG_CACHE_KEY, JSON.stringify(trimmed))
       void cacheMediaIn(trimmed)
@@ -42,13 +45,39 @@ function persistMessages(messages: Record<string, ChatMessage[]>) {
             return lastB - lastA
           })
           for (const k of sorted.slice(0, 3)) {
-            reduced[k] = messages[k].slice(-100)
+            reduced[k] = messages[k].slice(-100).map(({ decrypted: _plaintext, signature_valid: _signature, ...wire }) => wire)
           }
           localStorage.setItem(MSG_CACHE_KEY, JSON.stringify(reduced))
         }
       } catch { /* give up */ }
     }
   }, 500) // debounce 500ms
+}
+
+/** Sync advances its durable cursor only after the ciphertext cache is saved. */
+export function flushMessageCache(): void {
+  if (_saveMsgTimer) clearTimeout(_saveMsgTimer)
+  _saveMsgTimer = null
+  const snapshot: Record<string, unknown> = { _v: MSG_CACHE_VERSION }
+  for (const [id, messages] of Object.entries(useStore.getState().messages)) {
+    snapshot[id] = messages.slice(-2000).map(({ decrypted: _plaintext, signature_valid: _signature, ...wire }) => wire)
+  }
+  localStorage.setItem(MSG_CACHE_KEY, JSON.stringify(snapshot))
+}
+
+/** Apply freshly fetched identity keys to existing contacts without discarding
+ * remarks or cached presence, so every conversation sees the same key change. */
+export function refreshFriendIdentityKeys(peers: Array<{ id: string; ik_pub?: string; kem_pub?: string }>): void {
+  const state = useStore.getState()
+  const identities = new Map(peers.map(peer => [peer.id, peer]))
+  let changed = false
+  const friends = state.friends.map(friend => {
+    const peer = identities.get(friend.id)
+    if (!peer || (peer.ik_pub === friend.ik_pub && peer.kem_pub === friend.kem_pub)) return friend
+    changed = true
+    return { ...friend, ik_pub: peer.ik_pub, kem_pub: peer.kem_pub }
+  })
+  if (changed) state.setFriends(friends)
 }
 
 export interface User {
@@ -93,6 +122,8 @@ export interface ChatMessage {
   offline?: boolean
   decrypted?: string
   client_msg_id?: string
+  decryption_pending?: boolean
+  signature_valid?: boolean
   delivery_status?: 'queued' | 'sent' | 'failed'
   server_seq?: number
 }
@@ -336,7 +367,10 @@ export const useStore = create<AppStore>((set, get) => ({
       // Offline messages are replayed after every reconnect. Keep insertion
       // and its return value atomic so callers do not count a replay as new.
       if (msg.id && existing.some(m => m.id === msg.id)) {
-        return s
+        if (!msg.signature_valid) return s
+        const updated = { ...s.messages, [chatId]: existing.map(m => m.id === msg.id ? { ...m, ...msg } : m) }
+        persistMessages(updated)
+        return { messages: updated }
       }
       const optimisticIndex = msg.client_msg_id
         ? existing.findIndex(m => m.client_msg_id === msg.client_msg_id)

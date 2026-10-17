@@ -4,9 +4,8 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/버전-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 | 🗂️ 로컬 파일 저장소 | 영구 및 임시 디렉터리가 분리된 영구 볼륨 |
 | 🔑 2단계 인증 (2FA) | Google Authenticator 호환 TOTP, 8개 복구 코드, 로그인 시 적용 |
 | 📷 QR 코드 스캔 및 공유 | QR 코드로 친구 추가 또는 그룹 참여, 만료 기간 설정 가능 |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 프록시 설정 | SOCKS5 / HTTP / HTTPS 프록시 지원 — 로그인 및 설정 페이지에서 서버 주소, 포트, 사용자 이름, 비밀번호 설정 가능 |
 | 🛡️ 콘텐츠 관리 | 사용자 신고 (6가지 카테고리) + 사용자 차단 (게시물/메시지 즉시 숨김) + 이용약관 (EULA) |
 | 🔧 관리자 패널 | 내장 웹 관리 대시보드 (`/admin`, 경로 변경 가능), 비밀번호 보호, 신고 검토, 콘텐츠 삭제, 사용자 차단 — 8개 언어 지원 |
@@ -123,14 +122,9 @@ Shared frontend source (client/, not deployed independently)
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ cd client && npm install && npm run dev  # shared frontend source only
 
 ### FCM 개인 키 줄바꿈 처리
 
-Firebase 서비스 계정 JSON의 `private_key` 필드에는 PEM 형식의 RSA 개인 키가 포함되어 있으며, 각 64자 줄 사이에 **실제 줄바꿈 문자** (`\n`, ASCII 0x0A)가 필요합니다. 그러나 많은 배포 플랫폼 (Zeabur, Railway, Docker)은 환경 변수를 단일 행 문자열로 저장하여 `\n`을 리터럴 두 문자 시퀀스 `\` + `n`으로 변환합니다.
+Firebase 서비스 계정 JSON의 `private_key` 필드에는 PEM 형식의 RSA 개인 키가 포함되어 있으며, 각 64자 줄 사이에 **실제 줄바꿈 문자** (`\n`, ASCII 0x0A)가 필요합니다. 그러나 많은 배포 플랫폼 (Railway, Docker)은 환경 변수를 단일 행 문자열로 저장하여 `\n`을 리터럴 두 문자 시퀀스 `\` + `n`으로 변환합니다.
 
 **이것이 FCM 푸시 알림 실패의 가장 흔한 원인입니다** — PEM 파서가 조용히 실패하고 푸시 알림이 전송되지 않으며, 오류 로그도 남지 않습니다.
 
@@ -238,7 +232,6 @@ Firebase 서비스 계정 JSON의 `private_key` 필드에는 PEM 형식의 RSA �
 
 | 플랫폼 | 권장 형식 | 비고 |
 |--------|----------|------|
-| **Zeabur** | 단일 행 (`\n` 이스케이프) | Variables 패널에 JSON 값을 직접 붙여넣기 |
 | **Docker / docker-compose** | 둘 다 가능 | 여러 행은 YAML `\|` 사용; 단일 행은 `.env`에서 |
 | **Railway / Docker** | 단일 행 (`\n` 이스케이프) | 입력 필드는 일반적으로 실제 줄바꿈을 지원하지 않습니다 |
 | **Linux .env 파일** | 여러 행 (따옴표 사용) | 따옴표가 올바르게 닫혀 있는지 확인하세요 |

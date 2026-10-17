@@ -67,7 +67,7 @@ async fn main() {
     tokio::spawn(async move { services::storage::migrate_r2(&migration_state).await; });
 
     // CORS: mirror the request Origin so that credentialed/preflight requests
-    // work across Vercel (client) → Zeabur (server).
+    // work between native client WebViews and the configured backend.
     let cors = CorsLayer::new()
         .allow_origin(tower_http::cors::AllowOrigin::mirror_request())
         .allow_methods([

@@ -41,7 +41,7 @@ function flushOutbox(socket: WebSocket) {
  * receiveSenderKey() inside the distribution handler yields at `await`,
  * and the message handler fires before the key is stored → 🔒.
  */
-const SEQUENCED_TYPES = new Set(['sender_key_distribution', 'sender_key_invalidated', 'message'])
+const SEQUENCED_TYPES = new Set(['sender_key_distribution', 'sender_key_invalidated', 'sender_key_rotate', 'group_removed', 'message'])
 let _eventQueue: Promise<void> = Promise.resolve()
 
 function enqueueSequenced(fn: () => Promise<void>) {
@@ -111,7 +111,7 @@ export function connectWs() {
       } else if (type === 'auth_error' && data.refreshable) {
         void refreshAccessToken().finally(() => socket.close())
       }
-      if (type === 'ack') acknowledgeOutbound(data.client_msg_id)
+      if (type === 'ack' || type === 'message_failed') acknowledgeOutbound(data.client_msg_id)
 
       dispatchIncoming(data)
     } catch { /* ignore parse errors */ }

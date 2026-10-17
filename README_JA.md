@@ -4,9 +4,8 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/バージョン-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🗂️ ローカルファイルストレージ | 永久ファイルと一時ファイルを分離した永続ボリューム |
 | 🔑 二要素認証 (2FA) | Google Authenticator 互換 TOTP、8 個のリカバリーコード、ログイン時に強制 |
 | 📷 QR コードスキャン＆共有 | QR コードをスキャンして友達追加やグループ参加、有効期限設定可能 |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 プロキシ設定 | SOCKS5 / HTTP / HTTPS プロキシ対応 — ログインページと設定ページでサーバーアドレス、ポート、ユーザー名、パスワードを設定可能（制限されたネットワーク環境向け） |
 | 🛡️ コンテンツモデレーション | ユーザー報告（6 カテゴリ）+ ユーザーブロック（投稿/メッセージを即時非表示）+ 利用規約（EULA） |
 | 🔧 管理パネル | 内蔵 Web 管理ダッシュボード（`/admin`、パス変更可能）、パスワード保護、報告審査、コンテンツ削除、ユーザー BAN — 8 言語対応 |
@@ -123,14 +122,9 @@ Shared frontend source (client/, not deployed independently)
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ cd client && npm install && npm run dev  # shared frontend source only
 
 ### FCM 秘密鍵の改行処理
 
-Firebase サービスアカウント JSON の `private_key` フィールドには PEM 形式の RSA 秘密鍵が含まれており、64 文字ごとに**実際の改行文字**（`\n`、ASCII 0x0A）が必要です。しかし多くのデプロイプラットフォーム（Zeabur、Railway、Docker）は環境変数を単一行の文字列として保存し、`\n` を文字通りの 2 文字 `\` + `n` に変換します。
+Firebase サービスアカウント JSON の `private_key` フィールドには PEM 形式の RSA 秘密鍵が含まれており、64 文字ごとに**実際の改行文字**（`\n`、ASCII 0x0A）が必要です。しかし多くのデプロイプラットフォーム（Railway、Docker）は環境変数を単一行の文字列として保存し、`\n` を文字通りの 2 文字 `\` + `n` に変換します。
 
 **これが FCM プッシュ通知の失敗で最もよくある原因です** — PEM パーサーがサイレントに失敗し、プッシュ通知が送信されず、エラーログも出力されません。
 
@@ -238,7 +232,6 @@ Firebase サービスアカウント JSON の `private_key` フィールドに�
 
 | プラットフォーム | 推奨形式 | 備考 |
 |-----------------|---------|------|
-| **Zeabur** | 単一行（`\n` エスケープ） | Variables パネルに JSON 値を直接貼り付け |
 | **Docker / docker-compose** | どちらでも | YAML は `\|` で複数行対応、`.env` は単一行推奨 |
 | **Railway / Docker** | 単一行（`\n` エスケープ） | 入力フィールドは通常、実際の改行に非対応 |
 | **Linux .env ファイル** | 複数行（引用符囲み） | 引用符が正しく閉じられていることを確認 |

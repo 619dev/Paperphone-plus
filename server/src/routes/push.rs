@@ -9,6 +9,8 @@ use crate::auth::middleware::AuthUser;
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/status", get(push_status))
+        .route("/bark", get(get_bark).post(register_bark).delete(delete_bark))
+        .route("/bark/test", post(test_bark))
         .route("/fcm", post(register_fcm))
         .route("/ntfy", post(register_ntfy))
         .route("/ntfy-topic", get(get_ntfy_topic))
@@ -153,5 +155,65 @@ async fn register_apns(
     .execute(&state.db).await.ok();
 
     tracing::info!("[APNS] Token registered for user {}: {}...", &auth.0.id, &normalized[..20]);
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+type ApiError = (axum::http::StatusCode, Json<serde_json::Value>);
+
+fn api_error(status: axum::http::StatusCode, message: impl Into<String>) -> ApiError {
+    (status, Json(serde_json::json!({ "error": message.into() })))
+}
+
+#[derive(Deserialize)]
+struct BarkReq { endpoint: String, platform: Option<String> }
+
+#[derive(Deserialize)]
+struct BarkTestReq { endpoint: Option<String> }
+
+async fn get_bark(State(state): State<Arc<AppState>>, auth: AuthUser) -> Result<Json<serde_json::Value>, ApiError> {
+    let row: Option<(String,)> = sqlx::query_as(
+        "SELECT endpoint FROM bark_subscriptions WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1"
+    ).bind(&auth.0.id).fetch_optional(&state.db).await
+        .map_err(|e| api_error(axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    Ok(Json(match row {
+        Some((endpoint,)) => serde_json::json!({ "configured": true, "endpoint_hint": crate::services::bark::endpoint_hint(&endpoint) }),
+        None => serde_json::json!({ "configured": false }),
+    }))
+}
+
+async fn register_bark(State(state): State<Arc<AppState>>, auth: AuthUser, Json(body): Json<BarkReq>)
+    -> Result<Json<serde_json::Value>, ApiError>
+{
+    let endpoint = crate::services::bark::validate_endpoint(&state.config, body.endpoint.trim())
+        .map_err(|e| api_error(axum::http::StatusCode::BAD_REQUEST, e))?.to_string().trim_end_matches('/').to_string();
+    sqlx::query("INSERT INTO bark_subscriptions (user_id, endpoint, platform) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE endpoint = VALUES(endpoint), platform = VALUES(platform), updated_at = NOW()")
+        .bind(&auth.0.id).bind(endpoint).bind(body.platform.as_deref().unwrap_or("ios"))
+        .execute(&state.db).await.map_err(|e| api_error(axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+async fn test_bark(State(state): State<Arc<AppState>>, auth: AuthUser, Json(body): Json<BarkTestReq>)
+    -> Result<Json<serde_json::Value>, ApiError>
+{
+    let endpoint = if let Some(value) = body.endpoint {
+        crate::services::bark::validate_endpoint(&state.config, value.trim())
+            .map_err(|e| api_error(axum::http::StatusCode::BAD_REQUEST, e))?.to_string()
+    } else {
+        sqlx::query_as::<_, (String,)>("SELECT endpoint FROM bark_subscriptions WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1")
+            .bind(&auth.0.id).fetch_optional(&state.db).await
+            .map_err(|e| api_error(axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .map(|row| row.0).ok_or_else(|| api_error(axum::http::StatusCode::NOT_FOUND, "Bark is not configured"))?
+    };
+    crate::services::bark::validate_endpoint(&state.config, &endpoint)
+        .map_err(|e| api_error(axum::http::StatusCode::BAD_REQUEST, e))?;
+    crate::services::bark::send(&endpoint, "PaperPhonePlus", "Bark notifications are ready")
+        .await.map_err(|e| api_error(axum::http::StatusCode::BAD_GATEWAY, e))?;
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+async fn delete_bark(State(state): State<Arc<AppState>>, auth: AuthUser) -> Result<Json<serde_json::Value>, ApiError> {
+    sqlx::query("DELETE FROM bark_subscriptions WHERE user_id = ?")
+        .bind(&auth.0.id).execute(&state.db).await
+        .map_err(|e| api_error(axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(Json(serde_json::json!({ "ok": true })))
 }

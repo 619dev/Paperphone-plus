@@ -4,9 +4,8 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Version-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🗂️ Local File Storage | Persistent media volume with isolated permanent and temporary directories |
 | 🔑 Two-Factor Auth (2FA) | Google Authenticator–compatible TOTP, 8 recovery codes, enforced at login |
 | 📷 QR Code Scan & Share | Scan QR codes to add friends or join groups with configurable expiry |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 Proxy Settings | SOCKS5 / HTTP / HTTPS proxy support — configurable on both login and settings pages with server address, port, username and password for restricted network environments |
 | 🛡️ Content Moderation | User reporting (6 reason categories) + user blocking (instantly hides posts/messages) + Terms of Use (EULA) |
 | 🔧 Admin Panel | Embedded web admin dashboard (`/admin`, path customizable), password-protected, review reports, delete offending content, ban users — supports 8 languages |
@@ -123,14 +122,9 @@ Cryptographic Layer
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ Under **Profile > Message privacy**, you can enable an extra password for every 
 
 ### FCM Private Key Newline Handling
 
-The `private_key` field in Firebase service account JSON contains an RSA private key in PEM format, which requires **real newline characters** (`\n`, ASCII 0x0A) between each 64-character line. However, many deployment platforms (Zeabur, Railway, Docker) store environment variables as single-line strings, converting `\n` into the literal two-character sequence `\` + `n`.
+The `private_key` field in Firebase service account JSON contains an RSA private key in PEM format, which requires **real newline characters** (`\n`, ASCII 0x0A) between each 64-character line. However, many deployment platforms (Railway, Docker) store environment variables as single-line strings, converting `\n` into the literal two-character sequence `\` + `n`.
 
 **This is the most common cause of FCM push notification failure** — the PEM parser silently fails and no push notifications are sent, with no error logs.
 
@@ -238,7 +232,6 @@ The `private_key` field in Firebase service account JSON contains an RSA private
 
 | Platform | Recommended Format | Notes |
 |----------|-------------------|-------|
-| **Zeabur** | Single-line (`\n` escaped) | Paste JSON value directly in Variables panel |
 | **Docker / docker-compose** | Either | Use YAML `\|` for multi-line; single-line in `.env` |
 | **Railway / Docker** | Single-line (`\n` escaped) | Input fields typically don't support real newlines |
 | **Linux .env file** | Multi-line (quoted) | Ensure quotes are properly closed |

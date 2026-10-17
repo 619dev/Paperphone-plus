@@ -1,3 +1,5 @@
+import { securityText, securityErrorText } from '../i18n/security'
+import { t as translate, type LangCode } from '../i18n'
 import { useEffect } from 'react'
 import { useStore } from '../store'
 import { connectWs, disconnectWs, forceReconnect, onWs } from '../api/socket'
@@ -6,66 +8,50 @@ import { endSession } from '../utils/session'
 import { useNotificationStore } from '../store/notificationStore'
 import { playMessageSound, showBrowserNotification, getMessagePreview } from '../utils/notification'
 import { getKeys } from '../crypto/keystore'
-import { decryptHybrid } from '../crypto/ratchet'
-import { getSenderKey, storeSenderKey, clearGroupSenderKeys, clearAllSenderKeys, receiveSenderKey, removeSenderKey } from '../crypto/groupCrypto'
-import { decryptWithSenderKey } from '../crypto/groupCrypto'
+import { decryptSignedMessage } from '../crypto/authenticatedMessaging'
+import { clearGroupSenderKeys, retireOwnSenderKeys } from '../crypto/groupCrypto'
+import { decryptGroupMessage, fetchGroupKeys, importGroupDistribution, ensureGroupSenderKey, MissingGroupKey } from '../crypto/signedGroups'
 import { get } from '../api/http'
 import { decodeMessagePayload } from '../utils/messagePayload'
 import { unprotectPresentationText } from '../crypto/presentationCrypto'
 
-/**
- * Try to fetch and store sender keys from the server for a given group.
- * Returns true if at least one new key was imported.
- */
-async function fetchAndStoreSenderKeys(groupId: string): Promise<boolean> {
-  const keys = getKeys()
-  if (!keys) return false
-  try {
-    const skData = await get(`/api/groups/${groupId}/sender-keys`)
-    if (!skData?.keys || !Array.isArray(skData.keys)) return false
-    let imported = false
-    for (const k of skData.keys) {
-      // Always try to decrypt the latest distribution — don't skip if cached.
-      // Cached keys may be stale after identity key changes (logout/login cycle).
-      try {
-        const senderKey = await receiveSenderKey(
-          k.encrypted_key, k.header, keys.ik_priv, null
-        )
-        storeSenderKey(groupId, k.from_id, senderKey, k.key_version || 1)
-        imported = true
-      } catch (err) {
-        console.warn(`[useSocket] Failed to decrypt sender key from ${k.from_id} for group ${groupId}:`, err)
-      }
+/** Retry cached ciphertexts after historical epoch keys or identity pins arrive. */
+async function retryDecryptGroupMessages(groupId: string) {
+  const owner = useStore.getState().user?.id
+  const messages = useStore.getState().messages[groupId] || []
+  for (const message of messages) {
+    if ((message.signature_valid && !message.decryption_pending) || !message.header?.startsWith('ppg1.')) continue
+    try {
+      const decoded = await decryptGroupMessage(message, true)
+      if (useStore.getState().user?.id !== owner) return
+      useStore.getState().updateMessage(groupId, message.id, decoded)
     }
-    return imported
-  } catch (err) {
-    console.warn(`[useSocket] Failed to fetch sender keys for group ${groupId}:`, err)
-    return false
+    catch { /* Keep ciphertext for the next key/identity recovery. */ }
   }
 }
-
-/**
- * Re-decrypt any 🔒 messages in the store for a given group+sender
- * after their sender key becomes available.
- */
-async function retryDecryptGroupMessages(groupId: string, senderId: string) {
-  const sk = getSenderKey(groupId, senderId)
-  if (!sk) return
-  const msgs = useStore.getState().messages[groupId] || []
-  for (const msg of msgs) {
-    if (msg.from === senderId && msg.decrypted === '🔒' && msg.id) {
-      // This message failed to decrypt before — retry now
-      const nonce = (msg as any).nonce
-      if (msg.ciphertext && nonce) {
-        try {
-          const text = await decryptWithSenderKey(msg.ciphertext, nonce, sk.senderKey)
-          useStore.getState().updateMessage(groupId, msg.id, { decrypted: text })
-        } catch (err) {
-          console.warn(`[useSocket] Retry decrypt failed for msg ${msg.id}:`, err)
-        }
-      }
+const recoveryJobs = new Map<string, Promise<void>>()
+function recoverGroups(): Promise<void> {
+  const owner = useStore.getState().user?.id
+  if (!owner) return Promise.resolve()
+  const running = recoveryJobs.get(owner)
+  if (running) return running
+  const job = (async () => {
+    const groups = await get('/api/groups')
+    if (useStore.getState().user?.id !== owner) return
+    for (const previous of useStore.getState().groups) {
+      if (!groups.some((group: any) => group.id === previous.id)) clearGroupSenderKeys(previous.id)
     }
-  }
+    useStore.getState().setGroups(groups)
+    for (const group of groups) {
+      if (useStore.getState().user?.id !== owner) return
+      await fetchGroupKeys(group.id).catch(() => {})
+      await retryDecryptGroupMessages(group.id)
+      // Offline members may have missed the rotation event: always read epoch.
+      await ensureGroupSenderKey(group.id).catch(error => console.warn('[Group] Key update pending:', error))
+    }
+  })().finally(() => { recoveryJobs.delete(owner) })
+  recoveryJobs.set(owner, job)
+  return job
 }
 
 export function useSocket() {
@@ -91,7 +77,12 @@ export function useSocket() {
     // login ends solely when the server sends an explicit termination event.
     const logoutSignals = ['logout', 'force_logout', 'session_revoked', 'session_terminated']
     const unsubLogoutSignals = logoutSignals.map(type => onWs(type, () => endSession(type)))
-    const unsubAuthOk = onWs('auth_ok', () => syncMessages().catch(err => console.warn('[Sync] catch-up failed:', err)))
+    const unsubAuthOk = onWs('auth_ok', async () => {
+      await recoverGroups().catch(error => console.warn('[Group] Recovery failed:', error))
+      await syncMessages().catch(error => console.warn('[Sync] catch-up failed:', error))
+    })
+    const onIdentityChanged = () => { void recoverGroups().catch(() => {}) }
+    window.addEventListener('paperphone:identity-changed', onIdentityChanged)
 
     // Listen for incoming messages and route to store
     const unsubMsg = onWs('message', async (data) => {
@@ -124,56 +115,24 @@ export function useSocket() {
             if (keys) {
               const isMe = data.from === myId
               if (isMe && data.self_ciphertext && data.self_header) {
-                const text = await decryptHybrid(data.self_header, keys.ik_priv, null, data.self_ciphertext)
+                const decrypted = await decryptSignedMessage(data)
+                const text = await unprotectPresentationText(decrypted)
                 msgToAdd = { ...data, decrypted: text }
               } else if (!isMe) {
-                const text = await decryptHybrid(data.header, keys.ik_priv, null, data.ciphertext)
+                const decrypted = await decryptSignedMessage(data)
+                const text = await unprotectPresentationText(decrypted)
                 msgToAdd = { ...data, decrypted: text }
               }
             }
           } catch {
-            // Decryption failed, keep original data
+            msgToAdd = { ...data, decrypted: securityText('verify.signature_failed') }
           }
         } else if (data.group_id) {
-          // Group messages - check if encrypted
-          if (data.sender_key_version && data.nonce) {
-            // Encrypted group message — decrypt with sender's key
-            try {
-              let sk = getSenderKey(data.group_id, data.from)
-              if (!sk) {
-                // Don't have sender key yet — fetch from server
-                console.log(`[useSocket] No sender key for ${data.from} in group ${data.group_id}, fetching from server...`)
-                await fetchAndStoreSenderKeys(data.group_id)
-                sk = getSenderKey(data.group_id, data.from)
-              }
-              if (!sk) {
-                // Still no key — retry after a brief delay.
-                // The sender distributes keys via HTTP POST before sending the WS message,
-                // but there can be a race where the message arrives before the POST response
-                // has been fully committed to the DB.
-                console.log(`[useSocket] Retrying sender key fetch after 1s delay for ${data.from} in group ${data.group_id}...`)
-                await new Promise(r => setTimeout(r, 1000))
-                await fetchAndStoreSenderKeys(data.group_id)
-                sk = getSenderKey(data.group_id, data.from)
-              }
-              if (sk) {
-                const text = await decryptWithSenderKey(data.ciphertext, data.nonce, sk.senderKey)
-                msgToAdd = { ...data, decrypted: text }
-              } else {
-                // Still don't have sender key — store as 🔒 but keep nonce in data for retry
-                console.warn(`[useSocket] Still no sender key for ${data.from} in group ${data.group_id} after retries. Message will show 🔒`)
-                msgToAdd = { ...data, decrypted: '🔒' }
-              }
-            } catch (err) {
-              console.warn(`[useSocket] Group message decrypt failed for msg from ${data.from}:`, err)
-              msgToAdd = { ...data, decrypted: '🔒' }
-            }
-          } else {
-            // Unencrypted group message
-            msgToAdd = { ...data, decrypted: await unprotectPresentationText(data.ciphertext) }
-          }
+          try { msgToAdd = { ...data, ...await decryptGroupMessage(data, !!data.offline) } }
+          catch (error) { msgToAdd = { ...data, signature_valid: false, decrypted: error instanceof MissingGroupKey ? '🔒' : `⚠️ ${securityErrorText(error)}` } }
         }
 
+        if (useStore.getState().user?.id !== myId) return
         const isNewMessage = useStore.getState().addMessage(chatId, msgToAdd)
 
         // If not on that chat page AND message is not from me, trigger notification
@@ -305,51 +264,38 @@ export function useSocket() {
       }
     })
 
-    // Listen for sender key distributions
-    const unsubSKDist = onWs('sender_key_distribution', async (data) => {
-      if (data.group_id && data.from_id && data.encrypted_key && data.header) {
-        try {
-          const keys = getKeys()
-          if (keys) {
-            const senderKey = await receiveSenderKey(
-              data.encrypted_key,
-              data.header,
-              keys.ik_priv,
-              null
-            )
-            storeSenderKey(data.group_id, data.from_id, senderKey, data.key_version || 1)
-            console.log(`[useSocket] Stored sender key from ${data.from_id} for group ${data.group_id}`)
-            // Re-decrypt any 🔒 messages from this sender that we couldn't decrypt before
-            await retryDecryptGroupMessages(data.group_id, data.from_id)
-          }
-        } catch (err) {
-          console.error(`[useSocket] Failed to decrypt sender key distribution from ${data.from_id}:`, err)
-        }
-      }
+    const unsubSKDist = onWs('sender_key_distribution', async data => {
+      try {
+        await importGroupDistribution(data.group_id, data)
+        await retryDecryptGroupMessages(data.group_id)
+      } catch (error) { console.warn('[Group] Rejected sender key:', error) }
     })
-
-    // Listen for sender key rotation requests
-    const unsubSKRotate = onWs('sender_key_rotate', (data) => {
-      if (data.group_id && data.removed_user) {
-        // Remove the departed user's sender key from local cache
-        removeSenderKey(data.group_id, data.removed_user)
-      }
+    const unsubSKRotate = onWs('sender_key_rotate', async data => {
+      if (!data.group_id) return
+      const myId = useStore.getState().user?.id
+      if (myId) retireOwnSenderKeys(data.group_id, myId)
+      await ensureGroupSenderKey(data.group_id).catch(error => console.warn('[Group] Rotation pending; sending blocked:', error))
+      // Run outside this sequenced event handler: sync itself dispatches queued events.
+      void syncMessages().catch(error => console.warn('[Group] Rotation catch-up failed:', error))
     })
-
-    // Listen for sender key invalidation (user's identity keys changed)
-    const unsubSKInvalid = onWs('sender_key_invalidated', (data) => {
-      if (data.group_id && data.user_id) {
-        // Remove the invalidated user's sender key from local cache
-        removeSenderKey(data.group_id, data.user_id)
-        // Also remove OUR OWN sender key for this group.
-        // Our previous distribution to this user was encrypted with their OLD ik_pub,
-        // so they can't decrypt it. We must regenerate and re-distribute on next send.
-        const myId = useStore.getState().user?.id
-        if (myId && myId !== data.user_id) {
-          removeSenderKey(data.group_id, myId)
-        }
-        console.log(`[useSocket] Sender key invalidated for user ${data.user_id} in group ${data.group_id} (identity keys changed). Own key also cleared for re-distribution.`)
+    const unsubSKInvalid = onWs('sender_key_invalidated', async data => {
+      const myId = useStore.getState().user?.id
+      if (myId && data.group_id) retireOwnSenderKeys(data.group_id, myId)
+      await recoverGroups().catch(() => {})
+    })
+    const unsubAdded = onWs('group_member_added', () => recoverGroups().catch(() => {}))
+    const unsubRemoved = onWs('group_removed', data => {
+      clearGroupSenderKeys(data.group_id)
+      useStore.getState().setGroups(useStore.getState().groups.filter(group => group.id !== data.group_id))
+      window.dispatchEvent(new CustomEvent('paperphone:group-removed', { detail: data.group_id }))
+    })
+    const unsubFailed = onWs('message_failed', data => {
+      const messages = useStore.getState().messages[data.group_id] || []
+      for (const message of messages) if (message.client_msg_id === data.client_msg_id) {
+        useStore.getState().updateMessage(data.group_id, message.id, { delivery_status: 'failed', signature_valid: false, decrypted: securityText(data.code === 'not_group_member' ? 'grouptrust.not_member' : data.code === 'group_signature_required' ? 'grouptrust.signature_required' : data.code === 'client_message_conflict' ? 'grouptrust.message_conflict' : 'grouptrust.send_failed') })
       }
+      const myId = useStore.getState().user?.id
+      if (myId && data.group_id) retireOwnSenderKeys(data.group_id, myId)
     })
 
     return () => {
@@ -362,6 +308,10 @@ export function useSocket() {
       unsubSKDist()
       unsubSKRotate()
       unsubSKInvalid()
+      unsubRemoved()
+      unsubAdded()
+      unsubFailed()
+      window.removeEventListener('paperphone:identity-changed', onIdentityChanged)
       unsubLogoutSignals.forEach(unsubscribe => unsubscribe())
       unsubAuthOk()
       window.removeEventListener('online', recover)
@@ -379,19 +329,5 @@ export function useSocket() {
  * Falls back to English defaults.
  */
 function getI18nT(): (key: string) => string {
-  // Access i18n translations from the store
-  try {
-    const lang = useStore.getState().lang || 'en'
-    // Dynamic import not possible here, use a simple fallback map
-    const fallbacks: Record<string, string> = {
-      'notification.image': lang === 'zh' ? '[图片]' : '[Image]',
-      'notification.voice': lang === 'zh' ? '[语音]' : '[Voice]',
-      'notification.file': lang === 'zh' ? '[文件]' : '[File]',
-      'notification.video': lang === 'zh' ? '[视频]' : '[Video]',
-      'notification.sticker': lang === 'zh' ? '[表情]' : '[Sticker]',
-    }
-    return (key: string) => fallbacks[key] || key
-  } catch {
-    return (key: string) => key
-  }
+  return (key: string) => translate(key, useStore.getState().lang as LangCode)
 }

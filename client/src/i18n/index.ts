@@ -20,6 +20,10 @@ export const langNames: Record<LangCode, string> = {
 
 export const allLangs = Object.keys(langNames) as LangCode[]
 
-export function t(key: string, lang: LangCode = 'zh'): string {
-  return messages[lang]?.[key] || messages['en']?.[key] || key
+export type TranslationParams = Record<string, string | number>
+
+export function t(key: string, lang: LangCode = 'zh', params?: TranslationParams): string {
+  const template = messages[lang]?.[key] || messages['en']?.[key] || key
+  return params ? template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match) : template
 }

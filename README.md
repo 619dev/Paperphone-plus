@@ -4,9 +4,8 @@
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/版本-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@
 | 🗂️ 文件存储 | 头像、朋友圈和时间线媒体永久保存；聊天附件独立存放并定期清理 |
 | 🔑 两步验证 (2FA) | Google Authenticator 兼容 TOTP 验证，8 个一次性恢复码，登录时强制验证 |
 | 📷 扫码加好友/入群 | 扫一扫二维码添加好友、加入群聊，群二维码可设置有效期（1 周/1 月/3 月） |
-| 🏗️ 可自托管 | Docker Compose 或 Zeabur 部署后端，使用官方原生客户端连接 |
+| 🏗️ 可自托管 | Docker Compose 部署后端，使用官方原生客户端连接 |
 | 🌐 代理设置 | 支持 SOCKS5 / HTTP / HTTPS 代理协议，可在登录页和设置页配置代理服务器地址、端口、用户名和密码，方便受限网络环境下使用 |
 | 🛡️ 内容审核 | 用户举报（6 类原因）+ 拉黑用户（即时屏蔽动态/消息）+ 使用条款 EULA |
 | 🔧 管理后台 | 内嵌 Web 管理面板（`/admin`，路径可自定义），密码保护，审核举报、删除违规内容、封禁用户，支持 8 种语言 |
@@ -123,14 +122,9 @@ PaperPhonePlus 将“本地账号状态”“实时连接状态”和“消息�
 
 ---
 
-> 📖 **[详细部署文档 / Deployment Guide](DEPLOY_CN.md)** — 仅后端的 Zeabur、Docker Compose + Nginx 部署，以及原生客户端服务器地址配置。
+> 📖 **[详细部署文档 / Deployment Guide](DEPLOY_CN.md)** — 仅后端的 Docker Compose + Nginx 部署，以及原生客户端服务器地址配置。
 >
-> **重要：不再部署 Web 前端。** `/client` 仅作为 Android、iOS、Windows 和 macOS 客户端共享前端代码；不要部署到 Docker、Zeabur、Vercel 或 Nginx。
-
-### Zeabur 一键部署
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-模板只创建 `server`、MySQL、Redis 和 LiveKit。记录 `server` 的公网 HTTPS 域名，并在官方原生客户端登录页填写该地址。
+> **重要：不再部署 Web 前端。** `/client` 仅作为 Android、iOS、Windows 和 macOS 客户端共享前端代码；不要部署到 Docker、Vercel 或 Nginx。
 
 ### Docker Compose（推荐）
 ```bash
@@ -226,7 +220,7 @@ Firebase 服务账号 JSON 文件中的 `private_key` 字段包含 RSA 私钥，
 **服务端已做兼容处理**：`fcm.rs` 会自动将字面量 `\n` 转换为真实换行符，因此以下两种格式都支持：
 
 <details>
-<summary><b>格式一：单行（推荐用于 Zeabur / Docker / CI 环境变量）</b></summary>
+<summary><b>格式一：单行（推荐用于 Docker / CI 环境变量）</b></summary>
 
 直接从 JSON 文件中复制 `private_key` 的值（保留 `\n` 转义符），粘贴为一行：
 
@@ -257,7 +251,6 @@ MIIEvQIBADANBgkqhkiG9w0BAQE...
 
 | 部署平台 | 推荐格式 | 注意事项 |
 |----------|----------|----------|
-| **Zeabur** | 单行（`\n` 转义） | 在 Variables 面板直接粘贴 JSON 中的原始值即可 |
 | **Docker / docker-compose** | 单行或多行均可 | YAML 多行用 `\|` 语法；`.env` 文件建议用单行 |
 | **Railway / Docker** | 单行（`\n` 转义） | 环境变量输入框通常不支持真实多行 |
 | **Linux .env 文件** | 多行（引号包裹） | 确保引号闭合，注意 shell 转义 |
@@ -407,7 +400,6 @@ Nginx 只负责反向代理后端 API、管理后台、IM WebSocket 和 LiveKit 
 ```
 paperphoneplus/
 ├── docker-compose.yml
-├── zeabur.yaml
 ├── server/                          # Rust (Axum) 后端
 │   ├── Cargo.toml
 │   ├── Dockerfile

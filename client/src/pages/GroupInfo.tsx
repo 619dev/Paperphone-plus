@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { refreshIdentityTrust, IDENTITY_STATUS_KEYS, type IdentityStatus } from '../crypto/authenticatedMessaging'
+import IdentityBadge from '../components/IdentityBadge'
+import { clearGroupSenderKeys } from '../crypto/groupCrypto'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { get, post, put, del, uploadFileWithProgress } from '../api/http'
 import { useI18n } from '../hooks/useI18n'
-import { useStore } from '../store'
+import { useStore, refreshFriendIdentityKeys } from '../store'
 import { QRCodeCanvas } from '../components/QRCode'
 import { AlertTriangle, BellOff, Camera, ChevronLeft, ChevronRight, ChevronDown, Megaphone, MessageCircle, Pencil, Settings, Shield, Smartphone, Users, UserPlus, Plus, Check } from 'lucide-react'
 
@@ -18,6 +21,13 @@ export default function GroupInfo() {
   const navigate = useNavigate()
   const user = useStore(s => s.user)
   const [group, setGroup] = useState<any>(null)
+  const [trustRefreshing, setTrustRefreshing] = useState(true)
+  const [trustError, setTrustError] = useState(false)
+  const [memberTrust, setMemberTrust] = useState<Record<string, IdentityStatus | 'error'>>({})
+  const latestGroup = useRef<any>(null)
+  const trustRevision = useRef(0)
+  const refreshGeneration = useRef(0)
+  const refreshingGroup = useRef<string | null>(null)
   const [editing, setEditing] = useState<'name' | 'notice' | null>(null)
   const [editVal, setEditVal] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -29,8 +39,6 @@ export default function GroupInfo() {
   const [inviteLoading, setInviteLoading] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set())
-  const [encryptionLoading, setEncryptionLoading] = useState(false)
-  const [showEncryptConfirm, setShowEncryptConfirm] = useState(false)
   const avatarRef = useRef<HTMLInputElement>(null)
   const friends = useStore(s => s.friends)
 
@@ -61,16 +69,66 @@ export default function GroupInfo() {
     } catch {}
   }
 
-  const reload = () => {
-    if (id) get(`/api/groups/${id}`).then((g: any) => {
-      setGroup(g)
-      // Find current user's mute status
-      const me = g.members?.find((m: any) => m.id === user?.id)
+  const reload = useCallback(async () => {
+    if (!id || refreshingGroup.current === id) return
+    const generation = ++refreshGeneration.current
+    ++trustRevision.current
+    refreshingGroup.current = id
+    setTrustRefreshing(true)
+    setTrustError(false)
+    const current = () => generation === refreshGeneration.current && useStore.getState().user?.id === user?.id
+    try {
+      const detail = await get(`/api/groups/${id}`)
+      if (!current()) return
+      latestGroup.current = detail
+      setGroup(detail)
+      refreshFriendIdentityKeys(detail.members || [])
+      const statuses = await Promise.all((detail.members || []).map(async (member: any) => {
+        try { return [member.id, await refreshIdentityTrust(member)] as const }
+        catch { return [member.id, 'error'] as const }
+      }))
+      if (!current()) return
+      setMemberTrust(Object.fromEntries(statuses))
+      const me = detail.members?.find((member: any) => member.id === user?.id)
       if (me) setMyMuted(!!me.muted)
-    }).catch(() => {})
-  }
+    } catch {
+      if (current()) setTrustError(true)
+    } finally {
+      if (generation === refreshGeneration.current) refreshingGroup.current = null
+      if (current()) setTrustRefreshing(false)
+    }
+  }, [id, user?.id])
 
-  useEffect(() => { reload() }, [id])
+  useEffect(() => {
+    setGroup(null)
+    latestGroup.current = null
+    setMemberTrust({})
+    const onTrustChanged = async () => {
+      const detail = latestGroup.current
+      if (refreshingGroup.current || !detail) return
+      const revision = ++trustRevision.current
+      const generation = refreshGeneration.current
+      const statuses = await Promise.all((detail.members || []).map(async (member: any) => {
+        try { return [member.id, await refreshIdentityTrust(member)] as const }
+        catch { return [member.id, 'error'] as const }
+      }))
+      if (generation === refreshGeneration.current && revision === trustRevision.current && useStore.getState().user?.id === user?.id) setMemberTrust(Object.fromEntries(statuses))
+    }
+    const onVisible = () => { if (document.visibilityState === 'visible') void reload() }
+    void reload()
+    window.addEventListener('focus', reload)
+    window.addEventListener('paperphone:identity-changed', onTrustChanged)
+    window.addEventListener('paperphone:presentation-state-changed', onTrustChanged)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      ++refreshGeneration.current
+      refreshingGroup.current = null
+      window.removeEventListener('focus', reload)
+      window.removeEventListener('paperphone:identity-changed', onTrustChanged)
+      window.removeEventListener('paperphone:presentation-state-changed', onTrustChanged)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [reload])
 
   // ── Avatar upload ──
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +175,7 @@ export default function GroupInfo() {
     } catch {}
   }
 
-  if (!group) return <div className="page"><div className="loading-spinner" /></div>
+  if (!group) return <div className="page">{trustError ? <><p role="status">{t('grouptrust.profile_error')}</p><button className="btn btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button><button className="btn btn-secondary" onClick={() => navigate(-1)}>{t('verify.back')}</button></> : <div className="loading-spinner" />}</div>
 
   return (
     <div className="page" id="group-info-page">
@@ -295,51 +353,6 @@ export default function GroupInfo() {
         </div>
       )}
 
-      {/* Encryption confirm dialog */}
-      {showEncryptConfirm && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          animation: 'fade-in .2s ease',
-        }}>
-          <div style={{
-            background: 'var(--bg-card)', borderRadius: 16, padding: 24,
-            width: 'min(360px, 90vw)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
-              {t('group.encryption')}
-            </div>
-            <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5 }}>
-              {t('group.encryption_switch_confirm')}
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowEncryptConfirm(false)}
-                style={{
-                  padding: '8px 20px', borderRadius: 10, border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 14,
-                }}>{t('common.cancel')}</button>
-              <button onClick={async () => {
-                setEncryptionLoading(true)
-                try {
-                  await put(`/api/groups/${id}/encryption`, { encrypted: !group.encrypted })
-                  reload()
-                  useStore.getState().setMessages(id!, [])
-                  get('/api/groups').then(g => useStore.getState().setGroups(g)).catch(() => {})
-                } catch {}
-                setEncryptionLoading(false)
-                setShowEncryptConfirm(false)
-              }}
-                disabled={encryptionLoading}
-                style={{
-                  padding: '8px 20px', borderRadius: 10, border: 'none',
-                  background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
-                  opacity: encryptionLoading ? 0.6 : 1,
-                }}>{encryptionLoading ? '...' : t('common.save')}</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
 
@@ -435,37 +448,13 @@ export default function GroupInfo() {
             </div>
           </div>
 
-          {/* Encryption mode toggle */}
-          <div className="list-item" onClick={() => {
-            if (isOwner) setShowEncryptConfirm(true)
-            else alert(t('group.encryption_owner_only') || 'Only the group owner can change encryption mode')
-          }} style={{ cursor: isOwner ? 'pointer' : 'default', borderRadius: 12, marginBottom: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-              <span style={{ fontSize: 20 }}><Shield size={18} /></span>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500 }}>{t('group.encryption')}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {group.encrypted ? t('group.encryption_on') : t('group.encryption_off')}
-                </div>
-              </div>
-            </div>
-            {/* Toggle switch */}
-            <div style={{
-              width: 44, height: 24, borderRadius: 12, padding: 2,
-              background: group.encrypted ? 'var(--accent)' : 'var(--border)',
-              transition: 'background .2s ease', cursor: isOwner ? 'pointer' : 'default', flexShrink: 0,
-              opacity: isOwner ? 1 : 0.5,
-            }}>
-              <div style={{
-                width: 20, height: 20, borderRadius: 10,
-                background: '#fff',
-                transform: group.encrypted ? 'translateX(20px)' : 'translateX(0)',
-                transition: 'transform .2s ease',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }} />
+          <div className="list-item" style={{ borderRadius: 12, marginBottom: 6 }}>
+            <Shield size={18} />
+            <div style={{ marginLeft: 10 }}>
+              <div>{t('grouptrust.title')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>{t('grouptrust.description')}</div>
             </div>
           </div>
-
           {/* Bot warning when encryption is on */}
           {group.encrypted && (
             <div style={{
@@ -572,6 +561,10 @@ export default function GroupInfo() {
             </button>
           </div>
 
+          <p role="status" aria-live="polite" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {trustRefreshing ? t('grouptrust.refreshing') : trustError ? t('verify.error') : Object.values(memberTrust).includes('error') ? t('grouptrust.partial_error') : t('grouptrust.refreshed')}
+          </p>
+          {trustError && <button className="btn btn-sm btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button>}
           {group.members?.map((m: any) => (
             <div key={m.id} className="list-item" onClick={() => navigate(`/user/${m.id}`)}
               style={{ cursor: 'pointer', borderRadius: 12, marginBottom: 4 }}>
@@ -580,7 +573,7 @@ export default function GroupInfo() {
               </div>
               <div className="list-content" style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="name">{m.nickname}</span>
+                  <span className="name">{m.nickname}<IdentityBadge id={m.id} ik={m.ik_pub} sign={m.kem_pub} refreshing={trustRefreshing || trustError || memberTrust[m.id] === 'error'} /></span>
                   {m.role === 'owner' && (
                     <span style={{
                       fontSize: 10, padding: '1px 6px', borderRadius: 6,
@@ -589,6 +582,7 @@ export default function GroupInfo() {
                   )}
                 </div>
                 <div className="preview" style={{ fontSize: 12 }}>@{m.username}</div>
+                {!trustRefreshing && !trustError && m.id !== user?.id && memberTrust[m.id] && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t(IDENTITY_STATUS_KEYS[memberTrust[m.id]])}</div>}
               </div>
               <span style={{ opacity: 0.4, fontSize: 14 }}><ChevronRight size={14} /></span>
             </div>
@@ -604,6 +598,7 @@ export default function GroupInfo() {
               if (!window.confirm(t('group.disband_confirm'))) return
               try {
                 await del(`/api/groups/${id}`)
+                clearGroupSenderKeys(id!)
                 const g = await get('/api/groups')
                 useStore.getState().setGroups(g)
                 navigate('/chats')
@@ -619,6 +614,7 @@ export default function GroupInfo() {
               if (!window.confirm(t('group.leave_confirm'))) return
               try {
                 await post(`/api/groups/${id}/leave`)
+                clearGroupSenderKeys(id!)
                 const g = await get('/api/groups')
                 useStore.getState().setGroups(g)
                 navigate('/chats')

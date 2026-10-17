@@ -31,6 +31,7 @@ services:
       LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-paperphone}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-paperphone_change_this_secret}
+      BARK_ALLOWED_HOSTS: ${BARK_ALLOWED_HOSTS:-api.day.app}
       NTFY_BASE_URL: ${NTFY_BASE_URL:-https://ntfy.sh}
       NTFY_TOKEN: ${NTFY_TOKEN:-}
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}

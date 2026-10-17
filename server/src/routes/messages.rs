@@ -17,6 +17,7 @@ pub fn router() -> Router<Arc<AppState>> {
 struct PaginationQuery {
     limit: Option<i64>,
     before: Option<String>,
+    before_seq: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -28,15 +29,20 @@ async fn sync_messages(
     let after = params.after.unwrap_or(0);
     let limit = params.limit.unwrap_or(500).clamp(1, 1000);
     type Row = (u64,String,String,String,String,String,Option<String>,Option<String>,Option<String>,String,chrono::NaiveDateTime,Option<chrono::NaiveDateTime>,Option<String>,Option<i64>,Option<String>,Option<String>);
+    let mut transaction = state.db.begin().await.map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
+    sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1 FOR UPDATE").fetch_one(&mut *transaction).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
     let rows: Vec<Row> = sqlx::query_as(
         "SELECT m.server_seq,m.id,m.type,m.from_id,m.to_id,m.ciphertext,m.header,m.self_ciphertext,m.self_header,m.msg_type,m.created_at,m.read_at,m.nonce,m.sender_key_version,u.nickname,m.client_msg_id
          FROM messages m LEFT JOIN users u ON u.id=m.from_id
          WHERE m.server_seq > ? AND (
            (m.type='private' AND (m.from_id=? OR m.to_id=?)) OR
-           (m.type='group' AND EXISTS(SELECT 1 FROM group_members gm WHERE gm.group_id=m.to_id AND gm.user_id=?))
+           (m.type='group' AND EXISTS(SELECT 1 FROM group_members gm WHERE gm.group_id=m.to_id AND gm.user_id=? AND COALESCE(m.sender_key_version,0)>=gm.joined_epoch)
+             AND EXISTS(SELECT 1 FROM `groups` g WHERE g.id=m.to_id AND (g.auto_delete=0 OR m.created_at>=DATE_SUB(NOW(), INTERVAL g.auto_delete SECOND))))
          ) ORDER BY m.server_seq ASC LIMIT ?"
     ).bind(after).bind(&auth.0.id).bind(&auth.0.id).bind(&auth.0.id).bind(limit)
-      .fetch_all(&state.db).await.unwrap_or_default();
+      .fetch_all(&mut *transaction).await.map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
+    transaction.commit().await.map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
     let mut messages = Vec::with_capacity(rows.len());
     let mut next_cursor = after;
     for (seq,id,kind,from_id,to_id,ciphertext,header,self_ct,self_hdr,msg_type,created,read_at,nonce,skv,nickname,client_msg_id) in rows {
@@ -126,11 +132,16 @@ async fn get_private_messages(
 
 async fn get_group_messages(
     State(state): State<Arc<AppState>>,
-    _auth: AuthUser,
+    auth: AuthUser,
     Path(group_id): Path<String>,
     Query(params): Query<PaginationQuery>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    let limit = params.limit.unwrap_or(50).min(50000);
+    let member: Option<(u32,)> = sqlx::query_as("SELECT joined_epoch FROM group_members WHERE group_id=? AND user_id=?")
+        .bind(&group_id).bind(&auth.0.id).fetch_optional(&state.db).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
+    let joined = member.ok_or_else(|| (axum::http::StatusCode::FORBIDDEN, Json(serde_json::json!({"error":"Not a group member"}))))?.0;
+    let before_seq = params.before_seq.unwrap_or(u64::MAX);
+    let limit = params.limit.unwrap_or(50).clamp(1,50000);
 
     // First, delete any expired group messages for this group
     sqlx::query(
@@ -143,35 +154,35 @@ async fn get_group_messages(
     .bind(&group_id)
     .execute(&state.db).await.ok();
 
-    let rows: Vec<(String, String, String, Option<String>, String, chrono::NaiveDateTime, String, Option<String>, Option<String>, Option<i64>)> = if let Some(before) = &params.before {
+    let rows: Vec<(String, String, String, Option<String>, String, chrono::NaiveDateTime, String, Option<String>, Option<String>, Option<i64>, u64)> = if let Some(before) = &params.before {
         sqlx::query_as(
-            "SELECT m.id, m.from_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version
+            "SELECT m.id, m.from_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version, m.server_seq
              FROM (
                SELECT * FROM messages
-               WHERE type = 'group' AND to_id = ? AND created_at < ?
-               ORDER BY created_at DESC LIMIT ?
+               WHERE type = 'group' AND to_id = ? AND COALESCE(sender_key_version,0)>=? AND server_seq < ? AND created_at < ?
+               ORDER BY server_seq DESC LIMIT ?
              ) m LEFT JOIN users u ON u.id = m.from_id
-             ORDER BY m.created_at ASC"
+             ORDER BY m.server_seq ASC"
         )
-        .bind(&group_id).bind(before).bind(limit)
-        .fetch_all(&state.db).await.unwrap_or_default()
+        .bind(&group_id).bind(joined).bind(before_seq).bind(before).bind(limit)
+        .fetch_all(&state.db).await.map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?
     } else {
         sqlx::query_as(
-            "SELECT m.id, m.from_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version
+            "SELECT m.id, m.from_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version, m.server_seq
              FROM (
                SELECT * FROM messages
-               WHERE type = 'group' AND to_id = ?
-               ORDER BY created_at DESC LIMIT ?
+               WHERE type = 'group' AND to_id = ? AND COALESCE(sender_key_version,0)>=? AND server_seq < ?
+               ORDER BY server_seq DESC LIMIT ?
              ) m LEFT JOIN users u ON u.id = m.from_id
-             ORDER BY m.created_at ASC"
+             ORDER BY m.server_seq ASC"
         )
-        .bind(&group_id).bind(limit)
-        .fetch_all(&state.db).await.unwrap_or_default()
+        .bind(&group_id).bind(joined).bind(before_seq).bind(limit)
+        .fetch_all(&state.db).await.map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?
     };
 
-    let messages: Vec<serde_json::Value> = rows.iter().map(|(id, from_id, ct, hdr, msg_type, created, nickname, avatar, nonce, sender_key_version)| {
+    let messages: Vec<serde_json::Value> = rows.iter().map(|(id, from_id, ct, hdr, msg_type, created, nickname, avatar, nonce, sender_key_version, server_seq)| {
         let mut msg = serde_json::json!({
-            "id": id, "from": from_id,
+            "id": id, "from": from_id, "group_id":group_id, "server_seq":server_seq,
             "from_nickname": nickname, "from_avatar": avatar,
             "ciphertext": ct, "header": hdr,
             "msg_type": msg_type,

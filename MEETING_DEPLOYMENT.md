@@ -32,21 +32,5 @@ LIVEKIT_API_SECRET=<至少 32 字节随机 secret>
 `api.example.com`、`meeting.example.com` 和证书路径替换为实际值后启用。Nginx 只代理
 HTTPS/WebSocket；LiveKit 的 TCP 7881 和 UDP 7882 必须在主机及云防火墙中直接开放。
 
-## Zeabur 部署
-
-`zeabur.yaml` 会创建 LiveKit 服务，并自动向 server 注入相同的通话密钥和
-`LIVEKIT_URL=wss://<会议域名>`。
-
-Zeabur 当前不支持公开 UDP 服务端口，因此模板只公开：
-
-- 7880：WebSocket/API，经 Zeabur HTTPS 域名访问；
-- 7881：ICE/TCP 媒体回退。
-
-LiveKit 内部仍配置 UDP 7882，但在 Zeabur 模板中不声明该端口，以保证模板当前可用。
-TCP 可以建立通话，但丢包恢复、延迟和弱网画质通常不如 UDP。当前需要生产级通话时，
-请使用 LiveKit Cloud，或在具有公网 IP 的 VM 上单独运行 LiveKit，并将 Zeabur server 的
-`LIVEKIT_URL` 和会议密钥改为外置实例。Zeabur 支持 UDP 后，只需给 LiveKit 服务增加 UDP
-7882 声明，客户端和令牌接口不需要修改。
-
 私聊令牌接口只允许已接受的好友进入唯一私聊房间，令牌有效期为 1 小时。群会议令牌
 只允许群成员进入对应房间，群主获得主席权限，令牌有效期为 6 小时。

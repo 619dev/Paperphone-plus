@@ -1,3 +1,4 @@
+import { SecurityError } from '../i18n/security'
 /**
  * Group E2E Encryption — Sender Key Protocol
  *
@@ -24,12 +25,14 @@ interface SenderKeyEntry {
   userId: string        // The owner of this sender key
   senderKey: string     // base64-encoded 32-byte symmetric key
   keyVersion: number
+  authenticated?: boolean
   distributed?: boolean // Whether this key has been successfully distributed (only for own keys)
 }
 
 /** In-memory + localStorage cache of sender keys */
 let senderKeyCache: SenderKeyEntry[] = []
 let senderKeysAccount: string | null = null
+let persistence: Promise<unknown> = Promise.resolve()
 
 function currentAccount(): string | null {
   try { return JSON.parse(localStorage.getItem('user') || 'null')?.id || null } catch { return null }
@@ -62,20 +65,25 @@ function loadSenderKeys(): SenderKeyEntry[] {
 function saveSenderKeys() {
   localStorage.removeItem(SK_STORAGE_KEY)
   const account = currentAccount()
-  if (account) void setBrowserSecret(account, SK_SECRET_NAME, JSON.stringify(senderKeyCache))
-    .catch(err => console.warn('[GroupCrypto] Sender key persistence failed:', err))
+  if (account) {
+    const snapshot = JSON.stringify(senderKeyCache)
+    persistence = persistence.catch(() => {}).then(() => setBrowserSecret(account, SK_SECRET_NAME, snapshot))
+  }
 }
 
 /**
  * Store a sender key for a specific user in a specific group.
  */
-export function storeSenderKey(groupId: string, userId: string, senderKey: string, keyVersion: number, distributed?: boolean) {
+export function storeSenderKey(groupId: string, userId: string, senderKey: string, keyVersion: number, distributed?: boolean, authenticated = false) {
+  if (senderKeysAccount !== currentAccount()) { senderKeyCache = []; senderKeysAccount = currentAccount() }
   loadSenderKeys()
-  // Replace existing entry for same group+user
+  const existing = getSenderKey(groupId, userId, keyVersion)
+  if (existing?.authenticated && existing.senderKey !== senderKey) throw new SecurityError('crypto.key_conflict')
+  // Retain historical epochs so offline members can decrypt across rotations.
   senderKeyCache = senderKeyCache.filter(
-    sk => !(sk.groupId === groupId && sk.userId === userId)
+    sk => !(sk.groupId === groupId && sk.userId === userId && sk.keyVersion === keyVersion)
   )
-  senderKeyCache.push({ groupId, userId, senderKey, keyVersion, distributed })
+  senderKeyCache.push({ groupId, userId, senderKey, keyVersion, distributed, authenticated })
   saveSenderKeys()
 }
 
@@ -104,11 +112,11 @@ export function markSenderKeyDistributed(groupId: string, userId: string) {
 /**
  * Get the sender key for a specific user in a group.
  */
-export function getSenderKey(groupId: string, userId: string): SenderKeyEntry | null {
+export function getSenderKey(groupId: string, userId: string, version?: number): SenderKeyEntry | null {
+  if (senderKeysAccount !== currentAccount()) return null
   loadSenderKeys()
-  return senderKeyCache.find(
-    sk => sk.groupId === groupId && sk.userId === userId
-  ) || null
+  return senderKeyCache.filter(sk => sk.groupId === groupId && sk.userId === userId && (version === undefined || sk.keyVersion === version))
+    .sort((a,b) => b.keyVersion - a.keyVersion)[0] || null
 }
 
 /**
@@ -260,3 +268,11 @@ export async function receiveSenderKey(
     throw err
   }
 }
+
+/** Retire send capability immediately while retaining past decryption keys. */
+export function retireOwnSenderKeys(groupId: string, userId: string) {
+  for (const entry of senderKeyCache) if (entry.groupId === groupId && entry.userId === userId) entry.distributed = false
+  saveSenderKeys()
+}
+
+export async function flushSenderKeys(): Promise<void> { await persistence }

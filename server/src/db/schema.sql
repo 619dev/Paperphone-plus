@@ -385,3 +385,31 @@ CREATE TABLE IF NOT EXISTS group_sender_key_distributions (
   FOREIGN KEY (from_id)  REFERENCES users(id)    ON DELETE CASCADE,
   FOREIGN KEY (to_id)    REFERENCES users(id)    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Signed group protocol: membership epochs are also sender-key versions.
+ALTER TABLE `groups` ADD COLUMN key_epoch INT UNSIGNED NOT NULL DEFAULT 1;
+ALTER TABLE group_members ADD COLUMN joined_epoch INT UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE messages MODIFY msg_type ENUM('text','image','file','voice','system','sticker','video','identity_verification') NOT NULL DEFAULT 'text';
+ALTER TABLE `groups` ADD COLUMN signed_protocol TINYINT(1) NOT NULL DEFAULT 0;
+DELETE sk FROM group_sender_keys sk JOIN `groups` g ON g.id=sk.group_id WHERE g.signed_protocol=0;
+UPDATE `groups` SET encrypted=1, key_epoch=key_epoch+1, signed_protocol=1 WHERE signed_protocol=0;
+
+-- Serialize message allocation/commit so a global cursor cannot skip a lower
+-- AUTO_INCREMENT sequence still uncommitted by a concurrent sender.
+CREATE TABLE IF NOT EXISTS message_sync_barrier (id TINYINT UNSIGNED PRIMARY KEY) ENGINE=InnoDB;
+INSERT IGNORE INTO message_sync_barrier (id) VALUES (1);
+
+ALTER TABLE messages ADD INDEX idx_group_history (type,to_id,server_seq);
+
+-- ── Bark Subscriptions (iOS notification through a user-selected Bark app) ──
+CREATE TABLE IF NOT EXISTS bark_subscriptions (
+  id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     VARCHAR(36)     NOT NULL,
+  endpoint    VARCHAR(1024)   NOT NULL,
+  platform    VARCHAR(16)     DEFAULT 'ios',
+  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_bark_user (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_bark_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -218,24 +218,28 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             let self_hdr = parsed.get("self_header").and_then(|v| v.as_str());
             let ts = chrono::Utc::now().timestamp_millis();
 
+            let mut transaction = match state.db.begin().await { Ok(tx)=>tx, Err(_)=>continue };
+            if sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1 FOR UPDATE").fetch_one(&mut *transaction).await.is_err() { continue; }
             let insert = sqlx::query(
                 "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,self_ciphertext,self_header,msg_type,delivered,client_msg_id) VALUES (?,'private',?,?,?,?,?,?,?,0,?)"
             )
             .bind(&msg_id).bind(&uid).bind(to)
             .bind(ciphertext).bind(header).bind(self_ct).bind(self_hdr)
             .bind(msg_sub_type).bind(client_msg_id)
-            .execute(&state.db).await;
+            .execute(&mut *transaction).await;
 
             let (server_seq, is_new) = match insert {
                 Ok(result) => (result.last_insert_id(), true),
                 Err(_) if client_msg_id.is_some() => {
                     let existing: Option<(String,u64)> = sqlx::query_as(
                         "SELECT id,server_seq FROM messages WHERE from_id=? AND client_msg_id=?"
-                    ).bind(&uid).bind(client_msg_id).fetch_optional(&state.db).await.ok().flatten();
+                    ).bind(&uid).bind(client_msg_id).fetch_optional(&mut *transaction).await.ok().flatten();
                     if let Some((id,seq))=existing { msg_id=id; (seq,false) } else { continue; }
                 }
                 Err(_) => continue,
             };
+
+            if transaction.commit().await.is_err() { continue; }
 
             if is_new {
                 let envelope = serde_json::json!({
@@ -265,51 +269,78 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
             let sender_key_version = parsed.get("sender_key_version").and_then(|v| v.as_u64());
             let ts = chrono::Utc::now().timestamp_millis();
 
-            let sender: Option<(String, Option<String>)> = sqlx::query_as(
-                "SELECT nickname, avatar FROM users WHERE id = ?"
-            ).bind(&uid).fetch_optional(&state.db).await.ok().flatten();
-            let (nick, avatar) = sender.unwrap_or(("".to_string(), None));
-
+            // A group-row lock serializes send/upload against membership revocation.
+            let mut transaction = match state.db.begin().await { Ok(tx)=>tx, Err(_)=>continue };
+            let group: Option<(u32,)> = sqlx::query_as("SELECT key_epoch FROM `groups` WHERE id=? FOR UPDATE")
+                .bind(group_id).fetch_optional(&mut *transaction).await.ok().flatten();
+            let membership: Option<(String,)> = sqlx::query_as("SELECT user_id FROM group_members WHERE group_id=? AND user_id=?")
+                .bind(group_id).bind(&uid).fetch_optional(&mut *transaction).await.ok().flatten();
+            let published: Option<(u32,)> = sqlx::query_as("SELECT key_version FROM group_sender_keys WHERE group_id=? AND user_id=?")
+                .bind(group_id).bind(&uid).fetch_optional(&mut *transaction).await.ok().flatten();
+            // A lost ACK may be retried after rotation. Acknowledge an exact
+            // committed duplicate without publishing it again in the new epoch.
+            if let Some(client_id) = client_msg_id {
+                let existing: Option<(String,u64,String,Option<String>,String,Option<String>,Option<i64>)> = sqlx::query_as(
+                    "SELECT id,server_seq,ciphertext,header,msg_type,nonce,sender_key_version FROM messages WHERE from_id=? AND to_id=? AND type='group' AND client_msg_id=?")
+                    .bind(&uid).bind(group_id).bind(client_id).fetch_optional(&mut *transaction).await.ok().flatten();
+                if let Some((existing_id,seq,ct,hdr,kind,iv,version)) = existing {
+                    if ct==ciphertext && hdr.as_deref()==header && kind==msg_sub_type && iv.as_deref()==nonce && version.map(|v|v as u64)==sender_key_version {
+                        let _ = tx.send(serde_json::json!({"type":"ack","msg_id":existing_id,"client_msg_id":client_id,"server_seq":seq}).to_string());
+                    } else {
+                        let _ = tx.send(serde_json::json!({"type":"message_failed","code":"client_message_conflict","client_msg_id":client_id,"group_id":group_id}).to_string());
+                    }
+                    continue;
+                }
+            }
+            let epoch = group.map(|g| g.0);
+            let signed: Option<serde_json::Value> = header.and_then(|h|h.strip_prefix("ppg1.")).and_then(|h|serde_json::from_str(h).ok());
+            let context_ok = signed.as_ref().is_some_and(|value| {
+                let meta = &value["meta"];
+                meta["group"].as_str()==Some(group_id) && meta["from"].as_str()==Some(uid.as_str())
+                    && meta["epoch"].as_u64()==sender_key_version && meta["id"].as_str()==client_msg_id
+                    && meta["type"].as_str()==Some(msg_sub_type) && meta["nonce"].as_str()==nonce
+                    && value["signature"].as_str().is_some_and(|s| !s.is_empty())
+            });
+            let error = if membership.is_none() { Some("not_group_member") }
+                else if sender_key_version != epoch.map(u64::from) || published.map(|p|p.0) != epoch { Some("group_epoch_expired") }
+                else if !context_ok || nonce.is_none() || client_msg_id.is_none() { Some("group_signature_required") }
+                else { None };
+            if let Some(code) = error {
+                let _ = tx.send(serde_json::json!({"type":"message_failed","code":code,"client_msg_id":client_msg_id,"group_id":group_id,"key_epoch":epoch}).to_string());
+                continue;
+            }
+            let sender: Option<(String, Option<String>)> = sqlx::query_as("SELECT nickname,avatar FROM users WHERE id=?")
+                .bind(&uid).fetch_optional(&mut *transaction).await.ok().flatten();
+            let (nick, avatar) = sender.unwrap_or((String::new(), None));
+            if sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1 FOR UPDATE").fetch_one(&mut *transaction).await.is_err() { continue; }
             let insert = sqlx::query(
-                "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,msg_type,nonce,sender_key_version,client_msg_id) VALUES (?,'group',?,?,?,?,?,?,?,?)"
-            )
-            .bind(&msg_id).bind(&uid).bind(group_id)
-            .bind(ciphertext).bind(header).bind(msg_sub_type)
-            .bind(nonce).bind(sender_key_version.map(|v| v as i64)).bind(client_msg_id)
-            .execute(&state.db).await;
-            let (server_seq,is_new)=match insert {
+                "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,msg_type,nonce,sender_key_version,client_msg_id) VALUES (?,'group',?,?,?,?,?,?,?,?)")
+                .bind(&msg_id).bind(&uid).bind(group_id).bind(ciphertext).bind(header).bind(msg_sub_type)
+                .bind(nonce).bind(sender_key_version.map(|v|v as i64)).bind(client_msg_id).execute(&mut *transaction).await;
+            let (server_seq,is_new) = match insert {
                 Ok(result)=>(result.last_insert_id(),true),
                 Err(_) if client_msg_id.is_some()=>{
-                    let existing: Option<(String,u64)>=sqlx::query_as("SELECT id,server_seq FROM messages WHERE from_id=? AND client_msg_id=?")
-                        .bind(&uid).bind(client_msg_id).fetch_optional(&state.db).await.ok().flatten();
-                    if let Some((id,seq))=existing { msg_id=id;(seq,false) } else { continue; }
+                    let existing: Option<(String,u64)> = sqlx::query_as("SELECT id,server_seq FROM messages WHERE from_id=? AND client_msg_id=? AND to_id=? AND type='group'")
+                        .bind(&uid).bind(client_msg_id).bind(group_id).fetch_optional(&mut *transaction).await.ok().flatten();
+                    if let Some((id,seq))=existing { msg_id=id; (seq,false) } else { continue; }
                 }
                 Err(_)=>continue,
             };
-
-            let mut envelope = serde_json::json!({
-                "type":"message","id":msg_id,"server_seq":server_seq,"from":uid,
+            let members: Vec<(String,i8)> = match sqlx::query_as("SELECT user_id,muted FROM group_members WHERE group_id=?")
+                .bind(group_id).fetch_all(&mut *transaction).await { Ok(rows)=>rows, Err(_)=>continue };
+            if transaction.commit().await.is_err() { continue; }
+            let envelope = serde_json::json!({
+                "type":"message","id":msg_id,"server_seq":server_seq,"from":uid,"client_msg_id":client_msg_id,
                 "from_nickname":nick,"from_avatar":avatar,"group_id":group_id,
                 "msg_type":msg_sub_type,"ciphertext":ciphertext,"header":header,"ts":ts,
+                "nonce":nonce,"sender_key_version":sender_key_version
             });
-            if let Some(n)=nonce { envelope["nonce"]=serde_json::json!(n); }
-            if let Some(skv)=sender_key_version { envelope["sender_key_version"]=serde_json::json!(skv); }
-
-            // Send to all group members except sender
-            let members: Vec<(String, i8)> = sqlx::query_as(
-                "SELECT user_id, muted FROM group_members WHERE group_id = ?"
-            ).bind(group_id).fetch_all(&state.db).await.unwrap_or_default();
-
-            for (member_id, muted) in &members {
+            for (member_id,muted) in &members {
                 if is_new && member_id != &uid {
-                    state.ws_clients.send_to_user(member_id, envelope.clone());
-                    // Push notification if (offline or stale) AND not muted
-                    if !has_fresh_heartbeat(&state, member_id).await && *muted == 0 {
-                        push_offline_message(&state, &uid, member_id).await;
-                    }
+                    state.ws_clients.send_to_user(member_id,envelope.clone());
+                    if !has_fresh_heartbeat(&state, member_id).await && *muted == 0 { push_offline_message(&state,&uid,member_id).await; }
                 }
             }
-
             let _ = tx.send(serde_json::json!({"type":"ack","msg_id":msg_id,"client_msg_id":client_msg_id,"server_seq":server_seq,"ts":ts}).to_string());
         }
 
@@ -540,37 +571,9 @@ async fn flush_offline_messages(state: &Arc<AppState>, user_id: &str, tx: &mpsc:
         sqlx::query("UPDATE messages SET delivered = 1 WHERE id = ?").bind(id).execute(&state.db).await.ok();
     }
 
-    // ── Step 3: Flush remaining valid offline group messages ────────────
-    let group_rows: Vec<(String, String, String, String, Option<String>, String, chrono::NaiveDateTime, String, Option<String>, Option<String>, Option<i64>)> = sqlx::query_as(
-        "SELECT m.id, m.from_id, m.to_id, m.ciphertext, m.header, m.msg_type, m.created_at, u.nickname, u.avatar, m.nonce, m.sender_key_version
-         FROM messages m
-         LEFT JOIN users u ON u.id = m.from_id
-         WHERE m.type = 'group' AND m.to_id IN (SELECT group_id FROM group_members WHERE user_id = ?)
-           AND m.from_id != ?
-           AND m.created_at > COALESCE(
-             (SELECT last_active FROM sessions WHERE user_id = ? AND revoked = 0 ORDER BY last_active DESC LIMIT 1),
-             DATE_SUB(NOW(), INTERVAL 7 DAY)
-           )
-         ORDER BY m.created_at ASC LIMIT 50000"
-    ).bind(user_id).bind(user_id).bind(user_id).fetch_all(&state.db).await.unwrap_or_default();
+    // Group catch-up uses /api/messages/sync and its durable server_seq cursor.
+    // Do not infer missed messages from session.last_active (updated at login).
 
-    for (id, from_id, group_id, ct, hdr, msg_type, created, nick, avatar, nonce, sender_key_version) in &group_rows {
-        let mut envelope = serde_json::json!({
-            "type": "message", "id": id, "from": from_id,
-            "from_nickname": nick, "from_avatar": avatar,
-            "group_id": group_id, "msg_type": msg_type,
-            "ciphertext": ct, "header": hdr,
-            "ts": created.and_utc().timestamp_millis(),
-            "offline": true,
-        });
-        if let Some(n) = nonce {
-            envelope["nonce"] = serde_json::json!(n);
-        }
-        if let Some(skv) = sender_key_version {
-            envelope["sender_key_version"] = serde_json::json!(skv);
-        }
-        let _ = tx.send(serde_json::to_string(&envelope).unwrap_or_default());
-    }
 }
 
 /// Check if user has sent a heartbeat recently (within last 60s).
@@ -591,6 +594,7 @@ async fn push_offline_message(state: &Arc<AppState>, sender_id: &str, recipient_
     ).bind(sender_id).fetch_optional(&state.db).await.ok().flatten();
     let name = sender.map(|(n, u)| if n.is_empty() { u } else { n }).unwrap_or("Someone".to_string());
 
+    crate::services::bark::push_to_user(&state.db, &state.config, recipient_id, &name, "sent you a message").await;
     // FCM (Capacitor native)
     crate::services::fcm::push_to_user(&state.db, &state.config, recipient_id, &name, "sent you a message").await;
     // ntfy (Chinese Android without GMS)

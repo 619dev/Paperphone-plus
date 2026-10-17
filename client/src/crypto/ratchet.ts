@@ -1,3 +1,4 @@
+import { SecurityError } from '../i18n/security'
 /**
  * Hybrid E2E Encryption: X25519 ECDH + Kyber KEM + XSalsa20-Poly1305
  *
@@ -196,6 +197,8 @@ export interface HybridProtocolInfo {
 export function inspectHybridProtocol(headerB64?: string | null): HybridProtocolInfo | null {
   if (!headerB64) return null
   try {
+    if (headerB64.startsWith('pps1.')) headerB64 = JSON.parse(headerB64.slice(5)).fields[8]
+    if (typeof headerB64 !== 'string') return null
     const normalized = headerB64.replace(/-/g, '+').replace(/_/g, '/')
     const version = atob(normalized)[0]?.charCodeAt(0)
     if (!version) return null
@@ -221,6 +224,8 @@ export async function decryptHybrid(
   const privKey = sodium.from_base64(recipientPrivKey)
 
   const version = headerBytes[0]
+  if ((version !== 1 && version !== 2) || (version === 1 && headerBytes.length !== 57) || (version === 2 && headerBytes.length !== 1145)) throw new SecurityError('crypto.invalid_header')
+  if (version === 2 && !recipientKemPriv) throw new SecurityError('crypto.kem_private')
   const ephemeralPub = headerBytes.slice(1, 33) // 32 bytes X25519 public key
   const nonce = headerBytes.slice(33, 57) // 24 bytes nonce
 
@@ -246,11 +251,10 @@ export async function decryptHybrid(
         const info = new TextEncoder().encode('PaperPhonePlus-Hybrid-E2E-v2')
         finalKey = await hkdfDerive(combined, ephemeralPub, info, 32)
       } catch {
-        // KEM decap failed, try ECDH only as fallback
-        finalKey = ecdhSecret
+        throw new SecurityError('crypto.kem_failed')
       }
     } else {
-      finalKey = ecdhSecret
+      throw new SecurityError('crypto.kem_unavailable')
     }
   } else {
     finalKey = ecdhSecret

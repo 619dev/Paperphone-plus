@@ -1,12 +1,15 @@
 {
   "name": "paperphone-plus-client",
   "private": true,
-  "version": "2.5.2",
+  "version": "2.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:i18n": "node tests/securityI18n.test.cjs",
+    "test:security": "node tests/authenticatedMessaging.test.cjs && node tests/signedGroups.test.cjs && node tests/sync.test.cjs",
+    "test:attachments": "node tests/attachments.test.cjs"
   },
   "dependencies": {
     "crystals-kyber-js": "^2.7.0",

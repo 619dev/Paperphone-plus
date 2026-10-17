@@ -1,3 +1,4 @@
+import { securityApiException } from '../i18n/security'
 import { endSession, isExplicitLogoutSignal } from '../utils/session'
 import { useStore } from '../store'
 
@@ -20,6 +21,22 @@ export async function initializeLegacyFileMapping(): Promise<void> {
       localStorage.setItem(legacyFileBaseKey(), String(data.legacy_r2_public_url).replace(/\/$/, ''))
     }
   } catch { /* Older/offline servers keep the last successfully learned mapping. */ }
+}
+
+function normalizeAvatarFields(value: unknown): void {
+  if (!value || typeof value !== 'object') return
+  if (Array.isArray(value)) {
+    value.forEach(normalizeAvatarFields)
+    return
+  }
+  const record = value as Record<string, unknown>
+  for (const [key, child] of Object.entries(record)) {
+    if ((key === 'avatar' || key === 'from_avatar') && typeof child === 'string') {
+      record[key] = normalizeFileUrl(child)
+    } else {
+      normalizeAvatarFields(child)
+    }
+  }
 }
 
 export async function api<T = any>(
@@ -57,6 +74,8 @@ export async function api<T = any>(
     return {} as T
   }
 
+  normalizeAvatarFields(data)
+
   // Keep local login state through ordinary authorization or transport
   // failures. Only an explicit server instruction may end the session.
   if (isExplicitLogoutSignal(data, res.headers)) {
@@ -64,7 +83,7 @@ export async function api<T = any>(
   }
 
   if (!res.ok) {
-    throw new Error(data.error || `HTTP ${res.status}`)
+    throw securityApiException(data.error || `HTTP ${res.status}`)
   }
 
   return data as T
@@ -196,7 +215,7 @@ export function uploadFileWithProgress(
 /**
  * If the server returns a relative file URL (starts with /), prepend
  * the API base URL so it resolves to the correct server in cross-domain
- * deployments (e.g. client on Vercel, server on Zeabur).
+ * deployments where the client and configured backend have different origins.
  * Exported so rendering code can also normalize URLs from the DB.
  */
 export function normalizeFileUrl(url: string | null | undefined): string {
@@ -211,4 +230,28 @@ export function normalizeFileUrl(url: string | null | undefined): string {
     return `${base}${url}`
   }
   return url
+}
+
+/**
+ * Fetch an attachment through the configured PaperPhone server.  Keeping this
+ * as an authenticated in-app request prevents native shells from handing an
+ * onion URL to the system browser.
+ */
+export async function downloadFileFromServer(url: string): Promise<Blob> {
+  const base = new URL(getBase() || window.location.origin)
+  const target = new URL(normalizeFileUrl(url), base)
+  if (target.origin !== base.origin || !target.pathname.startsWith('/api/files/')) {
+    throw new Error('Refusing to download a file outside the configured server')
+  }
+
+  const request = async (token: string | null) => fetch(target.toString(), {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  let res = await request(localStorage.getItem('token'))
+  if (res.status === 401) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) res = await request(refreshed)
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.blob()
 }

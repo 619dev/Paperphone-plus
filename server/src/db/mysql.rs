@@ -92,4 +92,11 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
          )"
     ).fetch_one(pool).await.expect("Unable to verify reliability schema");
     assert_eq!(reliability_columns.0, 4, "Reliability schema migration incomplete; inspect the preceding database warnings");
+    let group_columns: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND ((TABLE_NAME='groups' AND COLUMN_NAME IN ('key_epoch','signed_protocol')) OR (TABLE_NAME='group_members' AND COLUMN_NAME='joined_epoch'))")
+        .fetch_one(pool).await.expect("Unable to verify group security schema");
+    assert_eq!(group_columns.0, 3, "Group security schema migration incomplete");
+    let (pending,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM `groups` WHERE signed_protocol<>1 OR encrypted<>1").fetch_one(pool).await.expect("Unable to verify group protocol migration");
+    assert_eq!(pending, 0, "Group protocol migration incomplete");
+    sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1").fetch_one(pool).await.expect("Message sync barrier migration incomplete");
+
 }

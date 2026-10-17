@@ -1,15 +1,20 @@
+import { securityErrorText } from '../i18n/security'
+import { getGroupHistory } from '../api/groupHistory'
+import { encryptSignedPair, decryptSignedMessage } from '../crypto/authenticatedMessaging'
+import IdentityBadge, { IdentityPrompt } from '../components/IdentityBadge'
 import { useEffect, useRef, useState, useCallback, ReactNode } from 'react'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { useCallContext } from '../contexts/CallContext'
 import { useGroupCallContext } from '../contexts/GroupCallContext'
-import { get, post, put, uploadFileWithProgress, normalizeFileUrl } from '../api/http'
+import { get, post, put, uploadFileWithProgress, normalizeFileUrl, downloadFileFromServer } from '../api/http'
 import { sendWs, onWs } from '../api/socket'
 import { getKeys } from '../crypto/keystore'
-import { encryptHybrid, decryptHybrid, inspectHybridProtocol } from '../crypto/ratchet'
+import { inspectHybridProtocol } from '../crypto/ratchet'
 import { getPresentationSettings, protectPresentationText, unprotectPresentationText } from '../crypto/presentationCrypto'
-import { getMySenderKey, getSenderKey, generateSenderKey, encryptWithSenderKey, decryptWithSenderKey, distributeSenderKey, storeSenderKey, receiveSenderKey, isSenderKeyDistributed, markSenderKeyDistributed, removeSenderKey } from '../crypto/groupCrypto'
+import { encryptGroupMessage, decryptGroupMessage, fetchGroupKeys, MissingGroupKey } from '../crypto/signedGroups'
 import { Shield } from 'lucide-react'
 import { ChevronLeft, ChevronDown, Lock, Settings, Timer, ImageIcon, Film, Plus, Mic, Download, Paperclip, AlertTriangle, Clock, Package as PackageIcon, FileText, File as FileIcon, Image as LucideImage, Music, Video, Check, CheckCheck, Phone, VideoIcon, SendHorizonal, Smile, WifiOff, X, ZoomIn, ZoomOut } from 'lucide-react'
 import StickerMedia from '../components/StickerMedia'
@@ -17,6 +22,16 @@ import { decodeMessagePayload, encodeMessagePayload, type ReplyReference } from 
 import { cacheSticker, cacheStickerPack } from '../utils/stickerCache'
 import { readOfflineData, writeOfflineData } from '../utils/offlineCache'
 import { useKeepAwake } from '../hooks/useKeepAwake'
+
+interface AttachmentSaverPlugin {
+  begin(options: { fileName: string; mimeType: string }): Promise<{ id: string }>
+  append(options: { id: string; data: string }): Promise<void>
+  finish(options: { id: string }): Promise<void>
+  abort(options: { id: string }): Promise<void>
+}
+
+const AttachmentSaver = registerPlugin<AttachmentSaverPlugin>('AttachmentSaver')
+const NATIVE_SAVE_CHUNK_SIZE = 512 * 1024
 
 // Auto-delete options (seconds)
 const AUTO_DELETE_OPTIONS = [
@@ -341,7 +356,7 @@ export default function Chat() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const isGroup = searchParams.get('group') === '1'
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const navigate = useNavigate()
   const user = useStore(s => s.user)
   const messages = useStore(s => s.messages[id!] ?? EMPTY_MSGS)
@@ -393,6 +408,7 @@ export default function Chat() {
   // Upload progress
   const [uploadProgress, setUploadProgress] = useState(-1) // -1 = hidden
   const [uploadLabel, setUploadLabel] = useState('')
+  const [savingAttachmentUrl, setSavingAttachmentUrl] = useState<string | null>(null)
   // Voice recording
   const [isRecording, setIsRecording] = useState(false)
   const [recordDuration, setRecordDuration] = useState(0)
@@ -407,6 +423,9 @@ export default function Chat() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const sendingRef = useRef(false)
+  const fileUploadRef = useRef(false)
+  const attachmentSaveRef = useRef(false)
   const mediaRecRef = useRef<MediaRecorder | null>(null)
   const recChunksRef = useRef<Blob[]>([])
   const recStartRef = useRef<number>(0)
@@ -550,9 +569,7 @@ export default function Chat() {
     for (let index = 0; index < items.length; index++) {
       const item = items[index]
       try {
-        const response = await fetch(item.url)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const blobUrl = URL.createObjectURL(await response.blob())
+        const blobUrl = URL.createObjectURL(await downloadFileFromServer(item.url))
         let fileName = item.fileName.replace(/[\\/:*?"<>|]/g, '_')
         if (usedNames.has(fileName)) {
           const dot = fileName.lastIndexOf('.')
@@ -642,39 +659,9 @@ export default function Chat() {
     const path = isGroup ? `/api/messages/group/${id}?limit=50000` : `/api/messages/private/${id}?limit=50000`
 
     const loadMessages = async () => {
-      // For encrypted groups, fetch sender keys from server BEFORE loading messages
-      // This ensures keys distributed while we were offline are available for decryption
-      if (isGroup && group?.encrypted) {
-        try {
-          const keys = getKeys()
-          if (keys) {
-            const skData = await get(`/api/groups/${id}/sender-keys`)
-            if (skData?.keys && Array.isArray(skData.keys)) {
-              for (const k of skData.keys) {
-                // Always try to import the latest distribution from server.
-                // Don't skip if we already have a cached key — the cached key may be
-                // stale (encrypted with a previous ik_pub after a logout/login cycle).
-                // If decryption succeeds, it overwrites the old cache entry.
-                try {
-                  const senderKey = await receiveSenderKey(
-                    k.encrypted_key,
-                    k.header,
-                    keys.ik_priv,
-                    null
-                  )
-                  storeSenderKey(id!, k.from_id, senderKey, k.key_version || 1)
-                } catch (err) {
-                  console.warn(`[Chat] Failed to import sender key from ${k.from_id}:`, err)
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn('[Chat] Failed to fetch sender keys:', err)
-        }
-      }
+      if (isGroup) await fetchGroupKeys(id).catch(() => {})
 
-      const msgs = await get(path)
+      const msgs = isGroup ? await getGroupHistory(id) : await get(path)
       if (!Array.isArray(msgs)) return
 
       // Client-side defense: filter out expired messages based on auto_delete
@@ -687,42 +674,29 @@ export default function Chat() {
 
       let serverMessages: any[]
       if (!isGroup) {
-        const keys = getKeys()
         serverMessages = await Promise.all(filtered.map(async (msg) => {
           try {
             const isMe = msg.from === user?.id
             if (isMe && msg.self_ciphertext && msg.self_header) {
-              const text = await decryptHybrid(msg.self_header, keys?.ik_priv || '', null, msg.self_ciphertext)
+              const decrypted = await decryptSignedMessage(msg)
+              const text = await unprotectPresentationText(decrypted)
               return { ...msg, decrypted: text }
             } else if (!isMe && msg.ciphertext && msg.header) {
-              const text = await decryptHybrid(msg.header, keys?.ik_priv || '', null, msg.ciphertext)
+              const decrypted = await decryptSignedMessage(msg)
+              const text = await unprotectPresentationText(decrypted)
               return { ...msg, decrypted: text }
             }
-          } catch {}
-          return { ...msg, decrypted: msg.decrypted || undefined }
-        }))
-      } else if (group?.encrypted) {
-        // Encrypted group: decrypt with sender keys
-        serverMessages = await Promise.all(filtered.map(async (msg) => {
-          if (msg.nonce && msg.sender_key_version) {
-            try {
-              const sk = getSenderKey(id!, msg.from)
-              if (sk) {
-                const text = await decryptWithSenderKey(msg.ciphertext, msg.nonce, sk.senderKey)
-                return { ...msg, decrypted: text }
-              }
-            } catch (err) {
-              console.warn(`[Chat] Failed to decrypt group msg ${msg.id} from ${msg.from}:`, err)
-            }
-            // Keep nonce in the message data so retry is possible later
-            return { ...msg, decrypted: '\ud83d\udd12' }
-          }
-          return { ...msg, decrypted: msg.ciphertext }
+          } catch { return { ...msg, decrypted: t('verify.signature_failed') } }
+          return { ...msg, decrypted: undefined }
         }))
       } else {
-        serverMessages = await Promise.all(filtered.map(async m => ({ ...m, decrypted: await unprotectPresentationText(m.ciphertext) })))
+        serverMessages = await Promise.all(filtered.map(async msg => {
+          try { return { ...msg, group_id: id, ...await decryptGroupMessage({ ...msg, group_id: id }, true) } }
+          catch (error) { return { ...msg, group_id: id, signature_valid: false, decrypted: error instanceof MissingGroupKey ? '🔒' : `⚠️ ${securityErrorText(error)}` } }
+        }))
       }
 
+      if (useStore.getState().user?.id !== user?.id) return
       // Merge: use server messages as base, append any local-only messages
       // (messages received via WebSocket that aren't in the server response yet)
       const serverIds = new Set(serverMessages.filter(m => m.id).map(m => m.id))
@@ -733,7 +707,7 @@ export default function Chat() {
     }
 
     loadMessages().catch(() => {}).finally(() => setHistoryLoaded(true))
-  }, [id, presentationStateVersion])
+  }, [id, presentationStateVersion, lang])
 
   useEffect(() => {
     if (!historyLoaded || scrollRestoredRef.current) return
@@ -788,7 +762,8 @@ export default function Chat() {
   const sendMessage = async (text?: string, msgType = 'text', _extra: any = {}) => {
     const content = text || input.trim()
     if (msgType === 'text' && !content) return
-    if (!id || !user || sending) return
+    if (!id || !user || sendingRef.current) return
+    sendingRef.current = true
     const reply = replyingTo
     const displayWireContent = encodeMessagePayload(content, reply)
     const clientMsgId = crypto.randomUUID()
@@ -810,7 +785,7 @@ export default function Chat() {
         // Never retain the original body in the optimistic cache when the
         // global appearance/encryption layer is enabled.
         decrypted: getPresentationSettings().enabled ? wireContent : displayWireContent,
-        ciphertext: (isGroup && !group?.encrypted) ? wireContent : '',
+        ciphertext: '',
       }
       if (isGroup) {
         pendingMsg.group_id = id
@@ -821,113 +796,20 @@ export default function Chat() {
 
       let sent = false
       if (isGroup) {
-        if (group?.encrypted) {
-          // Encrypted group: use sender key
-          try {
-            let sk = getMySenderKey(id!, user.id)
-            // If we have a key but it was never successfully distributed, discard it and regenerate
-            if (sk && !isSenderKeyDistributed(id!, user.id)) {
-              removeSenderKey(id!, user.id)
-              sk = null
-            }
-            if (!sk) {
-              // Generate and distribute sender key
-              const newKey = await generateSenderKey()
-              // Distribute to group members — fetch from server to ensure we have full member list
-              let distributed = false
-              try {
-                const groupDetail = await get(`/api/groups/${id}`)
-                if (groupDetail?.members && Array.isArray(groupDetail.members)) {
-                  const keys = getKeys()
-                  const distributions: any[] = []
-                  const recipients = groupDetail.members.filter((m: any) => m.id !== user.id)
-                  for (const m of groupDetail.members) {
-                    if (m.id === user.id) continue
-                    // Try friends list first for public key, then fetch from server
-                    let ikPub: string | undefined
-                    let kemPub: string | undefined
-                    const friendEntry = friends.find(f => f.id === m.id)
-                    if (friendEntry?.ik_pub) {
-                      ikPub = friendEntry.ik_pub
-                      kemPub = friendEntry.kem_pub
-                    } else {
-                      // Not in friends list — fetch public keys from server
-                      try {
-                        const memberKeys = await get(`/api/users/${m.id}`)
-                        ikPub = memberKeys?.ik_pub
-                        kemPub = memberKeys?.kem_pub
-                      } catch (fetchKeyErr) {
-                        console.warn(`[Chat] Failed to fetch public keys for member ${m.id}:`, fetchKeyErr)
-                      }
-                    }
-                    if (ikPub && keys) {
-                      try {
-                        // Pass null for kemPub — kem_pub on server is an Ed25519 signing key,
-                        // NOT a valid Kyber KEM key. Passing it causes unnecessary Kyber encap
-                        // failures. Using null goes directly to pure ECDH (version 1).
-                        const dist = await distributeSenderKey(newKey, ikPub, null)
-                        distributions.push({ to_id: m.id, encrypted_key: dist.encrypted_key, header: dist.header })
-                      } catch (distMemberErr) {
-                        console.warn(`[Chat] distributeSenderKey failed for member ${m.id}:`, distMemberErr)
-                      }
-                    }
-                  }
-                  if (distributions.length === recipients.length) {
-                    if (distributions.length > 0) {
-                    await post(`/api/groups/${id}/sender-keys`, { distributions, key_version: 1 })
-                    }
-                    distributed = true
-                  }
-                }
-              } catch (distErr) {
-                console.warn('[Chat] Sender key distribution failed:', distErr)
-              }
-              // Only store and use the key if distribution succeeded
-              if (distributed) {
-                storeSenderKey(id!, user.id, newKey, 1, true)
-                sk = { groupId: id!, userId: user.id, senderKey: newKey, keyVersion: 1, distributed: true }
-              } else {
-                throw new Error('Sender key distribution failed')
-              }
-            }
-            if (sk && !sent) {
-              const encrypted = await encryptWithSenderKey(wireContent, sk.senderKey)
-              // Update pendingMsg with actual encryption metadata so the ack handler
-              // stores the message with correct encrypted fields (matching server data).
-              // This ensures consistency when messages are later loaded from server.
-              pendingMsg.ciphertext = encrypted.ciphertext
-              pendingMsg.nonce = encrypted.nonce
-              pendingMsg.sender_key_version = sk.keyVersion
-              sent = sendWs({ type: 'message', client_msg_id: clientMsgId, msg_type: msgType, group_id: id, ciphertext: encrypted.ciphertext, nonce: encrypted.nonce, sender_key_version: sk.keyVersion })
-            }
-          } catch (encErr) {
-            console.error('[Chat] Group encryption failed; message blocked:', encErr)
-            throw encErr
-          }
-        } else {
-          sent = sendWs({ type: 'message', client_msg_id: clientMsgId, msg_type: msgType, group_id: id, ciphertext: wireContent })
-        }
+        const encrypted = await encryptGroupMessage(id, wireContent, msgType, clientMsgId)
+        Object.assign(pendingMsg, encrypted, { signature_valid: true })
+        sent = sendWs({ type: 'message', client_msg_id: clientMsgId, msg_type: msgType, group_id: id, ...encrypted })
       } else {
         const keys = getKeys()
         const recipientPub = friend?.ik_pub
         const recipientKem = friend?.kem_pub
         if (!recipientPub || !keys) {
-          throw new Error('Recipient or local encryption keys are unavailable')
+          throw new Error(t('crypto.peer_keys'))
         } else {
           try {
-            const forRecipient = await encryptHybrid(recipientPub, recipientKem, wireContent)
-            const forSelf = await encryptHybrid(keys.ik_pub, null, wireContent)
-            // Keep the optimistic cache ciphertext-only while waiting for the
-            // server acknowledgement, matching the Android 2.3.8 hardening.
-            pendingMsg.ciphertext = forRecipient.ciphertext
-            pendingMsg.header = forRecipient.header
-            pendingMsg.self_ciphertext = forSelf.ciphertext
-            pendingMsg.self_header = forSelf.header
-            sent = sendWs({
-              type: 'message', client_msg_id: clientMsgId, msg_type: msgType, to: id,
-              ciphertext: forRecipient.ciphertext, header: forRecipient.header,
-              self_ciphertext: forSelf.ciphertext, self_header: forSelf.header,
-            })
+            const pair = await encryptSignedPair(id!, recipientPub, recipientKem || '', wireContent, msgType)
+            Object.assign(pendingMsg, pair)
+            sent = sendWs({ type: 'message', client_msg_id: clientMsgId, msg_type: msgType, to: id, ...pair })
           } catch (encErr) {
             console.error('[Chat] Private-message encryption failed; message blocked:', encErr)
             throw encErr
@@ -947,8 +829,9 @@ export default function Chat() {
       console.error('[Chat] sendMessage error:', err)
       ;(window as any).__pendingMsg = null
       if (msgType === 'text' && content) setInput(content)
-      alert(t('chat.encryption_send_failed') || 'Encryption failed. The message was not sent.')
+      alert(securityErrorText(err, 'chat.encryption_send_failed'))
     } finally {
+      sendingRef.current = false
       setSending(false)
     }
   }
@@ -993,15 +876,19 @@ export default function Chat() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
     e.target.value = ''
+    if (!file) return
+    if (fileUploadRef.current) return
+    fileUploadRef.current = true
     setShowAttachPanel(false)
     try {
       const { url } = await uploadWithProgress(file, t('chat.uploading_file'))
       const meta = JSON.stringify({ url, fileName: file.name, fileSize: file.size, fileType: file.type })
-      sendMessage(meta, 'file', { url, fileName: file.name, fileSize: file.size, fileType: file.type })
+      await sendMessage(meta, 'file', { url, fileName: file.name, fileSize: file.size, fileType: file.type })
     } catch {
       alert(t('chat.upload_failed'))
+    } finally {
+      fileUploadRef.current = false
     }
   }
 
@@ -1248,8 +1135,74 @@ export default function Chat() {
     } catch { return null }
   }
 
+  const saveAttachment = async (url: string, requestedName?: string, fileType?: string) => {
+    if (attachmentSaveRef.current) return
+    attachmentSaveRef.current = true
+    setSavingAttachmentUrl(url)
+    let nativeSaveId: string | undefined
+    try {
+      const blob = await downloadFileFromServer(url)
+      const fileName = (requestedName || 'attachment').replace(/[\\/:*?"<>|]/g, '_')
+
+      // Android WebView does not reliably honor downloads whose source is a
+      // blob: URL. Stream the authenticated response into a native temporary
+      // file, then open Android's share/save chooser.
+      if (Capacitor.getPlatform() === 'android' && Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('AttachmentSaver')) {
+        const started = await AttachmentSaver.begin({
+          fileName,
+          mimeType: fileType || blob.type || 'application/octet-stream',
+        })
+        nativeSaveId = started.id
+        for (let offset = 0; offset < blob.size; offset += NATIVE_SAVE_CHUNK_SIZE) {
+          const bytes = new Uint8Array(await blob.slice(offset, offset + NATIVE_SAVE_CHUNK_SIZE).arrayBuffer())
+          let binary = ''
+          for (let i = 0; i < bytes.length; i += 0x8000) {
+            binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+          }
+          await AttachmentSaver.append({ id: nativeSaveId, data: btoa(binary) })
+        }
+        await AttachmentSaver.finish({ id: nativeSaveId })
+        nativeSaveId = undefined
+        return
+      }
+
+      // Browser/PWA path.
+      if (typeof File !== 'undefined' && navigator.share) {
+        const file = new File([blob], fileName, { type: fileType || blob.type || 'application/octet-stream' })
+        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: fileName })
+            return
+          } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') return
+          }
+        }
+      }
+
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = fileName
+      anchor.style.display = 'none'
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+    } catch (error) {
+      if (nativeSaveId) void AttachmentSaver.abort({ id: nativeSaveId }).catch(() => undefined)
+      console.error('[Chat] attachment download failed:', error)
+      alert(t('chat.download_failed'))
+    } finally {
+      attachmentSaveRef.current = false
+      setSavingAttachmentUrl(null)
+    }
+  }
+
   // ── Render message bubble content ──
   const renderBubble = (msg: any, displayText: string, isEncFailed: boolean) => {
+    if (isGroup && (!msg.signature_valid || msg.decryption_pending)) {
+      return <span style={{ color: 'var(--text-muted)' }}>{msg.decrypted || t('grouptrust.verifying')}</span>
+    }
     if (isEncFailed) {
       return <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}><Lock size={16} /> {t('chat.decrypt_failed')}</span>
     }
@@ -1294,10 +1247,11 @@ export default function Chat() {
       if (meta) {
         const icon = getFileIcon(meta.fileType || '')
         return (
-          <a href={normalizeFileUrl(meta.url)} target="_blank" rel="noopener noreferrer"
+          <button type="button" disabled={savingAttachmentUrl === meta.url} onClick={() => void saveAttachment(meta.url, meta.fileName, meta.fileType)}
             style={{
               display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit',
               padding: 8, borderRadius: 8, background: 'rgba(0,0,0,0.05)', minWidth: 180,
+              border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left',
             }}>
             <span style={{ fontSize: 28 }}>{icon}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1306,11 +1260,11 @@ export default function Chat() {
               </div>
               {meta.fileSize && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatFileSize(meta.fileSize)}</div>}
             </div>
-            <span style={{ fontSize: 18, color: 'var(--accent)' }}><Download size={18} /></span>
-          </a>
+            <span style={{ fontSize: 18, color: 'var(--accent)' }}>{savingAttachmentUrl === meta.url ? <Clock size={18} /> : <Download size={18} />}</span>
+          </button>
         )
       }
-      return <a href={normalizeFileUrl(displayText)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 4 }}><Paperclip size={14} /> {t('chat.file')}</a>
+      return <button type="button" onClick={() => void saveAttachment(displayText)} style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}><Paperclip size={14} /> {t('chat.file')}</button>
     }
     return displayText
   }
@@ -1437,9 +1391,9 @@ export default function Chat() {
         ) : (
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
           onClick={() => isGroup ? navigate(`/group/${id}`) : navigate(`/user/${id}`)}>
-          {chatName}
+          {chatName}{!isGroup && id && <IdentityBadge id={id} ik={friend?.ik_pub} sign={friend?.kem_pub} />}
           {!isGroup && <span style={{ fontSize: 14, opacity: 0.7 }} title={t('chat.e2e_enabled')}><Lock size={16} /></span>}
-          {isGroup && group?.encrypted && <span style={{ fontSize: 14, opacity: 0.7, color: 'var(--accent)' }} title={t('group.encryption_on')}><Shield size={16} /></span>}
+          {isGroup && <span style={{ fontSize: 14, opacity: 0.7, color: 'var(--accent)' }} title={t('group.encryption_on')}><Shield size={16} /></span>}
         </h1>
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -1483,6 +1437,7 @@ export default function Chat() {
           {t('chat.batch_downloading').replace('{completed}', String(downloadProgress.completed)).replace('{total}', String(downloadProgress.total))}
         </div>
       )}
+      {!isGroup && id && <IdentityPrompt id={id} ik={friend?.ik_pub} sign={friend?.kem_pub} onVerify={() => navigate(`/user/${id}`)} />}
 
       {!wsConnected && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 12px', fontSize: 12, color: '#fff', background: '#ef4444', animation: 'fade-in .3s ease' }}>
@@ -1496,7 +1451,7 @@ export default function Chat() {
         </div>
       )}
 
-      {isGroup && group?.encrypted && (
+      {isGroup && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '6px 14px', fontSize: 12,
@@ -1504,18 +1459,7 @@ export default function Chat() {
           borderBottom: '1px solid rgba(76, 175, 80, 0.15)',
         }}>
           <span style={{ fontSize: 14, flexShrink: 0 }}><Shield size={14} /></span>
-          <span>{t('group.encrypted_banner')}</span>
-        </div>
-      )}
-      {isGroup && !group?.encrypted && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 14px', fontSize: 12,
-          color: '#b8860b', background: 'rgba(255, 193, 7, 0.1)',
-          borderBottom: '1px solid rgba(255, 193, 7, 0.15)',
-        }}>
-          <span style={{ fontSize: 14, flexShrink: 0 }}><AlertTriangle size={14} /></span>
-          <span>{t('chat.group_unencrypted_warning')}</span>
+          <span>{t('grouptrust.banner')}</span>
         </div>
       )}
 
@@ -1575,12 +1519,12 @@ export default function Chat() {
               )}
               {!isMe && isGroup && (
                 <div className="avatar avatar-sm">
-                  {msg.from_avatar ? <img src={msg.from_avatar} alt="" /> : (msg.from_nickname?.[0] || '?')}
+                  {msg.from_avatar ? <img src={normalizeFileUrl(msg.from_avatar)} alt="" /> : (msg.from_nickname?.[0] || '?')}
                 </div>
               )}
               <div>
-                {!isMe && isGroup && (
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>{msg.from_nickname || msg.from}</div>
+                {isGroup && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>{msg.from_nickname || (isMe ? user?.nickname : msg.from)}{msg.signature_valid && <span style={{ color: '#22c55e', marginLeft: 4 }} title={t('grouptrust.signature_title', { id: msg.from })}>✅</span>}</div>
                 )}
                 <div className="msg-bubble" style={isSticker && !payload.reply ? { background: 'transparent', boxShadow: 'none', padding: 0 } : undefined}>
                   {payload.reply && (

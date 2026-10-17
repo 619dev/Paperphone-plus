@@ -4,19 +4,19 @@ PaperPhonePlus 的自托管部署只包含 `server`、MySQL、Redis 和 LiveKit�
 
 客户端登录时填写公开的 **server 后端地址**。`LIVEKIT_URL` 由 server 下发，用于 1:1 和群组音视频通话。
 
-上传文件保存在 server 的持久卷中。头像、群头像、朋友圈及时间线媒体永久保存；私聊和群聊附件由 `CHAT_FILE_RETENTION_DAYS` 控制，默认 14 天。旧 R2 实例仍可在升级时手动向 server 传入 `R2_*` 环境变量，以触发只读自动迁移；Docker Compose 和 Zeabur 模板不再预置这些变量，迁移完成后应删除。
+上传文件保存在 server 的持久卷中。头像、群头像、朋友圈及时间线媒体永久保存；私聊和群聊附件由 `CHAT_FILE_RETENTION_DAYS` 控制，默认 14 天。旧 R2 实例仍可在升级时手动向 server 传入 `R2_*` 环境变量，以触发只读自动迁移；Docker Compose不再预置这些变量，迁移完成后应删除。
 
-## 方式一：Zeabur 模板
+## 签名与身份验证升级（当前源码）
 
-1. 使用 [Zeabur 模板](https://zeabur.com/templates/SK6T93?referralCode=619dev)部署。
-2. 选择区域并填写环境变量。生产环境必须修改 `JWT_SECRET`、`ADMIN_PASSWORD` 和至少 32 字节的 `LIVEKIT_API_SECRET`。
-3. 等待 `server`、`MySQL`、`Redis`、`LiveKit` 四个服务启动。模板不会创建 `client` 服务。
-4. 在 `server` 服务的 **Networking** 页面记录公网 HTTPS 域名。
-5. 在官方 Android、iOS、Windows 或 macOS 客户端的登录页填写该 server 域名。
+此次同步 Lite 安全协议，包版本为 2.6.0。升级前备份 MySQL 与上传卷；停止旧服务端写入，再启动新版服务端执行 `server/src/db/schema.sql` 自动迁移，并协调升级全部客户端。启动会检查关键迁移，失败时须检查数据库权限与日志。旧客户端不能解析新签名信封，无法发送新群消息。
 
-Zeabur 当前不公开 UDP 服务端口，LiveKit 会通过 ICE/TCP 7881 回退。生产通话建议使用 LiveKit Cloud，或把 LiveKit 部署到可开放 `7881/tcp` 和 `7882/udp` 的主机，然后在 server 中设置对应的 `LIVEKIT_URL`、`LIVEKIT_API_KEY` 和 `LIVEKIT_API_SECRET`。
+迁移新增身份验证消息类型、群成员代次、签名协议状态及消息提交顺序屏障；现有群一次性开启加密并推进代次，不能再关闭。已有历史保留；已丢失的旧密钥无法恢复。可先在隔离 MySQL 上运行 `client/tests/README.md` 中的集成测试，验证重复迁移和历史兼容性。
 
-## 方式二：Docker Compose + Nginx
+用户在“消息隐私”设置相同的、仅在线下约定的文本外观密码，然后在联系人资料页完成双向验证。群消息发送前需私聊验证每名成员；身份密钥变化须线下重新核对并手动发起验证。绿色身份标记表示双向证明与回执通过，群消息绿色标记表示签名通过；缺少解密密钥时正文仍锁定。`kem_pub` 是历史命名，当前实际承载 Ed25519 签名公钥；签名消息使用 X25519，不能宣称已实现后量子身份注册。附件文件本身仍按原有存储方式处理。
+
+可选 Bark：`BARK_ALLOWED_HOSTS=api.day.app`，自建服务用逗号分隔添加允许的域名。已登录客户端可用 `/api/push/bark` GET/POST/DELETE 管理订阅（POST 为 `{ "endpoint": "https://api.day.app/<device-key>", "platform": "ios" }`），用 `/api/push/bark/test` POST `{}` 测试已保存配置。查询仅返回脱敏地址，不改变现有 FCM/APNs/ntfy 配置。
+
+## Docker Compose + Nginx 部署
 
 需要 Linux 服务器、Docker、Docker Compose、至少 2 GB 内存，以及两个已解析到服务器的域名（例如 `api.example.com` 和 `meeting.example.com`）。
 
@@ -83,7 +83,6 @@ docker compose logs --tail=100 server
 
 | 部署方式 | 客户端填写的地址 |
 |---|---|
-| Zeabur | `server` 服务的公网 HTTPS 域名 |
 | Docker Compose + Nginx | API 域名，例如 `https://api.example.com` |
 | 本地开发 | `http://localhost:3000` |
 
@@ -98,7 +97,6 @@ docker compose ps
 docker compose logs -f server
 ```
 
-- Zeabur：只重新部署 server，并确认健康检查通过；MySQL、Redis、LiveKit 按需更新。
 - Docker：当前只发布 `facilisvelox/paperphone-plus-server` 应用镜像。
-- `/client` 的代码随原生客户端版本发布，不部署到 Vercel、Nginx、Zeabur 或独立 Docker 容器。
-- 若旧环境还存在 `paperphone-plus-client` 容器或 Zeabur `client` 服务，可停止并删除；它不再属于当前部署拓扑。
+- `/client` 的代码随原生客户端版本发布，不部署到 Vercel、Nginx 或独立 Docker 容器。
+- 若旧环境还存在 `paperphone-plus-client` 容器，可停止并删除；它不再属于当前部署拓扑。

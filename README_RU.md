@@ -4,9 +4,8 @@
 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
 
-[![Version](https://img.shields.io/badge/Версия-2.5.2-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
@@ -71,7 +70,7 @@
 | 🗂️ Локальное хранилище | Постоянный том с раздельными постоянными и временными каталогами |
 | 🔑 Двухфакторная аутентификация (2FA) | TOTP совместимый с Google Authenticator, 8 кодов восстановления, проверка при входе |
 | 📷 Сканирование и обмен QR-кодами | Сканируйте QR-коды для добавления друзей или вступления в группы с настраиваемым сроком действия |
-| 🏗️ Self-hosting | Deploy the backend with Docker Compose or Zeabur; connect using an official native client |
+| 🏗️ Self-hosting | Deploy the backend with Docker Compose; connect using an official native client |
 | 🌐 Настройки прокси | Поддержка SOCKS5 / HTTP / HTTPS прокси — настройка на страницах входа и настроек с указанием адреса сервера, порта, имени пользователя и пароля для ограниченных сетевых сред |
 | 🛡️ Модерация контента | Жалобы пользователей (6 категорий) + блокировка пользователей (мгновенное скрытие постов/сообщений) + Условия использования (EULA) |
 | 🔧 Панель администратора | Встроенная веб-панель администратора (`/admin`, путь настраивается), защита паролем, проверка жалоб, удаление нарушающего контента, бан пользователей — поддержка 8 языков |
@@ -123,14 +122,9 @@ Shared frontend source (client/, not deployed independently)
 
 ---
 
-> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Zeabur and Docker Compose + Nginx instructions, plus native-client server address configuration.
+> 📖 **[Deployment Guide](DEPLOY_EN.md)** — backend-only Docker Compose + Nginx instructions, plus native-client server address configuration.
 >
-> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Zeabur, Vercel, or Nginx.
-
-### Zeabur one-click deployment
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/SK6T93?referralCode=619dev)
-
-The template creates only `server`, MySQL, Redis, and LiveKit. Record the public HTTPS domain of `server` and enter it in an official native client.
+> **Important: the Web frontend is no longer deployed.** `/client` is shared frontend source for Android, iOS, Windows, and macOS. Do not deploy it to Docker, Vercel, or Nginx.
 
 ### Docker Compose (recommended)
 ```bash
@@ -218,7 +212,7 @@ cd client && npm install && npm run dev  # shared frontend source only
 
 ### Обработка переводов строк в приватном ключе FCM
 
-Поле `private_key` в JSON сервисного аккаунта Firebase содержит RSA-ключ в формате PEM, который требует **реальных символов перевода строки** (`\n`, ASCII 0x0A) между каждой 64-символьной строкой. Однако многие платформы развёртывания (Zeabur, Railway, Docker) хранят переменные окружения как однострочные значения, преобразуя `\n` в буквальную двухсимвольную последовательность `\` + `n`.
+Поле `private_key` в JSON сервисного аккаунта Firebase содержит RSA-ключ в формате PEM, который требует **реальных символов перевода строки** (`\n`, ASCII 0x0A) между каждой 64-символьной строкой. Однако многие платформы развёртывания (Railway, Docker) хранят переменные окружения как однострочные значения, преобразуя `\n` в буквальную двухсимвольную последовательность `\` + `n`.
 
 **Это самая распространённая причина сбоя FCM push-уведомлений** — парсер PEM молча завершается с ошибкой, и push-уведомления не отправляются без каких-либо записей в логах.
 
@@ -238,7 +232,6 @@ cd client && npm install && npm run dev  # shared frontend source only
 
 | Платформа | Рекомендуемый формат | Примечания |
 |-----------|---------------------|------------|
-| **Zeabur** | Однострочный (экранирование `\n`) | Вставьте значение JSON непосредственно в панели Variables |
 | **Docker / docker-compose** | Любой | Используйте YAML `\|` для многострочного формата; однострочный в `.env` |
 | **Railway / Docker** | Однострочный (экранирование `\n`) | Поля ввода обычно не поддерживают реальные переводы строк |
 | **Linux .env файл** | Многострочный (в кавычках) | Убедитесь, что кавычки правильно закрыты |
