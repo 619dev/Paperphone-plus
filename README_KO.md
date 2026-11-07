@@ -8,6 +8,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 [![Version](https://img.shields.io/badge/버전-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-다운로드-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-다운로드-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-다운로드-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-다운로드-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 다국어 지원 | 중국어, 영어, 일본어, 한국어, 프랑스어, 독일어, 러시아어, 스페인어 — 자동 감지 + 수동 전환 |
 | 📱 iOS 네이티브 클라이언트 | 자체 호스팅 백엔드에 연결 |
-| 📱 Android 네이티브 앱 | [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)에서 다운로드 가능, FCM 푸시 알림 지원 |
+| 📱 Android 네이티브 앱 | [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)과 [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)에서 다운로드 가능, FCM 푸시 알림 지원 |
 | 📱 iOS 네이티브 앱 | [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178)에서 다운로드 가능, APNS 푸시 알림 지원 |
 | 🖥️ Windows 데스크톱 클라이언트 | Windows 네이티브 데스크톱 앱, [여기에서 다운로드](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac 데스크톱 클라이언트 | Mac 네이티브 데스크톱 앱, [여기에서 다운로드](https://github.com/619dev/ppp-mac/releases) |

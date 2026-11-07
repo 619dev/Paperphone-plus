@@ -8,6 +8,7 @@
 [![Version](https://img.shields.io/badge/版本-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-下载-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-下载-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-客户端下载-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-客户端下载-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@
 | 🔔 原生消息推送 | FCM + ntfy + APNS，支持 Android 与 iOS 客户端离线通知 |
 | 🌐 多语言 | 中文、英文、日语、韩语、法语、德语、俄语、西班牙语（自动检测 + 手动切换） |
 | 📱 iOS 原生客户端 | 使用系统安全存储与 APNS，连接自托管后端 |
-| 📱 Android 原生 App | 已上架 [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)，支持 FCM 推送通知 |
+| 📱 Android 原生 App | 已上架 [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) 和 [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)，支持 FCM 推送通知 |
 | 📱 iOS 原生 App | 已上架 [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178)，支持 APNS 推送通知 |
 | 🖥️ Windows 桌面客户端 | 原生 Windows 桌面应用，[点击下载](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac 桌面客户端 | 原生 Mac 桌面应用，[点击下载](https://github.com/619dev/ppp-mac/releases) |

@@ -8,6 +8,7 @@
 [![Version](https://img.shields.io/badge/Версия-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Скачать-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Скачать-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-Скачать-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Скачать-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-Скачать-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 Мультиязычность | Китайский, английский, японский, корейский, французский, немецкий, русский, испанский — автоопределение + ручное переключение |
 | 📱 Нативный клиент iOS | Подключается к самостоятельно размещённому серверу |
-| 📱 Нативное Android-приложение | Доступно в [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), с поддержкой FCM push-уведомлений |
+| 📱 Нативное Android-приложение | Доступно в [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) и [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/), с поддержкой FCM push-уведомлений |
 | 📱 Нативное iOS-приложение | Доступно в [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), с поддержкой APNS push-уведомлений |
 | 🖥️ Десктопный клиент Windows | Нативное настольное приложение для Windows, [скачать здесь](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Десктопный клиент Mac | Нативное настольное приложение для Mac, [скачать здесь](https://github.com/619dev/ppp-mac/releases) |

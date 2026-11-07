@@ -8,6 +8,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 [![Version](https://img.shields.io/badge/Versión-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Descargar-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Descargar-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-Descargar-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Cliente-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-Cliente-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 Multilingüe | Chino, inglés, japonés, coreano, francés, alemán, ruso, español — detección automática + cambio manual |
 | 📱 Cliente iOS nativo | Se conecta al backend autoalojado |
-| 📱 App nativa Android | Disponible en [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), con soporte de notificaciones push FCM |
+| 📱 App nativa Android | Disponible en [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) y [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/), con soporte de notificaciones push FCM |
 | 📱 App nativa iOS | Disponible en [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), con soporte de notificaciones push APNS |
 | 🖥️ Cliente de escritorio Windows | Aplicación de escritorio Windows nativa, [descargar aquí](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Cliente de escritorio Mac | Aplicación de escritorio Mac nativa, [descargar aquí](https://github.com/619dev/ppp-mac/releases) |

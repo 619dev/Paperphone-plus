@@ -8,6 +8,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 [![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Herunterladen-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-Herunterladen-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-Client-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 Mehrsprachig | Chinesisch, Englisch, Japanisch, Koreanisch, Französisch, Deutsch, Russisch, Spanisch — Autoerkennung + manueller Wechsel |
 | 📱 Nativer iOS-Client | Verbindet sich mit dem selbst gehosteten Backend |
-| 📱 Android Native App | Verfügbar bei [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), mit FCM-Push-Unterstützung |
+| 📱 Android Native App | Verfügbar bei [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) und [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/), mit FCM-Push-Unterstützung |
 | 📱 iOS Native App | Verfügbar im [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), mit APNS-Push-Unterstützung |
 | 🖥️ Windows Desktop-Client | Native Windows-Desktopanwendung, [hier herunterladen](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac Desktop-Client | Native Mac-Desktopanwendung, [hier herunterladen](https://github.com/619dev/ppp-mac/releases) |

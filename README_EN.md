@@ -8,6 +8,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 [![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Download-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-Download-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-Client-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 Multi-Language | Chinese, English, Japanese, Korean, French, German, Russian, Spanish — auto-detect + manual switch |
 | 📱 Native iOS Client | Uses operating-system secure storage and APNS; connects to the self-hosted backend |
-| 📱 Android Native App | Available on [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), with FCM push notification support |
+| 📱 Android Native App | Available on [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) and [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/), with FCM push notification support |
 | 📱 iOS Native App | Available on the [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), with APNS push notification support |
 | 🖥️ Windows Desktop Client | Native Windows desktop app, [download here](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac Desktop Client | Native Mac desktop app, [download here](https://github.com/619dev/ppp-mac/releases) |

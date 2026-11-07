@@ -8,6 +8,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 [![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Télécharger-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-Télécharger-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-Client-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-Client-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 Multilingue | Chinois, anglais, japonais, coréen, français, allemand, russe, espagnol — détection automatique + changement manuel |
 | 📱 iOS — Sans certificat d'entreprise | PWA via Safari « Ajouter à l'écran d'accueil », fonctionne en permanence sans signature Apple |
-| 📱 App native Android | Disponible sur [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus), avec support des notifications push FCM |
+| 📱 App native Android | Disponible sur [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) et [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/), avec support des notifications push FCM |
 | 📱 App native iOS | Disponible sur l'[App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178), avec support des notifications push APNS |
 | 🖥️ Client bureau Windows | Application de bureau Windows native, [télécharger ici](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Client bureau Mac | Application de bureau Mac native, [télécharger ici](https://github.com/619dev/ppp-mac/releases) |

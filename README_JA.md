@@ -8,6 +8,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 [![Version](https://img.shields.io/badge/バージョン-2.6.0-orange)](client/package.json)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
+[![F-Droid](https://img.shields.io/badge/F--Droid-ダウンロード-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)
 [![App Store](https://img.shields.io/badge/App%20Store-ダウンロード-blue?logo=apple)](https://apps.apple.com/us/app/paperphoneplus/id6769265178)
 [![Windows](https://img.shields.io/badge/Windows-クライアント-blue?logo=windows)](https://github.com/619dev/ppp-win/releases)
 [![Mac](https://img.shields.io/badge/Mac-クライアント-black?logo=apple)](https://github.com/619dev/ppp-mac/releases)
@@ -58,7 +59,7 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 | 🔔 Native push notifications | FCM + ntfy + APNS for Android and iOS clients |
 | 🌐 多言語対応 | 中国語、英語、日本語、韓国語、フランス語、ドイツ語、ロシア語、スペイン語 — 自動検出 + 手動切替 |
 | 📱 iOS ネイティブクライアント | セルフホストしたバックエンドに接続 |
-| 📱 Android ネイティブアプリ | [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) で公開中、FCM プッシュ通知対応 |
+| 📱 Android ネイティブアプリ | [Google Play](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus) と [F-Droid](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/) で公開中、FCM プッシュ通知対応 |
 | 📱 iOS ネイティブアプリ | [App Store](https://apps.apple.com/us/app/paperphoneplus/id6769265178) で公開中、APNS プッシュ通知対応 |
 | 🖥️ Windows デスクトップクライアント | ネイティブ Windows デスクトップアプリ、[ダウンロードはこちら](https://github.com/619dev/ppp-win/releases) |
 | 🍎 Mac デスクトップクライアント | ネイティブ Mac デスクトップアプリ、[ダウンロードはこちら](https://github.com/619dev/ppp-mac/releases) |
