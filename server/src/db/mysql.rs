@@ -99,7 +99,13 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
     assert_eq!(pending, 0, "Group protocol migration incomplete");
     sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1").fetch_one(pool).await.expect("Message sync barrier migration incomplete");
 
-    let repaired = sqlx::query(include_str!("repair_friendships.sql"))
+    let repair_sql = match std::env::var_os("FRIENDSHIP_REPAIR_SQL_PATH") {
+        Some(path) => tokio::fs::read_to_string(path)
+            .await
+            .expect("Unable to read FRIENDSHIP_REPAIR_SQL_PATH"),
+        None => include_str!("repair_friendships.sql").to_owned(),
+    };
+    let repaired = sqlx::query(&repair_sql)
         .execute(pool)
         .await
         .expect("Unable to repair reciprocal friendships");

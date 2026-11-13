@@ -16,6 +16,7 @@ services:
       DB_USER: ${DB_USER:-paperphoneplus}
       DB_PASS: ${DB_PASS:-paperphoneplus}
       DB_NAME: ${DB_NAME:-paperphoneplus}
+      FRIENDSHIP_REPAIR_SQL_PATH: /app/repair_friendships.sql
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASS: ${REDIS_PASS:?Set REDIS_PASS in your environment or .env file}
@@ -48,6 +49,12 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
     volumes:
       - uploads:/app/uploads
+      - type: bind
+        source: ./server/src/db/repair_friendships.sql
+        target: /app/repair_friendships.sql
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       mysql:
         condition: service_healthy
@@ -58,7 +65,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      # Existing databases may need reliability-schema migrations before /health is available.
+      # Schema migrations and friendship repair run before /health is available.
       start_period: 120s
     restart: unless-stopped
 
