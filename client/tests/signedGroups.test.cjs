@@ -39,7 +39,7 @@ async function run() {
       export const deleteBrowserSecret = async (a,n) => {globalThis.__secrets.delete(a+':'+n)}`,
     'libsodium-wrappers-sumo': 'export default globalThis.__sodium'
   }
-  const result = await build({ stdin: { contents: `export * from './src/crypto/signedGroups'; export * from './src/crypto/ratchet'; export * from './src/crypto/groupCrypto'`, resolveDir: path.resolve(__dirname, '..') }, bundle:true, platform:'node', format:'cjs', write:false, external:['crystals-kyber-js'], plugins:[{name:'test-adapters',setup(b){
+  const result = await build({ stdin: { contents: `export * from './src/crypto/signedGroups'; export * from './src/crypto/ratchet'; export * from './src/crypto/groupCrypto'; export * from './src/crypto/presentationCrypto'`, resolveDir: path.resolve(__dirname, '..') }, bundle:true, platform:'node', format:'cjs', write:false, external:['crystals-kyber-js'], plugins:[{name:'test-adapters',setup(b){
     b.onResolve({filter:/.*/}, a => mocks[a.path] ? {path:a.path,namespace:'mock'} : undefined)
     b.onLoad({filter:/.*/,namespace:'mock'}, a => ({contents:mocks[a.path],loader:'js'}))
   }}] })
@@ -52,9 +52,6 @@ async function run() {
     const enc=await api.generateKeyPair(), sign=await api.generateSignKeyPair()
     people[id]={ik_pub:enc.publicKey,ik_priv:enc.privateKey,sign_pub:sign.publicKey,sign_priv:sign.privateKey}
     __people[id]={ik_pub:enc.publicKey,kem_pub:sign.publicKey}
-  }
-  for (const id of ['a','b','c']) for (const peer of ['a','b','c']) if(id!==peer) {
-    __secrets.set(id+':identity-verification-v1:'+peer, JSON.stringify({ik:people[peer].ik_pub,sign:people[peer].sign_pub,own:people[id].ik_pub,ownSign:people[id].sign_pub,nonce:crypto.randomUUID(),received:crypto.randomUUID(),acknowledged:true}))
   }
   async function use(id) {
     await api.flushSenderKeys()
@@ -93,10 +90,17 @@ async function run() {
   const source=__distributions.find(d=>d.from_id==='a'&&d.to_id==='b')
   await assert.rejects(api.importGroupDistribution('other',source))
   await assert.rejects(api.importGroupDistribution('g',{...source,key_version:2}))
-  const savedPin=__secrets.get('b:identity-verification-v1:a')
-  __secrets.delete('b:identity-verification-v1:a')
-  await assert.rejects(api.decryptGroupMessage(first),/验证群成员身份/)
-  __secrets.set('b:identity-verification-v1:a',savedPin)
+  // A stale private-chat verification record does not block group encryption.
+  __secrets.set('b:identity-verification-v1:a', JSON.stringify({ik:'old-key',sign:'old-signature'}))
+  api.clearGroupSenderKeys('g')
+  assert.equal((await api.decryptGroupMessage(first)).decrypted, 'before departure')
+  await api.ensureGroupSenderKey('g')
+  assert.deepEqual(JSON.parse(__secrets.get('b:identity-verification-v1:a')), {ik:'old-key',sign:'old-signature'})
+  const identity = __people.a
+  __people.a = __people.c
+  await assert.rejects(api.decryptGroupMessage(first), /签名密钥不可信/)
+  await assert.rejects(api.importGroupDistribution('g', source))
+  __people.a = identity
   __members=['a','c']; __epoch=2
   __distributions=__distributions.filter(d=>d.to_id!=='b')
   await assert.rejects(api.ensureGroupSenderKey('g'),/Not a group member/)
@@ -130,7 +134,20 @@ async function run() {
   release({id:'g',key_epoch:2,members:__members.map(id=>({id,...__people[id]}))})
   await assert.rejects(pendingJob,/账户已切换/)
   __get=regularGet
-  await assert.rejects(api.decryptGroupMessage(first,true),/验证群成员身份/)
-  console.log('PASS: group signatures/context tampering, pinned identities, signed distribution, concurrent publication, full rotation, departed member exclusion, multi-epoch offline history and account isolation')
+  assert.equal((await api.decryptGroupMessage(first,true)).decryption_pending,true,'an outsider cannot download the sender key')
+
+  await use('a')
+  await api.enablePresentationCrypto('alphanumeric', 'test-password')
+  const oldText = await api.protectPresentationText('historical text with appearance encryption')
+  const oldMessage = message('a', await api.encryptGroupMessage('g', oldText, 'text', crypto.randomUUID()))
+  api.lockPresentationCrypto()
+  await assert.rejects(api.protectPresentationText('private chat text'))
+  const newMessage = message('a', await api.encryptGroupMessage('g', 'group text while appearance is locked', 'text', crypto.randomUUID()))
+  await use('c')
+  assert.equal((await api.decryptGroupMessage(newMessage)).decrypted, 'group text while appearance is locked')
+  assert.equal((await api.decryptGroupMessage(oldMessage, true)).decrypted, oldText)
+  await api.unlockPresentationCrypto('test-password')
+  assert.equal((await api.decryptGroupMessage(oldMessage, true)).decrypted, 'historical text with appearance encryption')
+  console.log('PASS: group signatures/context tampering, no text appearance verification, signed distribution, legacy text appearance, concurrent publication, full rotation, departed member exclusion, multi-epoch offline history and account isolation')
 }
 run().catch(error=>{console.error(error);process.exitCode=1})

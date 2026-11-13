@@ -33,10 +33,10 @@ async function checkPeer(id: string, ik: string, sign: string) {
   }
 }
 
-export async function encryptSignedPair(to: string, ik: string, sign: string, body: string, type: string) {
+export async function encryptSignedPair(to: string, ik: string, sign: string, body: string, type: string, options?: { groupDistribution?: boolean }) {
   const keys = getKeys()
   if (!keys) throw new SecurityError('crypto.local_keys')
-  await checkPeer(to, ik, sign)
+  if (!options?.groupDistribution) await checkPeer(to, ik, sign)
   const from = account()
   async function seal(target: string, copy: 'recipient' | 'self') {
     // kem_pub is historically the Ed25519 public key in this client, not an ML-KEM key.
@@ -51,14 +51,16 @@ export async function encryptSignedPair(to: string, ik: string, sign: string, bo
 }
 
 let proofQueue: Promise<unknown> = Promise.resolve()
-export async function decryptSignedMessage(msg: any, options?: { processIdentity?: boolean }): Promise<string> {
+export async function decryptSignedMessage(msg: any, options?: { processIdentity?: boolean; groupDistribution?: boolean }): Promise<string> {
   const keys = getKeys()
   if (!keys) throw new SecurityError('crypto.local_keys')
   const own = msg.from === account()
   const header = own ? msg.self_header : msg.header
   const ciphertext = own ? msg.self_ciphertext : msg.ciphertext
   const peerId = own ? msg.to : msg.from
+  const groupDistribution = options?.groupDistribution
   if (!header?.startsWith(PREFIX)) {
+    if (groupDistribution) throw new SecurityError('crypto.unsigned')
     // Legacy history is readable but explicitly never proves identity.
     if (await readTrust(peerId)) throw new SecurityError('crypto.unsigned')
     return securityText('verify.unsigned_history', { text: await decryptHybrid(header, keys.ik_priv, null, ciphertext) })
@@ -69,11 +71,12 @@ export async function decryptSignedMessage(msg: any, options?: { processIdentity
   const sodium = await initSodium()
   if (!sodium.crypto_sign_verify_detached(sodium.from_base64(envelope.signature), new TextEncoder().encode(JSON.stringify([...f, ciphertext])), sodium.from_base64(f[7]))) throw new SecurityError('crypto.signature')
   const peer = await get(`/api/users/${peerId}`).catch(async error => {
+    if (groupDistribution) throw error
     const pinned = await readTrust(peerId)
     if (!pinned) throw error
     return { ik_pub: pinned.ik, kem_pub: pinned.sign }
   })
-  await checkPeer(peerId, peer.ik_pub, peer.kem_pub)
+  if (!groupDistribution) await checkPeer(peerId, peer.ik_pub, peer.kem_pub)
   const sender = own ? keys : { ik_pub: peer.ik_pub, sign_pub: peer.kem_pub }
   if (f[5] !== sender.ik_pub || f[7] !== sender.sign_pub || f[6] !== (own ? peer.ik_pub : keys.ik_pub)) throw new SecurityError('crypto.identity_mismatch')
   const text = await decryptHybrid(f[8], keys.ik_priv, null, ciphertext)
@@ -122,16 +125,6 @@ async function receiveProof(id: string, peer: any, text: string) {
   if (proof.nonce) state.received = proof.nonce
   if (JSON.stringify(state) !== previous) await saveTrust(id, state)
   if (needsReply) await sendProof(id, peer, state, proof.nonce, proof.ack === state.nonce)
-}
-
-/** A signature key must be anchored in the offline password handshake, not in
- * an arbitrary server response. Group key distribution uses the same anchor. */
-export async function verifiedIdentity(id: string): Promise<{ ik_pub: string; kem_pub: string }> {
-  const keys = getKeys()
-  if (id === account() && keys) return { ik_pub: keys.ik_pub, kem_pub: keys.sign_pub }
-  const pin = await readTrust(id)
-  if (!pin || !await identityVerified(id, pin.ik, pin.sign)) throw new SecurityError('crypto.verify_member', { id })
-  return { ik_pub: pin.ik, kem_pub: pin.sign }
 }
 
 export type IdentityStatus = 'verified' | 'unverified' | 'pending' | 'locked' | 'changed'

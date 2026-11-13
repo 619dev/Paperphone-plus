@@ -1,5 +1,3 @@
-import { refreshIdentityTrust, IDENTITY_STATUS_KEYS, type IdentityStatus } from '../crypto/authenticatedMessaging'
-import IdentityBadge from '../components/IdentityBadge'
 import { clearGroupSenderKeys } from '../crypto/groupCrypto'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -21,11 +19,7 @@ export default function GroupInfo() {
   const navigate = useNavigate()
   const user = useStore(s => s.user)
   const [group, setGroup] = useState<any>(null)
-  const [trustRefreshing, setTrustRefreshing] = useState(true)
-  const [trustError, setTrustError] = useState(false)
-  const [memberTrust, setMemberTrust] = useState<Record<string, IdentityStatus | 'error'>>({})
-  const latestGroup = useRef<any>(null)
-  const trustRevision = useRef(0)
+  const [loadError, setLoadError] = useState(false)
   const refreshGeneration = useRef(0)
   const refreshingGroup = useRef<string | null>(null)
   const [editing, setEditing] = useState<'name' | 'notice' | null>(null)
@@ -72,60 +66,33 @@ export default function GroupInfo() {
   const reload = useCallback(async () => {
     if (!id || refreshingGroup.current === id) return
     const generation = ++refreshGeneration.current
-    ++trustRevision.current
     refreshingGroup.current = id
-    setTrustRefreshing(true)
-    setTrustError(false)
+    setLoadError(false)
     const current = () => generation === refreshGeneration.current && useStore.getState().user?.id === user?.id
     try {
       const detail = await get(`/api/groups/${id}`)
       if (!current()) return
-      latestGroup.current = detail
       setGroup(detail)
       refreshFriendIdentityKeys(detail.members || [])
-      const statuses = await Promise.all((detail.members || []).map(async (member: any) => {
-        try { return [member.id, await refreshIdentityTrust(member)] as const }
-        catch { return [member.id, 'error'] as const }
-      }))
-      if (!current()) return
-      setMemberTrust(Object.fromEntries(statuses))
       const me = detail.members?.find((member: any) => member.id === user?.id)
       if (me) setMyMuted(!!me.muted)
     } catch {
-      if (current()) setTrustError(true)
+      if (current()) setLoadError(true)
     } finally {
       if (generation === refreshGeneration.current) refreshingGroup.current = null
-      if (current()) setTrustRefreshing(false)
     }
   }, [id, user?.id])
 
   useEffect(() => {
     setGroup(null)
-    latestGroup.current = null
-    setMemberTrust({})
-    const onTrustChanged = async () => {
-      const detail = latestGroup.current
-      if (refreshingGroup.current || !detail) return
-      const revision = ++trustRevision.current
-      const generation = refreshGeneration.current
-      const statuses = await Promise.all((detail.members || []).map(async (member: any) => {
-        try { return [member.id, await refreshIdentityTrust(member)] as const }
-        catch { return [member.id, 'error'] as const }
-      }))
-      if (generation === refreshGeneration.current && revision === trustRevision.current && useStore.getState().user?.id === user?.id) setMemberTrust(Object.fromEntries(statuses))
-    }
     const onVisible = () => { if (document.visibilityState === 'visible') void reload() }
     void reload()
     window.addEventListener('focus', reload)
-    window.addEventListener('paperphone:identity-changed', onTrustChanged)
-    window.addEventListener('paperphone:presentation-state-changed', onTrustChanged)
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       ++refreshGeneration.current
       refreshingGroup.current = null
       window.removeEventListener('focus', reload)
-      window.removeEventListener('paperphone:identity-changed', onTrustChanged)
-      window.removeEventListener('paperphone:presentation-state-changed', onTrustChanged)
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [reload])
@@ -175,7 +142,7 @@ export default function GroupInfo() {
     } catch {}
   }
 
-  if (!group) return <div className="page">{trustError ? <><p role="status">{t('grouptrust.profile_error')}</p><button className="btn btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button><button className="btn btn-secondary" onClick={() => navigate(-1)}>{t('verify.back')}</button></> : <div className="loading-spinner" />}</div>
+  if (!group) return <div className="page">{loadError ? <><p role="status">{t('grouptrust.profile_error')}</p><button className="btn btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button><button className="btn btn-secondary" onClick={() => navigate(-1)}>{t('verify.back')}</button></> : <div className="loading-spinner" />}</div>
 
   return (
     <div className="page" id="group-info-page">
@@ -561,10 +528,7 @@ export default function GroupInfo() {
             </button>
           </div>
 
-          <p role="status" aria-live="polite" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            {trustRefreshing ? t('grouptrust.refreshing') : trustError ? t('verify.error') : Object.values(memberTrust).includes('error') ? t('grouptrust.partial_error') : t('grouptrust.refreshed')}
-          </p>
-          {trustError && <button className="btn btn-sm btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button>}
+          {loadError && <button className="btn btn-sm btn-secondary" onClick={() => void reload()}>{t('verify.retry')}</button>}
           {group.members?.map((m: any) => (
             <div key={m.id} className="list-item" onClick={() => navigate(`/user/${m.id}`)}
               style={{ cursor: 'pointer', borderRadius: 12, marginBottom: 4 }}>
@@ -573,7 +537,7 @@ export default function GroupInfo() {
               </div>
               <div className="list-content" style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="name">{m.nickname}<IdentityBadge id={m.id} ik={m.ik_pub} sign={m.kem_pub} refreshing={trustRefreshing || trustError || memberTrust[m.id] === 'error'} /></span>
+                  <span className="name">{m.nickname}</span>
                   {m.role === 'owner' && (
                     <span style={{
                       fontSize: 10, padding: '1px 6px', borderRadius: 6,
@@ -582,7 +546,6 @@ export default function GroupInfo() {
                   )}
                 </div>
                 <div className="preview" style={{ fontSize: 12 }}>@{m.username}</div>
-                {!trustRefreshing && !trustError && m.id !== user?.id && memberTrust[m.id] && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t(IDENTITY_STATUS_KEYS[memberTrust[m.id]])}</div>}
               </div>
               <span style={{ opacity: 0.4, fontSize: 14 }}><ChevronRight size={14} /></span>
             </div>

@@ -88,8 +88,6 @@ export function useSocket() {
       await recoverGroups().catch(error => console.warn('[Group] Recovery failed:', error))
       await syncMessages().catch(error => console.warn('[Sync] catch-up failed:', error))
     })
-    const onIdentityChanged = () => { void recoverGroups().catch(() => {}) }
-    window.addEventListener('paperphone:identity-changed', onIdentityChanged)
 
     // Listen for incoming messages and route to store
     const unsubMsg = onWs('message', async (data) => {
@@ -318,7 +316,6 @@ export function useSocket() {
       unsubRemoved()
       unsubAdded()
       unsubFailed()
-      window.removeEventListener('paperphone:identity-changed', onIdentityChanged)
       unsubLogoutSignals.forEach(unsubscribe => unsubscribe())
       unsubAuthOk()
       unsubFriendship()

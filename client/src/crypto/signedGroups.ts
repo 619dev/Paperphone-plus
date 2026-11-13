@@ -2,7 +2,7 @@ import { securityText, SecurityError } from '../i18n/security'
 import { get, post } from '../api/http'
 import { useStore, type ChatMessage } from '../store'
 import { getKeys } from './keystore'
-import { encryptSignedPair, decryptSignedMessage, verifiedIdentity } from './authenticatedMessaging'
+import { encryptSignedPair, decryptSignedMessage } from './authenticatedMessaging'
 import { initSodium, signMessage } from './ratchet'
 import { generateSenderKey, storeSenderKey, getSenderKey, encryptWithSenderKey, decryptWithSenderKey, receiveSenderKey } from './groupCrypto'
 import { unprotectPresentationText } from './presentationCrypto'
@@ -18,13 +18,14 @@ const signedBytes = (meta: GroupSignature, ciphertext: string) => new TextEncode
 
 export async function importGroupDistribution(group: string, distribution: any) {
   const own = me()!
-  const identity = await verifiedIdentity(distribution.from_id)
+  // Sender-key distributions use published group identities independently of private verification.
   const text = await decryptSignedMessage({ from: distribution.from_id, to: own, msg_type: 'group_sender_key',
     header: distribution.header, ciphertext: distribution.encrypted_key,
-    self_header: distribution.header, self_ciphertext: distribution.encrypted_key })
+    self_header: distribution.header, self_ciphertext: distribution.encrypted_key }, { groupDistribution: true })
   const payload = JSON.parse(text)
+  const { fields } = JSON.parse(distribution.header.slice('pps1.'.length))
   const sodium = await initSodium()
-  if (payload.domain !== 'PaperPhone-group-key-v1' || payload.group !== group || payload.from !== distribution.from_id || payload.to !== own || payload.epoch !== distribution.key_version || payload.ik !== identity.ik_pub || payload.sign !== identity.kem_pub || sodium.from_base64(payload.key).length !== 32) throw new SecurityError('grouptrust.key_context')
+  if (payload.domain !== 'PaperPhone-group-key-v1' || payload.group !== group || payload.from !== distribution.from_id || payload.to !== own || payload.epoch !== distribution.key_version || payload.ik !== fields[5] || payload.sign !== fields[7] || sodium.from_base64(payload.key).length !== 32) throw new SecurityError('grouptrust.key_context')
   requireAccount(own)
   storeSenderKey(group, payload.from, payload.key, payload.epoch, payload.from === own, true)
 }
@@ -57,14 +58,13 @@ export function ensureGroupSenderKey(group: string): Promise<ReturnType<typeof g
     const detail = await get(`/api/groups/${group}`)
     requireAccount(owner)
     const epoch = detail.key_epoch
-    if (!Number.isSafeInteger(epoch) || epoch < 1 || !detail.members?.some((m: any) => m.id === me())) throw new SecurityError('grouptrust.invalid_membership')
-    const identities = new Map<string, { ik_pub: string; kem_pub: string }>()
-    for (const member of detail.members) {
-      const pinned = await verifiedIdentity(member.id)
-      if (pinned.ik_pub !== member.ik_pub || pinned.kem_pub !== member.kem_pub) throw new SecurityError('grouptrust.member_changed', { id: member.nickname || member.id })
-      identities.set(member.id, pinned)
+    const self = detail.members?.find((member: any) => member.id === owner)
+    if (!Number.isSafeInteger(epoch) || epoch < 1 || !self) throw new SecurityError('grouptrust.invalid_membership')
+    const keys = getKeys()
+    if (!keys) throw new SecurityError('crypto.local_keys')
+    if (self.ik_pub !== keys.ik_pub || self.kem_pub !== keys.sign_pub) {
+      throw new SecurityError('grouptrust.member_changed', { id: self.nickname || self.id })
     }
-    requireAccount(owner)
     let own = getSenderKey(group, me()!, epoch)
     if (own?.authenticated && own.distributed) return own
     await fetchGroupKeys(group)
@@ -73,11 +73,10 @@ export function ensureGroupSenderKey(group: string): Promise<ReturnType<typeof g
     if (own?.authenticated && own.distributed) return own
     const key = await generateSenderKey()
     const distributions = []
-    const keys = getKeys()!
     for (const member of detail.members) {
-      const pinned = identities.get(member.id)!
+      if (!member.ik_pub || !member.kem_pub) throw new SecurityError('grouptrust.member_changed', { id: member.nickname || member.id })
       const body = JSON.stringify({ domain: 'PaperPhone-group-key-v1', group, from: me(), to: member.id, epoch, ik: keys.ik_pub, sign: keys.sign_pub, key })
-      const pair = await encryptSignedPair(member.id, pinned.ik_pub, pinned.kem_pub, body, 'group_sender_key')
+      const pair = await encryptSignedPair(member.id, member.ik_pub, member.kem_pub, body, 'group_sender_key', { groupDistribution: true })
       distributions.push({ to_id: member.id, encrypted_key: member.id === me() ? pair.self_ciphertext : pair.ciphertext, header: member.id === me() ? pair.self_header : pair.header })
     }
     requireAccount(owner)
@@ -119,22 +118,26 @@ export async function decryptGroupMessage(message: ChatMessage, historical = fal
       const key = getSenderKey(message.group_id!, message.from, message.sender_key_version)
       if (!key) throw new MissingGroupKey(securityText('grouptrust.history_key_pending'))
       text = await decryptWithSenderKey(message.ciphertext, message.nonce, key.senderKey)
+    } else {
+      text = await unprotectPresentationText(text)
     }
     requireAccount(owner)
-    return { decrypted: securityText('grouptrust.unsigned_history', { text: await unprotectPresentationText(text) }), signature_valid: false, decryption_pending: false }
+    return { decrypted: securityText('grouptrust.unsigned_history', { text }), signature_valid: false, decryption_pending: false }
   }
   const envelope = JSON.parse(message.header.slice(PREFIX.length))
   const meta: GroupSignature = envelope.meta
   if (!meta || meta.group !== message.group_id || meta.from !== message.from || meta.type !== message.msg_type || meta.epoch !== message.sender_key_version || meta.nonce !== message.nonce || !Number.isSafeInteger(meta.epoch) || meta.epoch < 1 || typeof meta.id !== 'string' || typeof meta.nickname !== 'string' || Array.from(meta.nickname).length > 128 || (message.client_msg_id && meta.id !== message.client_msg_id)) throw new SecurityError('grouptrust.context')
-  const pinned = await verifiedIdentity(meta.from)
-  if (meta.ik !== pinned.ik_pub || meta.sign !== pinned.kem_pub) throw new SecurityError('grouptrust.untrusted_key')
-  const sodium = await initSodium()
-  if (!sodium.crypto_sign_verify_detached(sodium.from_base64(envelope.signature), signedBytes(meta, message.ciphertext), sodium.from_base64(pinned.kem_pub))) throw new SecurityError('grouptrust.signature_invalid')
-  if (!historical && !message.offline) {
+  let identity
+  if (historical || message.offline) {
+    identity = await get(`/api/users/${meta.from}`)
+  } else {
     const detail = await get(`/api/groups/${meta.group}`)
-    const member = detail.members.find((member: any) => member.id === meta.from)
-    if (detail.key_epoch !== meta.epoch || !member || member.ik_pub !== pinned.ik_pub || member.kem_pub !== pinned.kem_pub) throw new SecurityError('grouptrust.retired')
+    identity = detail.members.find((member: any) => member.id === meta.from)
+    if (detail.key_epoch !== meta.epoch || !identity) throw new SecurityError('grouptrust.retired')
   }
+  if (meta.ik !== identity.ik_pub || meta.sign !== identity.kem_pub) throw new SecurityError('grouptrust.untrusted_key')
+  const sodium = await initSodium()
+  if (!sodium.crypto_sign_verify_detached(sodium.from_base64(envelope.signature), signedBytes(meta, message.ciphertext), sodium.from_base64(identity.kem_pub))) throw new SecurityError('grouptrust.signature_invalid')
   requireAccount(owner)
   const authenticated = { signature_valid: true, from_nickname: meta.nickname }
   try {
@@ -145,7 +148,7 @@ export async function decryptGroupMessage(message: ChatMessage, historical = fal
     }
     requireAccount(owner)
     if (!key?.authenticated) return { ...authenticated, decrypted: securityText('grouptrust.key_pending'), decryption_pending: true }
-    const decrypted = await unprotectPresentationText(await decryptWithSenderKey(message.ciphertext, message.nonce!, key.senderKey))
+    const decrypted = await decryptWithSenderKey(message.ciphertext, message.nonce!, key.senderKey)
     requireAccount(owner)
     return { ...authenticated, decrypted, decryption_pending: false }
   } catch {

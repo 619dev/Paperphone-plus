@@ -131,11 +131,11 @@ async function run() {
   assert.equal(await api.refreshContactVerification(peerA),'verified')
   assert.equal(__outbox.length,0,'refreshing verified receipts does not resend them')
   const trustBefore=JSON.parse(__secrets.get('b:identity-verification-v1:a'))
-  assert.equal(await api.refreshIdentityTrust(peerA),'verified','group member snapshots reuse the completed trust record')
+  assert.equal(await api.refreshIdentityTrust(peerA),'verified','profile snapshots reuse the completed trust record')
   assert.equal(await api.refreshContactVerification({...peerA,kem_pub:bob.sign.publicKey}),'changed')
   assert.equal(JSON.parse(__secrets.get('b:identity-verification-v1:a')).sign,trustBefore.sign,'refresh never replaces a pinned key')
   assert.equal(await api.identityVerified('a',alice.publicKey,alice.sign.publicKey),false,'a key change revokes the old green badge globally')
   assert.equal(__outbox.length,0,'changed keys require explicit offline confirmation')
-  console.log('PASS: signed round-trip, self history, tampering, wrong password, mutual challenge/receipt, replay, unsigned downgrade, identity replacement, automatic profile/history refresh, cooldown and group trust invalidation')
+  console.log('PASS: signed round-trip, self history, tampering, wrong password, mutual challenge/receipt, replay, unsigned downgrade, identity replacement, automatic profile/history refresh, cooldown and identity trust invalidation')
 }
 run().catch(error => { console.error(error); process.exitCode = 1 })
