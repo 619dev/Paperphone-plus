@@ -78,6 +78,8 @@ export const en: Record<string, string> = {
   'contacts.friends': 'Friends',
   'contacts.groups': 'Groups',
   'contacts.requests': 'Friend Requests',
+  'contacts.remove_friend': 'Remove Friend',
+  'contacts.remove_friend_confirm': 'You will both be removed from each other’s friends list. Remove this friend?',
   'contacts.add': 'Add Friend',
   'contacts.search_user': 'Search users...',
   'contacts.search_no_results': 'No matching users found',

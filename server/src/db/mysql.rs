@@ -99,4 +99,12 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
     assert_eq!(pending, 0, "Group protocol migration incomplete");
     sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1").fetch_one(pool).await.expect("Message sync barrier migration incomplete");
 
+    let repaired = sqlx::query(include_str!("repair_friendships.sql"))
+        .execute(pool)
+        .await
+        .expect("Unable to repair reciprocal friendships");
+    if repaired.rows_affected() > 0 {
+        tracing::info!("Repaired missing or inconsistent reciprocal friendships");
+    }
+
 }

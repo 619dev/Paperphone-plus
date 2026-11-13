@@ -5,6 +5,33 @@ use serde::Deserialize;
 use crate::AppState;
 use crate::auth::middleware::AuthUser;
 
+type ApiError = (axum::http::StatusCode, Json<serde_json::Value>);
+
+fn database_error(error: sqlx::Error) -> ApiError {
+    (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": error.to_string() })))
+}
+
+async fn lock_friendship(
+    db: &sqlx::MySqlPool,
+    user_id: &str,
+    friend_id: &str,
+) -> Result<(sqlx::Transaction<'static, sqlx::MySql>, bool), ApiError> {
+    let mut tx = db.begin().await.map_err(database_error)?;
+    // Lock both users in primary-key order, including when neither friend row exists.
+    let users: Vec<(String,)> = sqlx::query_as(
+        "SELECT id FROM users WHERE id IN (?, ?) ORDER BY id FOR UPDATE"
+    )
+    .bind(user_id).bind(friend_id)
+    .fetch_all(&mut *tx).await.map_err(database_error)?;
+    Ok((tx, users.len() == 2))
+}
+
+fn notify_friendship_changed(state: &AppState, user_id: &str, friend_id: &str) {
+    let event = serde_json::json!({ "type": "friendship_changed" });
+    state.ws_clients.send_to_user(user_id, event.clone());
+    state.ws_clients.send_to_user(friend_id, event);
+}
+
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(list_friends))
@@ -85,70 +112,47 @@ async fn send_request(
         }
     }
 
-    // Never let a new request downgrade an existing friendship. The friends
-    // table stores one row per direction, so inspect both directions before
-    // writing to also handle incoming requests and legacy inconsistent rows.
-    let relationships: Vec<(String, String, String)> = sqlx::query_as(
-        "SELECT user_id, friend_id, status FROM friends
+    let (mut tx, users_exist) = lock_friendship(&state.db, &auth.0.id, &body.friend_id).await?;
+    if !users_exist {
+        return Err((axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "Friend not found" }))));
+    }
+
+    let relationships: Vec<(String, String, i32)> = sqlx::query_as(
+        "SELECT user_id, status, auto_delete FROM friends
          WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)"
     )
     .bind(&auth.0.id).bind(&body.friend_id)
     .bind(&body.friend_id).bind(&auth.0.id)
-    .fetch_all(&state.db).await
-    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+    .fetch_all(&mut *tx).await.map_err(database_error)?;
 
-    if relationships.iter().any(|(_, _, status)| status == "accepted") {
-        // Older releases could leave only one accepted direction behind. A
-        // one-way friendship is invisible to one participant because most
-        // reads intentionally use user_id -> friend_id. Repair both rows when
-        // either side is already accepted instead of trapping the user in an
-        // "Already friends" state with no visible contact.
-        sqlx::query(
-            "INSERT INTO friends (user_id, friend_id, status) VALUES
-               (?, ?, 'accepted'), (?, ?, 'accepted')
-             ON DUPLICATE KEY UPDATE status = 'accepted'"
-        )
-        .bind(&auth.0.id).bind(&body.friend_id)
-        .bind(&body.friend_id).bind(&auth.0.id)
-        .execute(&state.db).await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
-
+    if let Some((owner, _, auto_delete)) = relationships.iter().find(|(_, status, _)| status == "accepted") {
+        if relationships.iter().filter(|(_, status, _)| status == "accepted").count() == 1 {
+            let peer = if owner == &auth.0.id { &body.friend_id } else { &auth.0.id };
+            sqlx::query(
+                "INSERT INTO friends (user_id, friend_id, status, auto_delete) VALUES (?, ?, 'accepted', ?)
+                 ON DUPLICATE KEY UPDATE auto_delete = VALUES(auto_delete), status = 'accepted'"
+            )
+            .bind(peer).bind(owner).bind(auto_delete)
+            .execute(&mut *tx).await.map_err(database_error)?;
+            tx.commit().await.map_err(database_error)?;
+            notify_friendship_changed(&state, &auth.0.id, &body.friend_id);
+        }
         return Ok(Json(serde_json::json!({ "ok": true, "already_friends": true })));
     }
-    if relationships.iter().any(|(user_id, _, status)| user_id == &body.friend_id && status == "pending") {
+    if relationships.iter().any(|(user_id, status, _)| user_id != &auth.0.id && status == "pending") {
         return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "This user has already sent you a friend request" }))));
     }
-    if relationships.iter().any(|(_, _, status)| status == "blocked") {
+    if relationships.iter().any(|(_, status, _)| status == "blocked") {
         return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Unable to send friend request" }))));
     }
 
     sqlx::query(
         "INSERT INTO friends (user_id, friend_id, status, message) VALUES (?, ?, 'pending', ?)
-         ON DUPLICATE KEY UPDATE
-           message = IF(status = 'pending', VALUES(message), message),
-           status = status"
+         ON DUPLICATE KEY UPDATE message = VALUES(message)"
     )
     .bind(&auth.0.id).bind(&body.friend_id).bind(&body.message)
-    .execute(&state.db).await
-    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
-
-    // Close the small race between the relationship check and the upsert: the
-    // upsert above preserves accepted/blocked rows, and this check prevents a
-    // misleading notification or success response if one changed meanwhile.
-    let stored_status: Option<(String,)> = sqlx::query_as(
-        "SELECT status FROM friends WHERE user_id = ? AND friend_id = ?"
-    )
-    .bind(&auth.0.id).bind(&body.friend_id)
-    .fetch_optional(&state.db).await
-    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
-    if let Some((status,)) = stored_status {
-        if status == "accepted" {
-            return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Already friends" }))));
-        }
-        if status == "blocked" {
-            return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Unable to send friend request" }))));
-        }
-    }
+    .execute(&mut *tx).await.map_err(database_error)?;
+    tx.commit().await.map_err(database_error)?;
 
     // Send WS notification
     let sender_info: Option<(String, String, Option<String>)> = sqlx::query_as(
@@ -179,27 +183,29 @@ async fn accept_request(
     auth: AuthUser,
     Json(body): Json<AcceptReq>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    // Update existing request (requester → accepter)
-    let result = sqlx::query("UPDATE friends SET status = 'accepted' WHERE user_id = ? AND friend_id = ? AND status = 'pending'")
-        .bind(&body.friend_id).bind(&auth.0.id)
-        .execute(&state.db).await
-        .map_err(|e| {
-            tracing::error!("accept_request UPDATE failed: {}", e);
-            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() })))
-        })?;
-
+    let (mut tx, users_exist) = lock_friendship(&state.db, &auth.0.id, &body.friend_id).await?;
+    let request_not_found = || (axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "Friend request not found or already processed" })));
+    if !users_exist {
+        return Err(request_not_found());
+    }
+    let result = sqlx::query(
+        "UPDATE friends SET status = 'accepted'
+         WHERE user_id = ? AND friend_id = ? AND status = 'pending'"
+    )
+    .bind(&body.friend_id).bind(&auth.0.id)
+    .execute(&mut *tx).await.map_err(database_error)?;
     if result.rows_affected() == 0 {
-        return Err((axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "Friend request not found or already processed" }))));
+        return Err(request_not_found());
     }
 
-    // Create reverse friendship (accepter → requester)
-    sqlx::query("INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted') ON DUPLICATE KEY UPDATE status = 'accepted'")
-        .bind(&auth.0.id).bind(&body.friend_id)
-        .execute(&state.db).await
-        .map_err(|e| {
-            tracing::error!("accept_request reverse INSERT failed: {}", e);
-            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() })))
-        })?;
+    sqlx::query(
+        "INSERT INTO friends (user_id, friend_id, status)
+         VALUES (?, ?, 'accepted') ON DUPLICATE KEY UPDATE status = 'accepted'"
+    )
+    .bind(&auth.0.id).bind(&body.friend_id)
+    .execute(&mut *tx).await.map_err(database_error)?;
+    tx.commit().await.map_err(database_error)?;
+    notify_friendship_changed(&state, &auth.0.id, &body.friend_id);
 
     // Notify the original requester via WebSocket
     let accepter: Option<(String, String, Option<String>)> = sqlx::query_as(
@@ -225,10 +231,16 @@ async fn remove_friend(
     auth: AuthUser,
     Path(friend_id): Path<String>,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
-    sqlx::query("DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)")
-        .bind(&auth.0.id).bind(&friend_id).bind(&friend_id).bind(&auth.0.id)
-        .execute(&state.db).await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+    let (mut tx, _) = lock_friendship(&state.db, &auth.0.id, &friend_id).await?;
+    let deleted = sqlx::query(
+        "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)"
+    )
+    .bind(&auth.0.id).bind(&friend_id).bind(&friend_id).bind(&auth.0.id)
+    .execute(&mut *tx).await.map_err(database_error)?;
+    tx.commit().await.map_err(database_error)?;
+    if deleted.rows_affected() > 0 {
+        notify_friendship_changed(&state, &auth.0.id, &friend_id);
+    }
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
@@ -247,14 +259,13 @@ async fn update_auto_delete(
     if !ALLOWED.contains(&body.auto_delete) {
         return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Invalid auto_delete value" }))));
     }
-    sqlx::query("UPDATE friends SET auto_delete = ? WHERE user_id = ? AND friend_id = ?")
-        .bind(body.auto_delete).bind(&auth.0.id).bind(&body.friend_id)
-        .execute(&state.db).await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
-    // Also update the reverse
-    sqlx::query("UPDATE friends SET auto_delete = ? WHERE user_id = ? AND friend_id = ?")
-        .bind(body.auto_delete).bind(&body.friend_id).bind(&auth.0.id)
-        .execute(&state.db).await.ok();
+    sqlx::query(
+        "UPDATE friends SET auto_delete = ?
+         WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)"
+    )
+    .bind(body.auto_delete).bind(&auth.0.id).bind(&body.friend_id)
+    .bind(&body.friend_id).bind(&auth.0.id)
+    .execute(&state.db).await.map_err(database_error)?;
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 

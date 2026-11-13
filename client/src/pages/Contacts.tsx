@@ -82,7 +82,10 @@ export default function Contacts() {
       // Someone sent us a request — refresh requests
       get('/api/friends/requests').then(setRequests).catch(() => {})
     })
-    return () => { unsub1(); unsub2() }
+    const unsub3 = onWs('friendship_changed', () =>
+      get('/api/friends/requests').then(setRequests).catch(() => {})
+    )
+    return () => { unsub1(); unsub2(); unsub3() }
   }, [])
 
   const loadTagData = useCallback(async () => {

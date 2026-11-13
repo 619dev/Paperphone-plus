@@ -83,6 +83,8 @@ export const zh: Record<string, string> = {
   'contacts.friends': '好友',
   'contacts.groups': '群组',
   'contacts.requests': '好友请求',
+  'contacts.remove_friend': '删除好友',
+  'contacts.remove_friend_confirm': '删除后，你和对方会同时从彼此的好友列表中移除。确定删除吗？',
   'contacts.add': '添加好友',
   'contacts.search_user': '搜索用户...',
   'contacts.search_no_results': '没有找到匹配的用户',
