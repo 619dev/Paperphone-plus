@@ -1,7 +1,7 @@
 {
   "name": "paperphone-plus-client",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.6.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test:i18n": "node tests/securityI18n.test.cjs",
     "test:security": "node tests/authenticatedMessaging.test.cjs && node tests/signedGroups.test.cjs && node tests/sync.test.cjs",
-    "test:attachments": "node tests/attachments.test.cjs"
+    "test:attachments": "node tests/attachments.test.cjs",
+    "test:media-cache": "node tests/mediaCache.test.cjs"
   },
   "dependencies": {
     "crystals-kyber-js": "^2.7.0",

@@ -5,7 +5,9 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/버전-2.6.0-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.6.6-orange)](client/package.json)
+
+2.6.6: 사용자·그룹 아바타, 모멘트, 타임라인 및 채팅 첨부 파일을 기기에 영구 캐시합니다. 다시 볼 때 로컬 사본을 사용하고 페이지 새로고침이나 재연결 시 갱신합니다. 게시물에서 돌아오면 스크롤 위치를 복원하며 이미지·동영상 업로드에 파일명, 백분율, 진행 막대를 표시합니다. 캐시는 계정별로 분리되며 서버의 첨부 파일 보관 기간은 계속 적용됩니다.
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-다운로드-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-다운로드-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

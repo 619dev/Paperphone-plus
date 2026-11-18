@@ -251,3 +251,7 @@ for primary brand actions, solid readable message surfaces, and glass only on
 navigation/composer overlays. Implement both themes, safe areas, 44px touch targets,
 keyboard focus, reduced motion, and long multilingual content. Do not introduce
 marketing-page patterns or copy another company's brand identity.
+
+## 2.6.6 media interaction
+
+Display avatars and social/chat media from the persistent client cache on repeat views; refresh on page reload or reconnect. Keep the Timeline list mounted while viewing a post and restore its scroll position on return. Show filename, percentage and a native progress bar during image/video uploads; prevent concurrent selection and publishing until uploads finish. Real-time call streams remain live media.

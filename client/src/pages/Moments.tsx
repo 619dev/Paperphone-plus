@@ -1,3 +1,4 @@
+import { CachedImage, CachedVideo } from '../components/CachedMedia'
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { get, post, del, uploadFile as httpUploadFile, normalizeFileUrl } from '../api/http'
@@ -152,7 +153,7 @@ export default function Moments() {
             <div key={m.id} className={`moment-card${imgCount === 0 && (!m.videos || m.videos.length === 0) ? ' text-only' : ''}`}>
               <div className="moment-header">
                 <div className="avatar avatar-sm">
-                  {m.user?.avatar ? <img src={m.user.avatar} alt="" /> : m.user?.nickname?.[0]}
+                  {m.user?.avatar ? <CachedImage src={m.user.avatar} alt="" /> : m.user?.nickname?.[0]}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div className="moment-user">{m.user?.nickname}</div>
@@ -172,14 +173,14 @@ export default function Moments() {
               {imgCount > 0 && (
                 <div className={`moment-images grid-${Math.min(imgCount, 9)}`}>
                   {m.images.slice(0, 9).map((url: string, i: number) => (
-                    <img key={i} src={normalizeFileUrl(url)} alt="" loading="lazy" />
+                    <CachedImage key={i} src={normalizeFileUrl(url)} alt="" loading="lazy" />
                   ))}
                 </div>
               )}
 
               {/* Video */}
               {m.videos?.length > 0 && (
-                <video
+                <CachedVideo
                   src={normalizeFileUrl(m.videos[0].url)}
                   poster={m.videos[0].thumbnail ? normalizeFileUrl(m.videos[0].thumbnail) : undefined}
                   controls
@@ -220,7 +221,7 @@ export default function Moments() {
                       border: '1.5px solid var(--border)',
                     }}>
                       {l.avatar
-                        ? <img src={l.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <CachedImage src={l.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : l.nickname?.[0]?.toUpperCase()
                       }
                     </div>
@@ -489,7 +490,7 @@ function MomentComposer({ t, friends, onBack, onPublished }: {
                 return (
                   <div key={f.id} className="list-item" onClick={() => toggleFriend(f.id)} style={{ cursor: 'pointer' }}>
                     <div className="avatar avatar-sm">
-                      {f.avatar ? <img src={f.avatar} alt="" /> : f.nickname[0]?.toUpperCase()}
+                      {f.avatar ? <CachedImage src={f.avatar} alt="" /> : f.nickname[0]?.toUpperCase()}
                     </div>
                     <div className="list-content">
                       <div className="name">{f.nickname}</div>
@@ -546,7 +547,7 @@ function MomentComposer({ t, friends, onBack, onPublished }: {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, marginBottom: 12 }}>
             {images.map((url, i) => (
               <div key={i} style={{ position: 'relative', paddingTop: '100%' }}>
-                <img src={url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                <CachedImage src={url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
                 <button
                   onClick={() => removeImage(i)}
                   style={{
@@ -565,7 +566,7 @@ function MomentComposer({ t, friends, onBack, onPublished }: {
         {/* Video preview */}
         {mediaMode === 'video' && videoUrl && (
           <div style={{ position: 'relative', marginBottom: 12 }}>
-            <video src={videoUrl} controls style={{ width: '100%', borderRadius: 8, maxHeight: 300 }} />
+            <CachedVideo src={videoUrl} controls style={{ width: '100%', borderRadius: 8, maxHeight: 300 }} />
             <button
               onClick={removeVideo}
               style={{

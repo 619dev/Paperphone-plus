@@ -8,7 +8,7 @@ Uploads live on the server's persistent volume. Avatars and social/timeline medi
 
 ## Signed messaging upgrade (current source)
 
-Package versions are 2.6.0. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
+Package versions are 2.6.6. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
 
 Migration adds identity-verification messages, membership epochs, signed-group protocol state and a message commit barrier. Existing groups are migrated once to mandatory encryption and a new epoch. History is retained; already-lost keys cannot be recovered. See `client/tests/README.md` for isolated MySQL integration checks, including repeatable migration.
 
@@ -100,3 +100,7 @@ docker compose logs -f server
 - Docker: the only PaperPhonePlus application image currently published is `facilisvelox/paperphone-plus-server`.
 - `/client` code is released through native client builds; do not deploy it to Vercel, Nginx, or a standalone Docker container.
 - If a legacy environment still has a `paperphone-plus-client` container, it can be stopped and removed; it is no longer part of the deployment topology.
+
+## 2.6.6 client update
+
+Shared-client changes add persistent media caching, Timeline scroll restoration and image/video upload progress. Rebuild platform clients with the updated shared source. This change adds no database migration or environment variables. Persistent media caching requires Cache Storage support (normally HTTPS or localhost in browsers); unavailable storage falls back to network loading. Caches are account-isolated and removable through the existing cache-clear action. Server attachment expiry does not remotely erase already-cached bytes. Validate with `npm --prefix client run test:media-cache` and the client build.

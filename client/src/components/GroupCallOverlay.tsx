@@ -1,3 +1,4 @@
+import { CachedImage } from './CachedMedia'
 import { useEffect, useRef, useState } from 'react'
 import { CameraOff, ChevronLeft, LayoutGrid, Mic, MicOff, PhoneIncoming, PhoneOff, Presentation, Users, Video } from 'lucide-react'
 import { formatDuration, useGroupCallContext } from '../contexts/GroupCallContext'
@@ -114,7 +115,7 @@ function PeoplePanel({ gc, participants }: { gc: ReturnType<typeof useGroupCallC
 
 function Avatar({ name, src, size }: { name?: string; src?: string; size: number }) {
   return <div style={{ width: size, height: size, flex: `0 0 ${size}px`, borderRadius: '50%', background: '#36506d', display: 'grid', placeItems: 'center', fontSize: size * .4, overflow: 'hidden' }}>
-    {src ? <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (name?.[0] || '?')}
+    {src ? <CachedImage src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (name?.[0] || '?')}
   </div>
 }
 

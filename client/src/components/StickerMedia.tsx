@@ -1,3 +1,4 @@
+import { CachedImage, CachedVideo } from './CachedMedia'
 import { useEffect, useState } from 'react'
 import TgsPlayer from './TgsPlayer'
 import { cachedStickerObjectUrl } from '../utils/stickerCache'
@@ -51,13 +52,13 @@ export default function StickerMedia({
   }
   if (type === 'video') {
     return (
-      <video src={src} autoPlay loop muted playsInline
+      <CachedVideo src={src} autoPlay loop muted playsInline
         aria-label={alt}
         style={{ maxWidth: width, maxHeight: height, display: 'block', objectFit: 'contain', background: 'transparent' }} />
     )
   }
   return (
-    <img src={src} alt={alt} loading="lazy"
+    <CachedImage src={src} alt={alt} loading="lazy"
       style={{ maxWidth: width, maxHeight: height, display: 'block', objectFit: 'contain', background: 'transparent' }} />
   )
 }

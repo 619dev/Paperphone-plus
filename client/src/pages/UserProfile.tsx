@@ -1,3 +1,4 @@
+import { CachedImage } from '../components/CachedMedia'
 import { getKeys } from '../crypto/keystore'
 import { startIdentityVerification, refreshContactVerification, refreshIdentityTrust, IDENTITY_STATUS_KEYS, type IdentityStatus } from '../crypto/authenticatedMessaging'
 import IdentityBadge from '../components/IdentityBadge'
@@ -276,7 +277,7 @@ export default function UserProfile() {
           borderRadius: 16, margin: '8px 12px',
         }}>
           <div className="avatar avatar-lg" style={{ marginBottom: 12 }}>
-            {user.avatar ? <img src={user.avatar} alt="" /> : user.nickname?.[0]?.toUpperCase()}
+            {user.avatar ? <CachedImage src={user.avatar} alt="" /> : user.nickname?.[0]?.toUpperCase()}
           </div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>{displayName}<IdentityBadge id={id!} ik={user.ik_pub} sign={user.kem_pub} refreshing={verificationRefreshing || verificationStatus === 'error'} /></div>
           {remark && (
@@ -481,7 +482,7 @@ export default function UserProfile() {
               {m.images?.length > 0 && (
                 <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
                   {m.images.slice(0, 3).map((url: string, i: number) => (
-                    <img key={i} src={normalizeFileUrl(url)} alt="" style={{
+                    <CachedImage key={i} src={normalizeFileUrl(url)} alt="" style={{
                       width: 64, height: 64, objectFit: 'cover', borderRadius: 6,
                     }} loading="lazy" />
                   ))}

@@ -5,6 +5,7 @@ Run these commands from the repository root after installing the client dependen
 ```bash
 npm --prefix client run test:security
 npm --prefix client run test:attachments
+npm --prefix client run test:media-cache
 npm --prefix client run test:i18n
 npm --prefix client run build
 cargo test --manifest-path server/Cargo.toml
@@ -139,6 +140,12 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-These source changes are unreleased; the package version is 2.6.0. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+These source changes are unreleased; the package version is 2.6.6. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 See the [main README](../../README_EN.md), [中文说明](../../README.md), [deployment/migration guide](../../DEPLOY_EN.md) for operating requirements. The client suites use cryptographic implementations with mocked transport/persistence; the server fixture uses real database/routes with transport signature fixtures. Together they provide regression coverage, not an independent audit or a native-device UI test.
+
+## 2.6.6 media cache and Timeline acceptance
+
+The media cache suite checks persistent cache hits, concurrent download deduplication, reconnect refresh, offline reads, account isolation and unavailable storage. Attachment tests retain authenticated download and token-refresh coverage.
+
+On native clients, reopen user/group avatars, Moments, Timeline and private/group attachments and inspect network requests: repeat views in the same session should use local copies. Reload or reconnect to check refresh; disconnect to check previously cached media. Scroll the Timeline, open several posts, and confirm each return restores the same position. Upload multiple images and a video, verify filename/percentage/progress feedback and disabled publish/select controls, and test an upload failure. Cache persistence depends on the host supporting Cache Storage; these automated tests do not substitute for native UI acceptance.

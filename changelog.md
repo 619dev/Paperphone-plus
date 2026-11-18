@@ -4,6 +4,18 @@ All notable changes and new features are recorded here. Historical entries below
 
 所有重要版本改动和新特性统一记录于此。下方历史条目由仓库原有文档迁移而来。
 
+## 2.6.6 — 2026-11-19
+
+- Added account-isolated persistent media caching for user/group avatars, Moments, Timeline and chat attachments, with concurrent download deduplication and refresh on reload/reconnect. Cached media remains readable offline when storage is available.
+- Keep the Timeline feed mounted and restore its scroll position after returning from a post.
+- Show filename, percentage and progress bars for Timeline image/video uploads; block overlapping uploads and publishing while uploading.
+- Updated client/server package metadata, Profile footer, all eight READMEs and supporting guides. Added media cache regression tests. Source update only; no native packages or container images are published by this commit.
+
+- 用户头像、群头像、朋友圈、时间线和聊天附件接入按账号隔离的持久媒体缓存，合并并发下载，刷新页面或恢复网络时更新，存储可用时支持离线读取。
+- 时间线保留列表，查看帖子返回后恢复原滚动位置。
+- 时间线图片/视频上传显示文件名、百分比和进度条，上传期间禁止重复选择和提前发布。
+- 客户端、服务端版本及个人信息页底部统一为 2.6.6，更新八语言说明与配套文档，新增缓存回归测试。本次仅提交源码，不发布原生安装包或容器镜像。
+
 ## 2.6.0 (Unreleased / 未发布) — 2026-10-17
 
 - Ported Lite `f5492a0` and `9bf6aaf`: Ed25519-signed private messages, mutual offline-password identity verification, identity-change revocation and localized verification badges.

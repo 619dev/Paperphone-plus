@@ -1,3 +1,4 @@
+import { CachedVideo } from './CachedMedia'
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 
@@ -168,7 +169,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       </div>
 
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <video ref={videoRef} style={{
+        <CachedVideo ref={videoRef} style={{
           width: '100%', height: '100%', objectFit: 'cover',
         }} playsInline muted />
         <canvas ref={canvasRef} style={{ display: 'none' }} />

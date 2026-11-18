@@ -1,3 +1,4 @@
+import { CachedImage } from '../components/CachedMedia'
 import { clearGroupSenderKeys } from '../crypto/groupCrypto'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -286,7 +287,7 @@ export default function GroupInfo() {
                         {selected && <Check size={14} color="#fff" />}
                       </div>
                       <div className="avatar avatar-sm">
-                        {f.avatar ? <img src={f.avatar} alt="" /> : f.nickname?.[0]?.toUpperCase()}
+                        {f.avatar ? <CachedImage src={f.avatar} alt="" /> : f.nickname?.[0]?.toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 500 }}>{f.nickname}</div>
@@ -342,7 +343,7 @@ export default function GroupInfo() {
             }}
             onClick={() => isOwner && avatarRef.current?.click()}
           >
-            {group.avatar ? <img src={group.avatar} alt="" /> : <Users size={20} />}
+            {group.avatar ? <CachedImage src={group.avatar} alt="" /> : <Users size={20} />}
             {isOwner && (
               <div style={{
                 position: 'absolute', bottom: -2, right: -2,
@@ -533,7 +534,7 @@ export default function GroupInfo() {
             <div key={m.id} className="list-item" onClick={() => navigate(`/user/${m.id}`)}
               style={{ cursor: 'pointer', borderRadius: 12, marginBottom: 4 }}>
               <div className="avatar avatar-sm">
-                {m.avatar ? <img src={m.avatar} alt="" /> : m.nickname?.[0]?.toUpperCase()}
+                {m.avatar ? <CachedImage src={m.avatar} alt="" /> : m.nickname?.[0]?.toUpperCase()}
               </div>
               <div className="list-content" style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

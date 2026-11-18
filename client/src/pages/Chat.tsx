@@ -1,3 +1,4 @@
+import { CachedImage, CachedVideo, CachedAudio } from '../components/CachedMedia'
 import { securityErrorText } from '../i18n/security'
 import { getGroupHistory } from '../api/groupHistory'
 import { encryptSignedPair, decryptSignedMessage } from '../crypto/authenticatedMessaging'
@@ -314,7 +315,7 @@ function ImageViewer({ src, onClose }: { src: string; onClose: () => void }) {
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
       >
-        <img
+        <CachedImage
           src={src}
           alt=""
           draggable={false}
@@ -1207,7 +1208,7 @@ export default function Chat() {
     }
     if (msg.msg_type === 'image') {
       const imgUrl = normalizeFileUrl(displayText)
-      return <img className="msg-image" src={imgUrl} alt="" style={{ maxWidth: 240, borderRadius: 8, cursor: 'pointer' }} onClick={() => setViewingImage(imgUrl)} />
+      return <CachedImage className="msg-image" src={imgUrl} alt="" style={{ maxWidth: 240, borderRadius: 8, cursor: 'pointer' }} onClick={() => setViewingImage(imgUrl)} />
     }
     if (msg.msg_type === 'sticker') {
       // Try to parse as JSON for animated/video stickers
@@ -1232,14 +1233,14 @@ export default function Chat() {
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 20 }}><Mic size={20} /></span>
-          <audio src={normalizeFileUrl(displayText)} controls style={{ height: 32, maxWidth: 200 }} />
+          <CachedAudio src={normalizeFileUrl(displayText)} controls style={{ height: 32, maxWidth: 200 }} />
         </div>
       )
     }
     if (msg.msg_type === 'video') {
       const meta = parseFileMeta(displayText)
       const videoUrl = meta?.url || displayText
-      return <video src={normalizeFileUrl(videoUrl)} controls style={{ maxWidth: 260, borderRadius: 8 }} />
+      return <CachedVideo src={normalizeFileUrl(videoUrl)} controls style={{ maxWidth: 260, borderRadius: 8 }} />
     }
     if (msg.msg_type === 'file') {
       const meta = parseFileMeta(displayText)
@@ -1518,7 +1519,7 @@ export default function Chat() {
               )}
               {!isMe && isGroup && (
                 <div className="avatar avatar-sm">
-                  {msg.from_avatar ? <img src={normalizeFileUrl(msg.from_avatar)} alt="" /> : (msg.from_nickname?.[0] || '?')}
+                  {msg.from_avatar ? <CachedImage src={normalizeFileUrl(msg.from_avatar)} alt="" /> : (msg.from_nickname?.[0] || '?')}
                 </div>
               )}
               <div>

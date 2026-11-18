@@ -1,3 +1,4 @@
+import { cachedMediaBlob } from '../utils/mediaCache'
 import { securityApiException } from '../i18n/security'
 import { endSession, isExplicitLogoutSignal } from '../utils/session'
 import { useStore } from '../store'
@@ -247,11 +248,13 @@ export async function downloadFileFromServer(url: string): Promise<Blob> {
   const request = async (token: string | null) => fetch(target.toString(), {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
-  let res = await request(localStorage.getItem('token'))
-  if (res.status === 401) {
-    const refreshed = await refreshAccessToken()
-    if (refreshed) res = await request(refreshed)
-  }
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.blob()
+  return cachedMediaBlob(target.toString(), async () => {
+    let res = await request(localStorage.getItem('token'))
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) res = await request(refreshed)
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.blob()
+  })
 }

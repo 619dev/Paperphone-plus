@@ -5,7 +5,9 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.0-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.6-orange)](client/package.json)
+
+2.6.6 : Cache média persistant pour les avatars, Moments, Timeline et pièces jointes des conversations. Les consultations suivantes utilisent la copie locale ; le rechargement de la page ou la reconnexion actualise le cache. Le fil retrouve sa position après la lecture d’une publication ; les envois d’images et de vidéos affichent le nom, le pourcentage et une barre de progression. Les caches sont isolés par compte ; la durée de conservation côté serveur reste applicable.
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Télécharger-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-Télécharger-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

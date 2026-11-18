@@ -1,3 +1,4 @@
+import { CachedImage } from './CachedMedia'
 /**
  * Global Call Overlay
  *
@@ -77,7 +78,7 @@ export default function CallOverlay() {
             backdropFilter: 'blur(10px)',
           }}>
             {peer?.avatar
-              ? <img src={peer.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ? <CachedImage src={peer.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
               : (peerName?.[0] || '?')}
           </div>
         )}

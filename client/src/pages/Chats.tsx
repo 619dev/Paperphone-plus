@@ -1,3 +1,4 @@
+import { CachedImage } from '../components/CachedMedia'
 import IdentityBadge from '../components/IdentityBadge'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -110,7 +111,7 @@ export default function Chats() {
               }}
             >
               <div className="avatar" style={{ position: 'relative' }}>
-                {chat.avatar ? <img src={chat.avatar} alt="" /> : (chat.isGroup ? <Users size={20} /> : chat.name[0]?.toUpperCase())}
+                {chat.avatar ? <CachedImage src={chat.avatar} alt="" /> : (chat.isGroup ? <Users size={20} /> : chat.name[0]?.toUpperCase())}
                 {chat.isOnline && <span className="online-dot" />}
               </div>
               <div className="list-content">

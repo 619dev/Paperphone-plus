@@ -1,3 +1,4 @@
+import { CachedImage } from './CachedMedia'
 /**
  * Global Toast Notification Component
  *
@@ -77,7 +78,7 @@ export default function NotificationToast() {
             overflow: 'hidden',
           }}>
             {toast.avatar ? (
-              <img src={toast.avatar} alt="" style={{
+              <CachedImage src={toast.avatar} alt="" style={{
                 width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
               }} />
             ) : toast.type === 'call' ? (
