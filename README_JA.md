@@ -5,9 +5,11 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/バージョン-2.6.6-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.6.7-orange)](client/package.json)
 
-2.6.6：ユーザー・グループのアバター、モーメンツ、タイムライン、チャット添付を端末に永続キャッシュします。再表示時はローカルを優先し、ページ再読み込みや再接続時に更新します。投稿から戻るとスクロール位置を復元し、画像・動画アップロードにはファイル名、割合、進捗バーを表示します。キャッシュはアカウント別で、サーバーの添付保存期限は引き続き適用されます。
+**2.6.7**：「プロフィール → アカウントの削除」で、3か月、6か月、1年、2年、3年のいずれかの未ログイン期間を設定できます。既定値は1年です。ログインに成功するたびに期間がリセットされます。同じ画面でパスワードを入力して、アカウントを今すぐ削除することもできます。
+
+ログイン画面の「パスワードをお忘れですか？」から、ユーザー名と認証アプリの6桁のコードで新しいパスワードを設定できます。事前に二要素認証を有効にしていた場合のみ復旧できます。再設定後は既存の端末がログアウトします。
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-ダウンロード-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-ダウンロード-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

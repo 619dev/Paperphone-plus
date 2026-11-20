@@ -16,6 +16,17 @@ async function run() {
   const api = mod.exports
   const keys = Object.keys(api.zh).filter(key => /^(verify|crypto|grouptrust)\./.test(key)).concat(['safety.description', 'safety.verify_steps', 'chat.presentation_password_prompt', 'chat.presentation_unlock_password_prompt'])
   assert.ok(keys.length >= 92)
+  const accountDeletionKeys = [
+    'profile.account_deletion', 'profile.inactivity_deletion', 'profile.inactivity_desc',
+    'profile.inactivity_period', ...[3, 6, 12, 24, 36].map(period => `profile.inactivity_${period}`),
+    'profile.delete_account', 'profile.delete_warning', 'profile.delete_confirm',
+    'profile.delete_enter_password', 'profile.delete_need_password', 'profile.delete_invalid_password',
+  ]
+  const passwordRecoveryKeys = [
+    'auth.forgot_password', 'auth.reset_help', 'auth.reset_password', 'auth.reset_confirm',
+    'auth.back_to_login', 'auth.reset_failed', 'auth.reset_success', 'auth.reset_length',
+    'auth.totp_code', 'password.new', 'password.mismatch',
+  ]
   const placeholders = value => [...value.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort()
   let language = 'zh'
   global.localStorage = { getItem: key => key === 'lang' ? language : null }
@@ -31,7 +42,7 @@ async function run() {
       ts.forEachChild(node, visit)
     }
     visit(ast)
-    for (const key of keys) {
+    for (const key of [...keys, ...accountDeletionKeys, ...passwordRecoveryKeys]) {
       assert.ok(Object.hasOwn(locale, key), `${lang}: missing ${key}; fallback is not a translation`)
       assert.equal(typeof locale[key], 'string')
       assert.ok(locale[key].trim(), `${lang}: empty ${key}`)
@@ -57,6 +68,6 @@ async function run() {
   assert.equal(api.securityText('verify.notice'), api.zh['verify.notice'])
   assert.equal(api.zh['verify.notice'], '文本外观密码是检验对方是否可信任的凭证，文本外观密码只在线下交流，不要以任何形式发到网上。')
   assert.equal(api.localizeSecurityApiError('unrelated error'), 'unrelated error')
-  console.log(`PASS: ${keys.length} security text keys × 8 languages, no duplicates or missing keys, matching placeholders, live locale changes and unchanged protocol/user text`)
+  console.log(`PASS: ${keys.length} security, ${accountDeletionKeys.length} account deletion and ${passwordRecoveryKeys.length} password recovery text keys × 8 languages, no duplicates or missing keys, matching placeholders, live locale changes and unchanged protocol/user text`)
 }
 run().catch(error => { console.error(error); process.exitCode = 1 })

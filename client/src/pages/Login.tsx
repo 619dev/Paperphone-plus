@@ -22,6 +22,11 @@ export default function Login() {
   const [isRegister, setIsRegister] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [isResetting, setIsResetting] = useState(false)
+  const [resetCode, setResetCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [resetSucceeded, setResetSucceeded] = useState(false)
   const [nickname, setNickname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -167,9 +172,42 @@ export default function Login() {
     }
   }
 
+  const showPasswordReset = (show: boolean) => {
+    setIsResetting(show)
+    setError('')
+    setPassword('')
+    setResetCode('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setResetSucceeded(false)
+  }
+
+  const resetPassword = async () => {
+    if (newPassword !== confirmPassword) {
+      setError(t('password.mismatch'))
+      return
+    }
+    const length = [...newPassword].length
+    if (length < 6 || length > 128) {
+      setError(t('auth.reset_length'))
+      return
+    }
+    try {
+      await post('/api/auth/reset-password', { username, code: resetCode, new_password: newPassword })
+      showPasswordReset(false)
+      setResetSucceeded(true)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      const key = message === 'Password recovery verification failed' ? 'auth.reset_failed'
+        : message === 'Invalid new password length' ? 'auth.reset_length' : 'common.error'
+      setError(t(key))
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setResetSucceeded(false)
     const normalizedServerUrl = serverUrl.trim().replace(/\/+$/, '')
     if (normalizedServerUrl !== serverUrl) {
       setServerUrl(normalizedServerUrl)
@@ -177,6 +215,10 @@ export default function Login() {
     setLoading(true)
 
     try {
+      if (isResetting) {
+        await resetPassword()
+        return
+      }
       if (!agreedToTerms) {
         setError(t('terms.must_agree'))
         setLoading(false)
@@ -296,28 +338,29 @@ export default function Login() {
         <div className="login-logo">
           <CachedImage src="/icons/icon-512.png" alt="PaperPhonePlus" className="login-logo-img" />
         </div>
-        <h1 className="login-title">{t('app.name')}</h1>
-        <p className="login-subtitle">{t('auth.subtitle')}</p>
+        <h1 className="login-title">{t(isResetting ? 'auth.reset_password' : 'app.name')}</h1>
+        <p className="login-subtitle">{t(isResetting ? 'auth.reset_help' : 'auth.subtitle')}</p>
 
-        {/* Security Features */}
-        <div className="security-badges">
-          <div className="security-badge">
-            <span className="security-icon"><Lock size={16} /></span>
-            <span className="security-text">{t('security.local_keys')}</span>
+        {!isResetting && (
+          <div className="security-badges">
+            <div className="security-badge">
+              <span className="security-icon"><Lock size={16} /></span>
+              <span className="security-text">{t('security.local_keys')}</span>
+            </div>
+            <div className="security-badge">
+              <span className="security-icon"><Shield size={16} /></span>
+              <span className="security-text">{t('security.e2e')}</span>
+            </div>
+            <div className="security-badge">
+              <span className="security-icon"><Link size={16} /></span>
+              <span className="security-text">{t('security.forward')}</span>
+            </div>
+            <div className="security-badge">
+              <span className="security-icon"><Atom size={16} /></span>
+              <span className="security-text">{t('security.quantum')}</span>
+            </div>
           </div>
-          <div className="security-badge">
-            <span className="security-icon"><Shield size={16} /></span>
-            <span className="security-text">{t('security.e2e')}</span>
-          </div>
-          <div className="security-badge">
-            <span className="security-icon"><Link size={16} /></span>
-            <span className="security-text">{t('security.forward')}</span>
-          </div>
-          <div className="security-badge">
-            <span className="security-icon"><Atom size={16} /></span>
-            <span className="security-text">{t('security.quantum')}</span>
-          </div>
-        </div>
+        )}
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="input-group">
@@ -597,52 +640,85 @@ export default function Login() {
             </div>
           )}
 
-          <div className="input-group">
-            <input
-              className="input" id="password-input"
-              type="password" autoComplete={isRegister ? 'new-password' : 'current-password'}
-              placeholder={t('auth.password')}
-              value={password} onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          {isResetting ? (
+            <>
+              <input
+                className="input" id="reset-totp-input" type="text" inputMode="numeric"
+                autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required
+                aria-label={t('auth.totp_code')} placeholder={t('auth.totp_code')}
+                value={resetCode} onChange={e => setResetCode(e.target.value)}
+              />
+              <input
+                className="input" id="reset-password-input" type="password" autoComplete="new-password"
+                aria-label={t('password.new')} placeholder={t('password.new')} required
+                value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              />
+              <input
+                className="input" id="confirm-reset-password-input" type="password" autoComplete="new-password"
+                aria-label={t('auth.reset_confirm')} placeholder={t('auth.reset_confirm')} required
+                value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              />
+            </>
+          ) : (
+            <div className="input-group">
+              <input
+                className="input" id="password-input"
+                type="password" autoComplete={isRegister ? 'new-password' : 'current-password'}
+                placeholder={t('auth.password')}
+                value={password} onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          )}
 
-          {error && <div style={{ color: 'var(--danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
+          {resetSucceeded && <div role="status" className="login-subtitle">{t('auth.reset_success')}</div>}
+          {error && <div role="alert" style={{ color: 'var(--danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
 
           <button className="btn btn-primary btn-full" type="submit" id="submit-btn" disabled={loading}>
-            {loading
-              ? (isRegister ? t('auth.registering') : t('auth.logging_in'))
-              : (isRegister ? t('auth.register') : t('auth.login'))
-            }
+            {isResetting
+              ? t(loading ? 'common.loading' : 'auth.reset_password')
+              : t(loading
+                ? (isRegister ? 'auth.registering' : 'auth.logging_in')
+                : (isRegister ? 'auth.register' : 'auth.login'))}
           </button>
+          {!isRegister && (
+            <button className="btn btn-full" type="button" disabled={loading}
+              onClick={() => showPasswordReset(!isResetting)}>
+              {t(isResetting ? 'auth.back_to_login' : 'auth.forgot_password')}
+            </button>
+          )}
         </form>
 
-        {/* Terms of Use checkbox (login & registration) */}
-        <div style={{
-          display: 'flex', alignItems: 'flex-start', gap: 8,
-          padding: '8px 4px', fontSize: 13, color: 'var(--text-secondary)',
-        }}>
-          <input
-            type="checkbox"
-            id="terms-checkbox"
-            checked={agreedToTerms}
-            onChange={e => setAgreedToTerms(e.target.checked)}
-            style={{ marginTop: 2, accentColor: 'var(--accent)', width: 18, height: 18, flexShrink: 0 }}
-          />
-          <label htmlFor="terms-checkbox" style={{ lineHeight: 1.4 }}>
-            {t('terms.agree_prefix')}
-            <a onClick={() => navigate('/terms')} style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>
-              {t('terms.agree_link')}
-            </a>
-          </label>
-        </div>
+        {!isResetting && (
+          <>
+            {/* Terms of Use checkbox (login & registration) */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              padding: '8px 4px', fontSize: 13, color: 'var(--text-secondary)',
+            }}>
+              <input
+                type="checkbox"
+                id="terms-checkbox"
+                checked={agreedToTerms}
+                onChange={e => setAgreedToTerms(e.target.checked)}
+                style={{ marginTop: 2, accentColor: 'var(--accent)', width: 18, height: 18, flexShrink: 0 }}
+              />
+              <label htmlFor="terms-checkbox" style={{ lineHeight: 1.4 }}>
+                {t('terms.agree_prefix')}
+                <a onClick={() => navigate('/terms')} style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>
+                  {t('terms.agree_link')}
+                </a>
+              </label>
+            </div>
 
-        <div className="login-toggle">
-          {isRegister ? t('auth.has_account') : t('auth.no_account')}{' '}
-          <a onClick={() => { setIsRegister(!isRegister); setError('') }}>
-            {isRegister ? t('auth.login') : t('auth.register')}
-          </a>
-        </div>
+            <div className="login-toggle">
+              {isRegister ? t('auth.has_account') : t('auth.no_account')}{' '}
+              <a onClick={() => { setIsRegister(!isRegister); setResetSucceeded(false); setError('') }}>
+                {isRegister ? t('auth.login') : t('auth.register')}
+              </a>
+            </div>
+          </>
+        )}
 
         <div className="login-lang">
           {allLangs.map(l => (

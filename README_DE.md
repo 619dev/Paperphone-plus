@@ -5,9 +5,11 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.6-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.7-orange)](client/package.json)
 
-2.6.6: Persistenter Mediencache für Benutzer- und Gruppenavatare, Moments, Timeline und Chat-Anhänge. Erneutes Anzeigen nutzt lokale Kopien; Neuladen oder Wiederverbinden aktualisiert den Cache. Nach dem Lesen eines Beitrags wird die Scrollposition wiederhergestellt; Bild- und Video-Uploads zeigen Dateiname, Prozentwert und Fortschrittsbalken. Caches sind nach Konto getrennt; serverseitige Aufbewahrungsfristen gelten weiterhin.
+**2.6.7**: Unter Profil → Kontolöschung kannst du dein Konto nach 3 Monaten, 6 Monaten, 1 Jahr, 2 Jahren oder 3 Jahren ohne Anmeldung automatisch löschen lassen. Standardmäßig gilt 1 Jahr. Jede erfolgreiche Anmeldung startet die Frist neu. Auf derselben Seite kannst du die sofortige Löschung mit deinem Passwort bestätigen.
+
+Auf dem Anmeldebildschirm kannst du über „Passwort vergessen?“ mit deinem Benutzernamen und dem sechsstelligen Code deiner Authenticator-App ein neues Passwort setzen. Die Wiederherstellung setzt eine zuvor aktivierte Zwei-Faktor-Authentifizierung voraus. Nach dem Zurücksetzen werden bisherige Geräte abgemeldet.
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Herunterladen-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-Herunterladen-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

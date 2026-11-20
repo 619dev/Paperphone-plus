@@ -20,7 +20,7 @@ async fn require_member(db: &sqlx::MySqlPool, group: &str, user: &str) -> Result
     if member.is_none() { return Err(fail(axum::http::StatusCode::FORBIDDEN, "Not a group member")); }
     Ok(())
 }
-async fn lock_epoch(tx: &mut sqlx::Transaction<'_, sqlx::MySql>, group: &str) -> Result<u32, ApiError> {
+pub(super) async fn lock_epoch(tx: &mut sqlx::Transaction<'_, sqlx::MySql>, group: &str) -> Result<u32, ApiError> {
     let row: Option<(u32,)> = sqlx::query_as("SELECT key_epoch FROM `groups` WHERE id=? FOR UPDATE")
         .bind(group).fetch_optional(&mut **tx).await.map_err(db_error)?;
     row.map(|r| r.0).ok_or_else(|| fail(axum::http::StatusCode::NOT_FOUND, "Group not found"))
@@ -31,7 +31,7 @@ async fn advance_epoch(tx: &mut sqlx::Transaction<'_, sqlx::MySql>, group: &str,
     sqlx::query("DELETE FROM group_sender_keys WHERE group_id=?").bind(group).execute(&mut **tx).await.map_err(db_error)?;
     Ok(next)
 }
-async fn notify_rotation(state: &AppState, group: &str, epoch: u32, removed: Option<&str>) {
+pub(super) async fn notify_rotation(state: &AppState, group: &str, epoch: u32, removed: Option<&str>) {
     let members: Vec<(String,)> = sqlx::query_as("SELECT user_id FROM group_members WHERE group_id=?")
         .bind(group).fetch_all(&state.db).await.unwrap_or_default();
     for (id,) in members {
@@ -236,16 +236,26 @@ pub(crate) async fn revoke_member(state: &AppState, actor: &str, group: &str, us
     if target == "owner" || (!leaving && target == "admin" && role.as_ref().map(|r|r.0.as_str()) != Some("owner")) {
         return Err(fail(axum::http::StatusCode::FORBIDDEN, "Cannot remove group owner or peer administrator"));
     }
-    sqlx::query("DELETE FROM group_members WHERE group_id=? AND user_id=?").bind(group).bind(user).execute(&mut *tx).await.map_err(db_error)?;
-    // Remaining recipients retain historical distributions for offline catch-up.
-    // The departed member loses every downloadable distribution, including history.
-    sqlx::query("DELETE FROM group_sender_key_distributions WHERE group_id=? AND to_id=?")
-        .bind(group).bind(user).execute(&mut *tx).await.map_err(db_error)?;
-    let next = advance_epoch(&mut tx, group, epoch).await?;
+    let next = remove_member_and_rotate(&mut tx, group, user, epoch).await?
+        .ok_or_else(|| fail(axum::http::StatusCode::NOT_FOUND, "Member not found"))?;
     tx.commit().await.map_err(db_error)?;
     state.ws_clients.send_to_user(user, serde_json::json!({"type":"group_removed","group_id":group,"key_epoch":next}));
     notify_rotation(state, group, next, Some(user)).await;
     Ok(next)
+}
+
+pub(super) async fn remove_member_and_rotate(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>, group: &str, user: &str, epoch: u32,
+) -> Result<Option<u32>, ApiError> {
+    let removed = sqlx::query("DELETE FROM group_members WHERE group_id=? AND user_id=?")
+        .bind(group).bind(user).execute(&mut **tx).await.map_err(db_error)?;
+    if removed.rows_affected() == 0 {
+        return Ok(None);
+    }
+    // Remaining recipients retain historical distributions for offline catch-up.
+    sqlx::query("DELETE FROM group_sender_key_distributions WHERE group_id=? AND to_id=?")
+        .bind(group).bind(user).execute(&mut **tx).await.map_err(db_error)?;
+    Ok(Some(advance_epoch(tx, group, epoch).await?))
 }
 
 async fn remove_member(State(state): State<Arc<AppState>>, auth: AuthUser, Path((group_id,user_id)): Path<(String,String)>) -> Result<Json<serde_json::Value>, ApiError> {

@@ -5,9 +5,11 @@
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/版本-2.6.6-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.6.7-orange)](client/package.json)
 
-2.6.6：用户/群头像、朋友圈、时间线与聊天附件使用客户端持久媒体缓存，重复查看优先读取本地，页面刷新或网络恢复时更新。时间线查看帖子后返回原滚动位置；图片和视频上传显示文件名、百分比和进度条。缓存按账号隔离，聊天附件的服务端保留期限仍然适用。
+**2.6.7**：在「个人资料 → 账号删除」中，可以选择连续 3 个月、6 个月、1 年、2 年或 3 年未登录时自动删除账号，默认 1 年。每次成功登录都会重新计时。同一页面也可以输入密码确认立即删除账号。
+
+登录页的「忘记密码？」可用用户名和验证器应用的六位验证码设置新密码。只有提前启用双因素验证的账号才能找回。重置后旧设备会退出登录。
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-下载-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-下载-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

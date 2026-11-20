@@ -4,7 +4,8 @@ use serde::Deserialize;
 
 use crate::AppState;
 use crate::auth::middleware::AuthUser;
-use crate::auth::jwt::{sign_token, verify_token};
+use crate::auth::jwt::verify_token;
+use super::auth::create_login_session;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
@@ -17,7 +18,7 @@ pub fn router() -> Router<Arc<AppState>> {
 }
 
 /// Helper: create a TOTP instance (sync, returns owned values)
-fn make_totp(secret_bytes: Vec<u8>, account: &str) -> Result<totp_rs::TOTP, totp_rs::TotpUrlError> {
+pub(super) fn make_totp(secret_bytes: Vec<u8>, account: &str) -> Result<totp_rs::TOTP, totp_rs::TotpUrlError> {
     totp_rs::TOTP::new(
         totp_rs::Algorithm::SHA1,
         6,
@@ -145,15 +146,7 @@ async fn verify_totp(
         return Err((axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid TOTP code" }))));
     }
 
-    let session_id = uuid::Uuid::new_v4().to_string();
-    let (device_name, device_type, os_name, browser_name) = crate::routes::auth::parse_user_agent(&headers);
-    let ip_address = crate::routes::auth::extract_ip(&headers);
-    sqlx::query("INSERT INTO sessions (id, user_id, device_name, device_type, os, browser, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .bind(&session_id).bind(&claims.id).bind(&device_name).bind(&device_type).bind(&os_name).bind(&browser_name).bind(&ip_address)
-        .execute(&state.db).await.ok();
-
-    let token = sign_token(&claims.id, &claims.username, Some(&session_id), &state.config.jwt_secret);
-    let refresh_token = crate::routes::auth::attach_refresh_token(&state, &session_id).await;
+    let (token, refresh_token) = create_login_session(&state, &claims.id, &claims.username, &headers, claims.password_reset_version.unwrap_or_default()).await?;
 
     let user: Option<(String, String, String, Option<String>, Option<String>)> = sqlx::query_as(
         "SELECT id, username, nickname, avatar, ik_pub FROM users WHERE id = ?"
@@ -215,8 +208,16 @@ async fn use_recovery_code(
     let claims = verify_token(&body.login_token, &state.config.jwt_secret)
         .map_err(|_| (axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid token" }))))?;
 
-    let row: Option<(Option<String>,)> = sqlx::query_as("SELECT recovery_codes FROM user_totp WHERE user_id = ? AND enabled = 1")
-        .bind(&claims.id).fetch_optional(&state.db).await.unwrap_or(None);
+    if claims.token_type.as_deref() != Some("2fa_pending") {
+        return Err((axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid token type" }))));
+    }
+
+    let row: Option<(Option<String>,)> = sqlx::query_as(
+        "SELECT t.recovery_codes FROM user_totp t JOIN users u ON u.id = t.user_id
+         WHERE t.user_id = ? AND t.enabled = 1 AND u.password_reset_version = ?"
+    )
+    .bind(&claims.id).bind(claims.password_reset_version.unwrap_or_default())
+    .fetch_optional(&state.db).await.unwrap_or(None);
 
     let (codes_json,) = row.ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "2FA not enabled" }))))?;
 
@@ -226,17 +227,19 @@ async fn use_recovery_code(
     if let Some(pos) = codes.iter().position(|c| c == &body.code) {
         codes.remove(pos);
         let updated = serde_json::to_string(&codes).unwrap_or_default();
-        sqlx::query("UPDATE user_totp SET recovery_codes = ? WHERE user_id = ?")
-            .bind(&updated).bind(&claims.id).execute(&state.db).await.ok();
+        let consumed = sqlx::query(
+            "UPDATE user_totp t JOIN users u ON u.id = t.user_id SET t.recovery_codes = ?
+             WHERE t.user_id = ? AND t.enabled = 1 AND t.recovery_codes = ? AND u.password_reset_version = ?"
+        )
+        .bind(&updated).bind(&claims.id).bind(&codes_str)
+        .bind(claims.password_reset_version.unwrap_or_default())
+        .execute(&state.db).await
+        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "Unable to use recovery code" }))))?;
+        if consumed.rows_affected() == 0 {
+            return Err((axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid recovery code" }))));
+        }
 
-        let session_id = uuid::Uuid::new_v4().to_string();
-        let (device_name, device_type, os_name, browser_name) = crate::routes::auth::parse_user_agent(&headers);
-        let ip_address = crate::routes::auth::extract_ip(&headers);
-        sqlx::query("INSERT INTO sessions (id, user_id, device_name, device_type, os, browser, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)")
-            .bind(&session_id).bind(&claims.id).bind(&device_name).bind(&device_type).bind(&os_name).bind(&browser_name).bind(&ip_address)
-            .execute(&state.db).await.ok();
-        let token = sign_token(&claims.id, &claims.username, Some(&session_id), &state.config.jwt_secret);
-        let refresh_token = crate::routes::auth::attach_refresh_token(&state, &session_id).await;
+        let (token, refresh_token) = create_login_session(&state, &claims.id, &claims.username, &headers, claims.password_reset_version.unwrap_or_default()).await?;
 
         Ok(Json(serde_json::json!({ "token": token, "refresh_token": refresh_token, "remaining_codes": codes.len() })))
     } else {

@@ -52,6 +52,49 @@ pub async fn attach_refresh_token(state: &AppState, session_id: &str) -> String 
     format!("{}.{}", session_id, raw)
 }
 
+pub(super) async fn create_login_session(
+    state: &AppState,
+    user_id: &str,
+    username: &str,
+    headers: &HeaderMap,
+    password_reset_version: u32,
+) -> Result<(String, String), (axum::http::StatusCode, Json<serde_json::Value>)> {
+    let db_error = |error: sqlx::Error| {
+        tracing::error!(%error, "Unable to create login session");
+        (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": "Unable to create login session"})),
+        )
+    };
+    let session_id = Uuid::new_v4().to_string();
+    let (device_name, device_type, os, browser) = parse_user_agent(headers);
+    let (raw, hash) = new_refresh_token();
+
+    let mut tx = state.db.begin().await.map_err(db_error)?;
+    let current_version: Option<u32> = sqlx::query_scalar(
+        "SELECT password_reset_version FROM users WHERE id = ? FOR UPDATE"
+    ).bind(user_id).fetch_optional(&mut *tx).await.map_err(db_error)?;
+    if current_version != Some(password_reset_version) {
+        return Err((axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({
+            "error": "Invalid or expired credentials"
+        }))));
+    }
+    sqlx::query("UPDATE users SET last_login_at = NOW() WHERE id = ?")
+        .bind(user_id).execute(&mut *tx).await.map_err(db_error)?;
+    sqlx::query(
+        "INSERT INTO sessions (id, user_id, device_name, device_type, os, browser, ip_address,
+                               refresh_token_hash, refresh_expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 90 DAY))"
+    )
+    .bind(&session_id).bind(user_id).bind(device_name).bind(device_type).bind(os).bind(browser)
+    .bind(extract_ip(headers)).bind(hash)
+    .execute(&mut *tx).await.map_err(db_error)?;
+    tx.commit().await.map_err(db_error)?;
+
+    let token = sign_token(user_id, username, Some(&session_id), &state.config.jwt_secret);
+    Ok((token, format!("{session_id}.{raw}")))
+}
+
 #[derive(Serialize)]
 struct AuthResponse {
     token: String,
@@ -78,6 +121,8 @@ pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/register", post(register))
         .route("/login", post(login))
+        .route("/reset-password", post(super::password_recovery::reset_password)
+            .layer(axum::extract::DefaultBodyLimit::max(4096)))
         .route("/refresh", post(refresh))
         .route("/upgrade-session", post(upgrade_session))
 }
@@ -113,7 +158,7 @@ async fn register(
     let nickname = body.nickname.unwrap_or_else(|| body.username.clone());
 
     sqlx::query(
-        "INSERT INTO users (id, username, nickname, password, ik_pub, spk_pub, spk_sig, kem_pub) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO users (id, username, nickname, password, ik_pub, spk_pub, spk_sig, kem_pub, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     )
     .bind(&id).bind(&body.username).bind(&nickname).bind(&hash)
     .bind(&body.ik_pub).bind(&body.spk_pub).bind(&body.spk_sig).bind(&body.kem_pub)
@@ -129,16 +174,7 @@ async fn register(
         }
     }
 
-    // Create session with device info
-    let session_id = Uuid::new_v4().to_string();
-    let (device_name, device_type, os_name, browser_name) = parse_user_agent(&headers);
-    let ip_address = extract_ip(&headers);
-    sqlx::query("INSERT INTO sessions (id, user_id, device_name, device_type, os, browser, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .bind(&session_id).bind(&id).bind(&device_name).bind(&device_type).bind(&os_name).bind(&browser_name).bind(&ip_address)
-        .execute(&state.db).await.ok();
-
-    let token = sign_token(&id, &body.username, Some(&session_id), &state.config.jwt_secret);
-    let refresh_token = attach_refresh_token(&state, &session_id).await;
+    let (token, refresh_token) = create_login_session(&state, &id, &body.username, &headers, 0).await?;
 
     Ok((axum::http::StatusCode::CREATED, Json(serde_json::json!({
         "token": token, "refresh_token": refresh_token,
@@ -155,14 +191,14 @@ async fn login(
         return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing fields" }))));
     }
 
-    let user: Option<(String, String, String, Option<String>, String, Option<String>)> = sqlx::query_as(
-        "SELECT id, username, nickname, avatar, password, ik_pub FROM users WHERE username = ?"
+    let user: Option<(String, String, String, Option<String>, String, Option<String>, u32)> = sqlx::query_as(
+        "SELECT id, username, nickname, avatar, password, ik_pub, password_reset_version FROM users WHERE username = ?"
     )
     .bind(&body.username)
     .fetch_optional(&state.db).await
     .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
-    let (id, username, nickname, avatar, pw_hash, ik_pub) = user
+    let (id, username, nickname, avatar, pw_hash, ik_pub, password_reset_version) = user
         .ok_or_else(|| (axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid credentials" }))))?;
 
     // Verify password
@@ -177,23 +213,15 @@ async fn login(
         "SELECT enabled FROM user_totp WHERE user_id = ? AND enabled = 1"
     )
     .bind(&id)
-    .fetch_optional(&state.db).await.unwrap_or(None);
+    .fetch_optional(&state.db).await
+    .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
 
     if totp_enabled.is_some() {
-        let login_token = sign_2fa_pending_token(&id, &username, &state.config.jwt_secret);
+        let login_token = sign_2fa_pending_token(&id, &username, password_reset_version, &state.config.jwt_secret);
         return Ok(Json(serde_json::json!({ "requires_2fa": true, "login_token": login_token })));
     }
 
-    // Create session with device info
-    let session_id = Uuid::new_v4().to_string();
-    let (device_name, device_type, os_name, browser_name) = parse_user_agent(&headers);
-    let ip_address = extract_ip(&headers);
-    sqlx::query("INSERT INTO sessions (id, user_id, device_name, device_type, os, browser, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .bind(&session_id).bind(&id).bind(&device_name).bind(&device_type).bind(&os_name).bind(&browser_name).bind(&ip_address)
-        .execute(&state.db).await.ok();
-
-    let token = sign_token(&id, &username, Some(&session_id), &state.config.jwt_secret);
-    let refresh_token = attach_refresh_token(&state, &session_id).await;
+    let (token, refresh_token) = create_login_session(&state, &id, &username, &headers, password_reset_version).await?;
 
     Ok(Json(serde_json::json!({
         "token": token, "refresh_token": refresh_token,

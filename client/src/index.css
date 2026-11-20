@@ -729,7 +729,6 @@ textarea.input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 24px;
   background: linear-gradient(160deg,
     #f5f0e8 0%,
@@ -737,7 +736,7 @@ textarea.input {
     #d4c5a9 70%,
     #c7b898 100%);
   position: relative;
-  overflow: hidden;
+  overflow: hidden auto;
 }
 
 /* Ambient light orbs */
@@ -782,8 +781,10 @@ textarea.input {
 }
 
 .login-card {
+  flex: 0 0 auto;
   width: 100%;
   max-width: 380px;
+  margin-block: auto;
   padding: 36px 28px;
   border-radius: var(--radius-xl);
   position: relative;

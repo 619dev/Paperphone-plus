@@ -3,6 +3,7 @@ use axum::Router;
 
 pub mod home;
 pub mod auth;
+mod password_recovery;
 pub mod users;
 pub mod friends;
 pub mod groups;

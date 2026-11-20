@@ -1,6 +1,14 @@
 export const en: Record<string, string> = {
   'app.name': 'PaperPhonePlus',
   'auth.login': 'Log In',
+  'auth.forgot_password': "Forgot password?",
+  'auth.reset_help': "Enter your username, the six-digit code from your authenticator app, and a new password. Recovery requires two-factor authentication to have been enabled.",
+  'auth.reset_password': "Reset password",
+  'auth.reset_confirm': "Confirm new password",
+  'auth.back_to_login': "Back to sign in",
+  'auth.reset_failed': "Verification failed. Check your username and current code, or try again later.",
+  'auth.reset_success': "Password reset. Existing devices have been signed out. Sign in with your new password.",
+  'auth.reset_length': "Use between 6 and 128 characters for your new password.",
   'auth.register': 'Sign Up',
   'auth.username': 'Username',
   'auth.password': 'Password',
@@ -405,11 +413,21 @@ export const en: Record<string, string> = {
   'proxy.max_reached': 'Maximum of 5 proxies reached',
   'proxy.manage_hint': 'Manage proxies in Settings → Proxy Settings after login',
 
+  'profile.account_deletion': "Account deletion",
+  'profile.inactivity_deletion': "Automatic account deletion",
+  'profile.inactivity_desc': "Your account will be permanently deleted if you do not sign in for the selected period. Each successful sign-in restarts the countdown.",
+  'profile.inactivity_period': "Time without signing in",
+  'profile.inactivity_3': "3 months",
+  'profile.inactivity_6': "6 months",
+  'profile.inactivity_12': "1 year",
+  'profile.inactivity_24': "2 years",
+  'profile.inactivity_36': "3 years",
   // Delete Account
-  'profile.delete_account': 'Delete Account',
+  'profile.delete_account': "Delete account now",
   'profile.delete_warning': 'This action cannot be undone. Deleting your account will permanently remove all your data, including messages, contacts, and moments. This data cannot be recovered.',
-  'profile.delete_confirm': 'Delete Account',
+  'profile.delete_confirm': "Delete account now",
   'profile.delete_enter_password': 'Enter your password to confirm',
+  'profile.delete_invalid_password': "Incorrect password",
   'profile.delete_need_password': 'Please enter your password',
 
   // Terms of Use / EULA

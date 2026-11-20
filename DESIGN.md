@@ -255,3 +255,11 @@ marketing-page patterns or copy another company's brand identity.
 ## 2.6.6 media interaction
 
 Display avatars and social/chat media from the persistent client cache on repeat views; refresh on page reload or reconnect. Keep the Timeline list mounted while viewing a post and restore its scroll position on return. Show filename, percentage and a native progress bar during image/video uploads; prevent concurrent selection and publishing until uploads finish. Real-time call streams remain live media.
+
+## 2.6.7 account deletion
+
+Place automatic deletion and immediate deletion together under Profile → Account deletion. Show the saved inactivity period and the five localized choices, with a save action for changes. Keep immediate deletion visually distinct as a destructive action and show the irreversible-deletion warning and password confirmation before submitting it.
+
+## 2.6.7 password recovery
+
+Place Forgot password? on the sign-in form. Keep the current server selection and language controls available during recovery. Request the username, authenticator code and new password twice, explain the prior 2FA requirement, and show the same verification failure for unknown accounts, unavailable enrollment and rejected codes. After success, return to sign-in with a confirmation and clear the password and code fields.

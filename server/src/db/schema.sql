@@ -413,3 +413,21 @@ CREATE TABLE IF NOT EXISTS bark_subscriptions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_bark_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Account inactivity settings for new and existing installations.
+ALTER TABLE users ADD COLUMN inactivity_months TINYINT UNSIGNED NOT NULL DEFAULT 12
+  CHECK (inactivity_months IN (3, 6, 12, 24, 36));
+ALTER TABLE users ADD COLUMN last_login_at DATETIME DEFAULT NULL;
+
+-- Use historical activity as the initial reference when a login timestamp was not recorded.
+UPDATE users u
+LEFT JOIN (SELECT user_id, MAX(last_active) AS last_active FROM sessions GROUP BY user_id) s
+  ON s.user_id = u.id
+SET u.last_login_at = GREATEST(u.created_at, u.last_seen, COALESCE(s.last_active, u.created_at))
+WHERE u.last_login_at IS NULL;
+
+-- Password recovery is limited per enrolled account and cannot reuse a reset code.
+ALTER TABLE users ADD COLUMN password_reset_version INT UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE user_totp ADD COLUMN reset_window_started_at DATETIME DEFAULT NULL;
+ALTER TABLE user_totp ADD COLUMN reset_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE user_totp ADD COLUMN last_reset_totp_step BIGINT UNSIGNED DEFAULT NULL;

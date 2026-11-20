@@ -5,9 +5,11 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.6-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.7-orange)](client/package.json)
 
-2.6.6: Persistent client media caching covers user/group avatars, Moments, Timeline and chat attachments. Repeat views use local copies; page reloads or reconnects refresh cached media. Timeline restores the feed scroll position after viewing a post, and image/video uploads show filenames, percentages and progress bars. Caches are account-isolated; server attachment retention still applies.
+**2.6.7**: In Profile → Account deletion, choose automatic deletion after 3 months, 6 months, 1 year, 2 years, or 3 years without signing in. The default is 1 year. Each successful sign-in restarts the countdown. You can also confirm immediate deletion with your password on the same page.
+
+Use Forgot password? on the sign-in screen to set a new password with your username and the six-digit code from your authenticator app. Recovery requires previously enabled two-factor authentication. A successful reset signs out existing devices.
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green?logo=google-play)](https://play.google.com/store/apps/details?id=com.fm619.paperphoneplus)
 [![F-Droid](https://img.shields.io/badge/F--Droid-Download-1976D2?logo=f-droid)](https://f-droid.org/zh_Hans/packages/com.fm619.paperphoneplus/)

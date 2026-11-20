@@ -17,6 +17,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/keys", put(update_keys))
         .route("/reset-sender-keys", post(reset_sender_keys))
         .route("/delete", post(delete_account))
+        .route("/account-deletion", get(get_account_deletion).put(update_account_deletion))
         .route("/block", post(block_user))
         .route("/block", get(get_blocked_users))
         .route("/block/{id}", delete(unblock_user))
@@ -226,10 +227,13 @@ async fn change_password(
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?
         .to_string();
 
-    sqlx::query("UPDATE users SET password = ? WHERE id = ?")
-        .bind(&new_hash).bind(&auth.0.id)
+    let updated = sqlx::query("UPDATE users SET password = ? WHERE id = ? AND password = ?")
+        .bind(&new_hash).bind(&auth.0.id).bind(&pw_hash)
         .execute(&state.db).await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+    if updated.rows_affected() == 0 {
+        return Err((axum::http::StatusCode::CONFLICT, Json(serde_json::json!({ "error": "Password changed during request" }))));
+    }
 
     Ok(Json(serde_json::json!({ "ok": true })))
 }
@@ -286,6 +290,42 @@ async fn reset_sender_keys(
     Ok(Json(serde_json::json!({"ok":true})))
 }
 
+type ApiError = (axum::http::StatusCode, Json<serde_json::Value>);
+
+fn account_db_error(error: sqlx::Error) -> ApiError {
+    tracing::error!(%error, "Account deletion operation failed");
+    (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
+        "error": "Account operation failed"
+    })))
+}
+
+#[derive(Deserialize)]
+struct AccountDeletionSettings {
+    inactivity_months: u8,
+}
+
+async fn get_account_deletion(
+    State(state): State<Arc<AppState>>, auth: AuthUser,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let months: u8 = sqlx::query_scalar("SELECT inactivity_months FROM users WHERE id = ?")
+        .bind(&auth.0.id).fetch_one(&state.db).await.map_err(account_db_error)?;
+    Ok(Json(serde_json::json!({ "inactivity_months": months })))
+}
+
+async fn update_account_deletion(
+    State(state): State<Arc<AppState>>, auth: AuthUser, Json(body): Json<AccountDeletionSettings>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    if !matches!(body.inactivity_months, 3 | 6 | 12 | 24 | 36) {
+        return Err((axum::http::StatusCode::BAD_REQUEST, Json(serde_json::json!({
+            "error": "Unsupported account inactivity period"
+        }))));
+    }
+    sqlx::query("UPDATE users SET inactivity_months = ? WHERE id = ?")
+        .bind(body.inactivity_months).bind(&auth.0.id)
+        .execute(&state.db).await.map_err(account_db_error)?;
+    Ok(Json(serde_json::json!({ "inactivity_months": body.inactivity_months })))
+}
+
 #[derive(Deserialize)]
 struct DeleteAccountReq {
     password: String,
@@ -312,33 +352,88 @@ async fn delete_account(
         .verify_password(body.password.as_bytes(), &parsed)
         .map_err(|_| (axum::http::StatusCode::UNAUTHORIZED, Json(serde_json::json!({ "error": "Invalid password" }))))?;
 
-    let uid = &auth.0.id;
+    remove_account(&state, &auth.0.id, false).await?;
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
 
-    // Account deletion also revokes membership before deleting identity rows.
-    let memberships: Vec<(String,)> = sqlx::query_as("SELECT gm.group_id FROM group_members gm JOIN `groups` g ON g.id=gm.group_id WHERE gm.user_id=? AND g.owner_id<>? ORDER BY gm.group_id")
-        .bind(uid).bind(uid).fetch_all(&state.db).await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))))?;
-    for (group,) in memberships { super::groups::revoke_member(&state, uid, &group, uid, true).await?; }
+pub(crate) async fn purge_inactive_accounts(state: &AppState) -> Result<(), sqlx::Error> {
+    let mut cursor = String::new();
+    loop {
+        let accounts: Vec<String> = sqlx::query_scalar(
+            "SELECT id FROM users WHERE id > ?
+             AND DATE_ADD(COALESCE(last_login_at, created_at), INTERVAL inactivity_months MONTH) <= NOW()
+             ORDER BY id LIMIT 100"
+        )
+        .bind(&cursor).fetch_all(&state.db).await?;
 
-    // Delete messages sent by or to this user
-    sqlx::query("DELETE FROM messages WHERE from_id = ? OR (to_id = ? AND type = 'private')")
-        .bind(uid).bind(uid)
-        .execute(&state.db).await.ok();
+        for uid in &accounts {
+            if let Err((status, Json(body))) = remove_account(state, uid, true).await {
+                tracing::warn!(user_id = %uid, %status, error = %body, "Unable to purge inactive account");
+            }
+        }
+        match accounts.into_iter().last() {
+            Some(uid) => cursor = uid,
+            None => return Ok(()),
+        }
+    }
+}
 
-    // Delete groups owned by this user (CASCADE will handle group_members, group_invites)
+async fn remove_account(state: &AppState, uid: &str, inactive_only: bool) -> Result<(), ApiError> {
+    let mut tx = state.db.begin().await.map_err(account_db_error)?;
+
+    // Serialize deletion with login and settings changes, and recheck eligibility
+    // after acquiring the lock in case the scheduled query saw an older snapshot.
+    let user: Option<(String,)> = sqlx::query_as(
+        "SELECT id FROM users WHERE id = ?
+         AND (? = 0 OR DATE_ADD(COALESCE(last_login_at, created_at), INTERVAL inactivity_months MONTH) <= NOW())
+         FOR UPDATE"
+    )
+    .bind(uid).bind(inactive_only).fetch_optional(&mut *tx).await.map_err(account_db_error)?;
+    if user.is_none() {
+        return Ok(());
+    }
+
+    let memberships: Vec<String> = sqlx::query_scalar(
+        "SELECT gm.group_id FROM group_members gm JOIN `groups` g ON g.id = gm.group_id
+         WHERE gm.user_id = ? AND g.owner_id <> ? ORDER BY gm.group_id"
+    )
+    .bind(uid).bind(uid).fetch_all(&mut *tx).await.map_err(account_db_error)?;
+    let mut rotations = Vec::new();
+    for group in memberships {
+        let epoch = match super::groups::lock_epoch(&mut tx, &group).await {
+            Ok(epoch) => epoch,
+            Err((axum::http::StatusCode::NOT_FOUND, _)) => continue,
+            Err(error) => return Err(error),
+        };
+        if let Some(next) = super::groups::remove_member_and_rotate(&mut tx, &group, uid, epoch).await? {
+            rotations.push((group, next));
+        }
+    }
+
+    // Group sends lock the group before the message barrier. Keep the same order.
+    let owned_groups: Vec<String> = sqlx::query_scalar("SELECT id FROM `groups` WHERE owner_id = ? FOR UPDATE")
+        .bind(uid).fetch_all(&mut *tx).await.map_err(account_db_error)?;
+    sqlx::query("SELECT id FROM message_sync_barrier WHERE id = 1 FOR UPDATE")
+        .fetch_one(&mut *tx).await.map_err(account_db_error)?;
+
+    sqlx::query("DELETE FROM messages WHERE from_id = ? OR (type = 'private' AND to_id = ?)")
+        .bind(uid).bind(uid).execute(&mut *tx).await.map_err(account_db_error)?;
+    for group in owned_groups {
+        sqlx::query("DELETE FROM messages WHERE type = 'group' AND to_id = ?")
+            .bind(group).execute(&mut *tx).await.map_err(account_db_error)?;
+    }
+
     sqlx::query("DELETE FROM `groups` WHERE owner_id = ?")
-        .bind(uid)
-        .execute(&state.db).await.ok();
-
-    // Delete the user record (CASCADE handles: prekeys, friends, group_members,
-    // moments, moment_likes, moment_comments,
-    // sessions, friend_tags, friend_tag_assignments, user_totp, moment_privacy,
-    // timeline_posts, timeline_likes, timeline_comments, group_invites, fcm_tokens,
-    // ntfy_subscriptions, apns_tokens)
+        .bind(uid).execute(&mut *tx).await.map_err(account_db_error)?;
     sqlx::query("DELETE FROM users WHERE id = ?")
-        .bind(uid)
-        .execute(&state.db).await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))))?;
+        .bind(uid).execute(&mut *tx).await.map_err(account_db_error)?;
+    tx.commit().await.map_err(account_db_error)?;
+
+    state.ws_clients.disconnect_deleted_account(uid);
+
+    for (group, epoch) in rotations {
+        super::groups::notify_rotation(state, &group, epoch, Some(uid)).await;
+    }
 
     // Clean up Redis
     if let Ok(mut conn) = state.redis.get().await {
@@ -348,12 +443,9 @@ async fn delete_account(
             .query_async(&mut *conn).await;
     }
 
-    // Disconnect WebSocket connections for this user
-    state.ws_clients.send_to_user(uid, serde_json::json!({"type": "account_deleted"}));
-
     tracing::info!("🗑️ Account deleted: user_id={}", uid);
 
-    Ok(Json(serde_json::json!({ "ok": true })))
+    Ok(())
 }
 
 // ── Block User ──────────────────────────────────────────────────────────

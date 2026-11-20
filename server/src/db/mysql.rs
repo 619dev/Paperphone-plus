@@ -99,6 +99,17 @@ pub async fn run_schema(pool: &sqlx::MySqlPool) {
     assert_eq!(pending, 0, "Group protocol migration incomplete");
     sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1").fetch_one(pool).await.expect("Message sync barrier migration incomplete");
 
+    sqlx::query("SELECT inactivity_months, last_login_at FROM users LIMIT 0")
+        .execute(pool).await.expect("Account inactivity schema migration incomplete");
+    let pending: Option<(String,)> = sqlx::query_as("SELECT id FROM users WHERE last_login_at IS NULL LIMIT 1")
+        .fetch_optional(pool).await.expect("Unable to verify account inactivity migration");
+    assert!(pending.is_none(), "Existing account login timestamps were not backfilled");
+
+    sqlx::query("SELECT password_reset_version FROM users LIMIT 0")
+        .execute(pool).await.expect("Password recovery user migration incomplete");
+    sqlx::query("SELECT reset_window_started_at, reset_attempts, last_reset_totp_step FROM user_totp LIMIT 0")
+        .execute(pool).await.expect("Password recovery 2FA migration incomplete");
+
     let repair_sql = match std::env::var_os("FRIENDSHIP_REPAIR_SQL_PATH") {
         Some(path) => tokio::fs::read_to_string(path)
             .await

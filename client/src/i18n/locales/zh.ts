@@ -2,6 +2,14 @@ export const zh: Record<string, string> = {
   // Auth
   'app.name': 'PaperPhonePlus',
   'auth.login': '登录',
+  'auth.forgot_password': "忘记密码？",
+  'auth.reset_help': "输入用户名、验证器应用中的 6 位验证码和新密码。只有已启用双因素验证的账号才能找回。",
+  'auth.reset_password': "重置密码",
+  'auth.reset_confirm': "确认新密码",
+  'auth.back_to_login': "返回登录",
+  'auth.reset_failed': "无法验证。请检查用户名和最新验证码，或稍后再试。",
+  'auth.reset_success': "密码已重置，原有设备已退出登录。请使用新密码登录。",
+  'auth.reset_length': "新密码长度须为 6 至 128 个字符。",
   'auth.register': '注册',
   'auth.username': '用户名',
   'auth.password': '密码',
@@ -419,11 +427,21 @@ export const zh: Record<string, string> = {
   'proxy.max_reached': '已达到最多 5 条代理上限',
   'proxy.manage_hint': '登录后在 设置 → 代理设置 中管理代理',
 
+  'profile.account_deletion': "账号删除",
+  'profile.inactivity_deletion': "不登录时自动删除",
+  'profile.inactivity_desc': "账号达到所选期限未登录时，将被永久删除。每次成功登录都会重新计时。",
+  'profile.inactivity_period': "未登录期限",
+  'profile.inactivity_3': "3 个月",
+  'profile.inactivity_6': "6 个月",
+  'profile.inactivity_12': "1 年",
+  'profile.inactivity_24': "2 年",
+  'profile.inactivity_36': "3 年",
   // Delete Account
-  'profile.delete_account': '删除账号',
+  'profile.delete_account': "立即删除账号",
   'profile.delete_warning': '此操作不可撤销。删除账号后，你的所有数据（包括聊天记录、联系人、朋友圈等）将被永久删除，且无法恢复。',
-  'profile.delete_confirm': '确认删除',
+  'profile.delete_confirm': "立即删除账号",
   'profile.delete_enter_password': '请输入密码以确认',
+  'profile.delete_invalid_password': "密码错误",
   'profile.delete_need_password': '请输入密码',
 
   // Terms of Use / EULA

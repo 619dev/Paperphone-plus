@@ -8,7 +8,7 @@ Uploads live on the server's persistent volume. Avatars and social/timeline medi
 
 ## Signed messaging upgrade (current source)
 
-Package versions are 2.6.6. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
+Package versions are 2.6.7. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
 
 Migration adds identity-verification messages, membership epochs, signed-group protocol state and a message commit barrier. Existing groups are migrated once to mandatory encryption and a new epoch. History is retained; already-lost keys cannot be recovered. See `client/tests/README.md` for isolated MySQL integration checks, including repeatable migration.
 
@@ -104,3 +104,13 @@ docker compose logs -f server
 ## 2.6.6 client update
 
 Shared-client changes add persistent media caching, Timeline scroll restoration and image/video upload progress. Rebuild platform clients with the updated shared source. This change adds no database migration or environment variables. Persistent media caching requires Cache Storage support (normally HTTPS or localhost in browsers); unavailable storage falls back to network loading. Caches are account-isolated and removable through the existing cache-clear action. Server attachment expiry does not remotely erase already-cached bytes. Validate with `npm --prefix client run test:media-cache` and the client build.
+
+## 2.6.7 account deletion upgrade
+
+At startup, the server applies `server/src/db/schema.sql`, sets the default inactivity period to 12 months for existing accounts, and backfills the initial timestamp from registration, last-seen and session activity records. The first cleanup runs at server startup, followed by hourly checks. Back up MySQL before upgrading and confirm that accounts already beyond the default period can be removed.
+
+Successful password sign-in and completed two-factor or recovery-code sign-in restart the countdown. Background token refresh leaves the countdown running. Ship the 2.6.7 shared frontend with platform clients to expose the period picker and password-confirmed immediate deletion under Profile → Account deletion.
+
+### Password recovery with two-factor authentication
+
+The startup patch also adds password reset state to existing users and two-factor enrollments. On updated clients, users with two-factor authentication already enabled can enter their username, a six-digit authenticator code, and a new password on the sign-in screen. Verification is limited to five attempts per account in a 30-minute window. Each authenticator time step can be used for a reset once. A successful reset revokes existing device sessions and returns the user to normal sign-in.

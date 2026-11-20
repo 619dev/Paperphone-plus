@@ -4,6 +4,18 @@ All notable changes and new features are recorded here. Historical entries below
 
 所有重要版本改动和新特性统一记录于此。下方历史条目由仓库原有文档迁移而来。
 
+## 2.6.7 — 2026-11-20
+
+- Added automatic account deletion after 3 months, 6 months, 1 year, 2 years, or 3 years without signing in. The default is 1 year. Each successful sign-in restarts the countdown.
+- Moved password-confirmed immediate deletion to the same account deletion page and localized the settings and confirmation in eight languages.
+- Added a startup MySQL migration that backfills the initial timestamp from account and session activity. The server checks for expired accounts at startup and hourly thereafter.
+- Added password recovery on the sign-in screen for accounts with existing two-factor authentication. A valid authenticator code allows the user to set a new password and signs out existing devices. The recovery flow supports all eight interface languages.
+
+- 新增连续 3 个月、6 个月、1 年、2 年或 3 年未登录时自动删除账号，默认 1 年。成功登录后重新计时。
+- 将原有删除功能合并至「账号删除」页面，保留密码确认，设置和确认文案覆盖八种语言。
+- 服务端启动时自动迁移 MySQL 并根据已有活动记录补齐时间基准，启动后及此后每小时检查到期账号。
+- 登录页新增「忘记密码？」。已启用双因素验证的账号可使用验证器应用的六位验证码设置新密码，成功后撤销原有设备会话。找回流程支持八种界面语言。
+
 ## 2.6.6 — 2026-11-19
 
 - Added account-isolated persistent media caching for user/group avatars, Moments, Timeline and chat attachments, with concurrent download deduplication and refresh on reload/reconnect. Cached media remains readable offline when storage is available.

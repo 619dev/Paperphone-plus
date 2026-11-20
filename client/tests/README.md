@@ -129,7 +129,7 @@ on focus/visibility and update labels and badges on trust changes.
 
 ## Eight-language validation
 
-Run `npm --prefix client run test:i18n` from the repository root to validate all 92 security-related text keys
+Run `npm --prefix client run test:i18n` from the repository root to validate the security, account deletion and password recovery text keys
 in Chinese, English, Japanese, Korean, French, German, Russian and Spanish.
 The suite checks explicit coverage (without fallback), duplicate keys,
 placeholder consistency, current-language error rendering and verbatim handling
@@ -140,7 +140,7 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-These source changes are unreleased; the package version is 2.6.6. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+These source changes are unreleased; the package version is 2.6.7. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 See the [main README](../../README_EN.md), [中文说明](../../README.md), [deployment/migration guide](../../DEPLOY_EN.md) for operating requirements. The client suites use cryptographic implementations with mocked transport/persistence; the server fixture uses real database/routes with transport signature fixtures. Together they provide regression coverage, not an independent audit or a native-device UI test.
 
@@ -149,3 +149,13 @@ See the [main README](../../README_EN.md), [中文说明](../../README.md), [dep
 The media cache suite checks persistent cache hits, concurrent download deduplication, reconnect refresh, offline reads, account isolation and unavailable storage. Attachment tests retain authenticated download and token-refresh coverage.
 
 On native clients, reopen user/group avatars, Moments, Timeline and private/group attachments and inspect network requests: repeat views in the same session should use local copies. Reload or reconnect to check refresh; disconnect to check previously cached media. Scroll the Timeline, open several posts, and confirm each return restores the same position. Upload multiple images and a video, verify filename/percentage/progress feedback and disabled publish/select controls, and test an upload failure. Cache persistence depends on the host supporting Cache Storage; these automated tests do not substitute for native UI acceptance.
+
+## 2.6.7 account deletion acceptance
+
+Use an isolated MySQL instance to check migration of an existing account and restart the server to verify the selected period persists. In Profile → Account deletion, verify the default of one year and save each of the five options. Check that successful password, two-factor and recovery-code sign-ins update the last-login timestamp. An invalid password, a pending second factor and automatic token refresh should leave it unchanged.
+
+Set a test account’s last-login timestamp beyond its selected period, restart the server to trigger the first sweep, and verify the account and its sessions are removed. Test a newer account that should survive the sweep. Exercise immediate deletion with an incorrect and a correct password, then verify the open session receives the deletion event and disconnects. Run `npm --prefix client run test:i18n` to check explicit account deletion translations in all eight languages.
+
+## 2.6.7 password recovery acceptance
+
+Check that an account with enabled two-factor authentication can reset its password from sign-in with a valid authenticator code and then sign in with its new password. Test unknown accounts, disabled enrollment, incorrect or expired codes, repeated codes, and the attempt limit. Verify that old passwords, pre-reset pending sign-in tokens, and existing device sessions are rejected after a successful reset. The recovery flow returns users to sign-in and preserves their existing authenticator setup. Verify the prompt, validation, failure and success text in all eight languages with the localization suite.

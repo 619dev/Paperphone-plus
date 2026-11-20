@@ -20,6 +20,9 @@ pub struct WsClients {
     sessions: Arc<DashMap<usize, String>>, // conn_id -> session_id
 }
 
+const SESSION_REVOKED_EVENT: &str = r#"{"type":"session_revoked"}"#;
+const ACCOUNT_DELETED_EVENT: &str = r#"{"type":"account_deleted"}"#;
+
 static CONN_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 impl WsClients {
@@ -45,17 +48,25 @@ impl WsClients {
 
     pub fn send_to_user(&self, user_id: &str, payload: serde_json::Value) -> bool {
         let data = serde_json::to_string(&payload).unwrap_or_default();
+        self.send_serialized(user_id, &data)
+    }
+
+    fn send_serialized(&self, user_id: &str, data: &str) -> bool {
         if let Some(set) = self.inner.get(user_id) {
             let mut sent = false;
             for &conn_id in set.iter() {
                 if let Some(tx) = self.senders.get(&conn_id) {
-                    let _ = tx.send(data.clone());
+                    let _ = tx.send(data.to_owned());
                     sent = true;
                 }
             }
             return sent;
         }
         false
+    }
+
+    pub fn disconnect_deleted_account(&self, user_id: &str) {
+        self.send_serialized(user_id, ACCOUNT_DELETED_EVENT);
     }
 
     pub fn is_online(&self, user_id: &str) -> bool {
@@ -68,7 +79,7 @@ impl WsClients {
                 if let Some(sid) = self.sessions.get(&conn_id) {
                     if sid.value() == session_id {
                         if let Some(tx) = self.senders.get(&conn_id) {
-                            let _ = tx.send(serde_json::json!({"type":"session_revoked"}).to_string());
+                            let _ = tx.send(SESSION_REVOKED_EVENT.to_owned());
                         }
                     }
                 }
@@ -93,16 +104,29 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
     let mut session_id: Option<String>;
 
     // Spawn task to forward messages from channel to websocket
-    let send_task = tokio::spawn(async move {
+    let mut send_task = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
+            let terminate = matches!(msg.as_str(), ACCOUNT_DELETED_EVENT | SESSION_REVOKED_EVENT);
             if ws_tx.send(Message::Text(msg.into())).await.is_err() {
+                break;
+            }
+            if terminate {
+                let _ = ws_tx.send(Message::Close(None)).await;
                 break;
             }
         }
     });
 
     // Process incoming messages
-    while let Some(Ok(msg)) = ws_rx.next().await {
+    loop {
+        let msg = tokio::select! {
+            biased;
+            _ = &mut send_task => break,
+            incoming = ws_rx.next() => match incoming {
+                Some(Ok(msg)) => msg,
+                _ => break,
+            },
+        };
         let text = match msg {
             Message::Text(t) => t.to_string(),
             Message::Ping(_) => continue,
@@ -122,7 +146,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
         if msg_type == "auth" {
             let token = parsed.get("token").and_then(|v| v.as_str()).unwrap_or("");
             match verify_token(token, &state.config.jwt_secret) {
-                Ok(claims) => {
+                Ok(claims) if claims.token_type.is_none() => {
                     user_id = Some(claims.id.clone());
                     session_id = claims.session_id.clone();
 
@@ -133,7 +157,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                         ).bind(sid).bind(&claims.id).fetch_optional(&state.db).await.ok().flatten();
 
                         if revoked.map(|r| r.0).unwrap_or(1) == 1 {
-                            let _ = tx.send(serde_json::json!({"type":"session_revoked"}).to_string());
+                            let _ = tx.send(SESSION_REVOKED_EVENT.to_owned());
                             break;
                         }
                     }
@@ -170,7 +194,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                     // Flush offline messages
                     flush_offline_messages(&state, &claims.id, &tx).await;
                 }
-                Err(_) => {
+                _ => {
                     let _ = tx.send(serde_json::json!({
                         "type":"auth_error", "code":"access_token_expired",
                         "msg":"Auth failed", "refreshable":true
@@ -220,6 +244,13 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
 
             let mut transaction = match state.db.begin().await { Ok(tx)=>tx, Err(_)=>continue };
             if sqlx::query("SELECT id FROM message_sync_barrier WHERE id=1 FOR UPDATE").fetch_one(&mut *transaction).await.is_err() { continue; }
+            let participants: Result<i64, _> = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM users WHERE id IN (?, ?)"
+            ).bind(&uid).bind(to).fetch_one(&mut *transaction).await;
+            let expected = if uid == to { 1 } else { 2 };
+            if participants.ok() != Some(expected) {
+                continue;
+            }
             let insert = sqlx::query(
                 "INSERT INTO messages (id,type,from_id,to_id,ciphertext,header,self_ciphertext,self_header,msg_type,delivered,client_msg_id) VALUES (?,'private',?,?,?,?,?,?,?,0,?)"
             )
