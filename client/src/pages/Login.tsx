@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { get, post, put } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { ShieldCheck, Lock, Shield, Link, Atom, Server, Wifi, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { ShieldCheck, Lock, Shield, Link, Atom, Server, Wifi, ChevronDown, ChevronUp, Check, Trash2, Plus } from 'lucide-react'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
@@ -512,11 +512,12 @@ export default function Login() {
                     )}
 
                     {/* Delete button */}
-                    <div
+                    <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); removeProxy(p.id) }}
-                      style={{ cursor: 'pointer', fontSize: 12, padding: '2px 4px', opacity: 0.5, flexShrink: 0 }}
+                      style={{ cursor: 'pointer', background: 'none', border: 0, color: 'inherit', padding: '2px 4px', opacity: 0.5, flexShrink: 0 }}
                       title={t('common.delete')}
-                    >🗑️</div>
+                    ><Trash2 size={14} /></button>
                   </div>
                 )
               })}
@@ -533,7 +534,7 @@ export default function Login() {
                     transition: 'background 0.2s',
                   }}
                 >
-                  <span style={{ fontSize: 15 }}>+</span> {t('proxy.add')}
+                  <Plus size={15} /> {t('proxy.add')}
                 </div>
               )}
 

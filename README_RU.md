@@ -5,7 +5,9 @@
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Версия-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Версия-2.6.8-orange)](client/package.json)
+
+**2.6.8** Общий интерфейс использует значки Lucide для взаимной проверки личности, статуса групповых сообщений, звонков, сканирования QR-кодов и настроек. В чате по-прежнему доступны эмодзи, недавние эмодзи и стикеры.
 
 **2.6.7**: В разделе «Профиль → Удаление аккаунта» можно выбрать автоматическое удаление после 3 месяцев, 6 месяцев, 1 года, 2 лет или 3 лет без входа. По умолчанию установлен срок 1 год. Каждый успешный вход запускает отсчёт заново. На той же странице можно подтвердить немедленное удаление паролем.
 

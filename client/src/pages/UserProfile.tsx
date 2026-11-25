@@ -8,7 +8,7 @@ import { get, post, put, del, normalizeFileUrl } from '../api/http'
 import { useStore, refreshFriendIdentityKeys, type Friend } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { deriveSafetyNumber } from '../crypto/safetyNumber'
-import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Fingerprint, Lock, MessageCircle, Pencil, Phone, ShieldCheck, Flag, Ban } from 'lucide-react'
+import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Fingerprint, Lock, MessageCircle, Pencil, Phone, ShieldCheck, Flag, Ban, ArrowLeftRight } from 'lucide-react'
 
 export default function UserProfile() {
   const { id } = useParams<{ id: string }>()
@@ -433,7 +433,7 @@ export default function UserProfile() {
 
             {/* Participants */}
             <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-              {me?.nickname} ↔ {displayName}
+              {me?.nickname} <ArrowLeftRight size={14} style={{ verticalAlign: 'middle' }} /> {displayName}
             </div>
 
             {/* Copy button */}

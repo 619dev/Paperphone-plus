@@ -4,6 +4,14 @@ All notable changes and new features are recorded here. Historical entries below
 
 所有重要版本改动和新特性统一记录于此。下方历史条目由仓库原有文档迁移而来。
 
+## 2.6.8 — 2026-11-25
+
+- Standardized shared frontend controls and status indicators on Lucide, including the green check mark for mutual identity verification.
+- Updated the emoji picker’s category icons while preserving emoji insertion, recent emoji, and stickers.
+
+- 共享前端统一使用 Lucide 界面图标，涵盖双方身份验证后的绿色对勾、群消息状态、通话、扫码及设置。
+- 更新表情选择器的分类图标，保留 Emoji 输入、最近使用记录和贴纸功能。
+
 ## 2.6.7 — 2026-11-20
 
 - Added automatic account deletion after 3 months, 6 months, 1 year, 2 years, or 3 years without signing in. The default is 1 year. Each successful sign-in restarts the countdown.

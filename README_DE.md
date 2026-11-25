@@ -5,7 +5,9 @@ Eine WeChat-ähnliche Ende-zu-Ende-verschlüsselte Instant-Messaging-App mit zus
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.8-orange)](client/package.json)
+
+**2.6.8** Das gemeinsame Frontend nutzt Lucide-Symbole für die gegenseitige Identitätsprüfung, den Status von Gruppennachrichten, Anrufe, QR-Scans und Einstellungen. Im Chat stehen weiterhin Emojis, zuletzt verwendete Emojis und Sticker zur Verfügung.
 
 **2.6.7**: Unter Profil → Kontolöschung kannst du dein Konto nach 3 Monaten, 6 Monaten, 1 Jahr, 2 Jahren oder 3 Jahren ohne Anmeldung automatisch löschen lassen. Standardmäßig gilt 1 Jahr. Jede erfolgreiche Anmeldung startet die Frist neu. Auf derselben Seite kannst du die sofortige Löschung mit deinem Passwort bestätigen.
 

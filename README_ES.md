@@ -5,7 +5,9 @@ Una aplicación de mensajería instantánea cifrada de extremo a extremo, estilo
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Versión-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Versión-2.6.8-orange)](client/package.json)
+
+**2.6.8** La interfaz compartida usa iconos de Lucide para la verificación mutua de identidad, el estado de los mensajes de grupo, las llamadas, el escaneo de códigos QR y los ajustes. El chat conserva los emojis, los emojis recientes y los stickers.
 
 **2.6.7**: En Perfil → Eliminación de la cuenta puedes elegir que la cuenta se elimine tras 3 meses, 6 meses, 1 año, 2 años o 3 años sin iniciar sesión. El plazo predeterminado es de 1 año y se reinicia con cada inicio de sesión correcto. En la misma página puedes confirmar la eliminación inmediata con tu contraseña.
 

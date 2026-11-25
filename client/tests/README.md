@@ -140,7 +140,7 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-These source changes are unreleased; the package version is 2.6.7. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+These checks cover the shared frontend source. Validate published native clients and Docker images separately. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 See the [main README](../../README_EN.md), [中文说明](../../README.md), [deployment/migration guide](../../DEPLOY_EN.md) for operating requirements. The client suites use cryptographic implementations with mocked transport/persistence; the server fixture uses real database/routes with transport signature fixtures. Together they provide regression coverage, not an independent audit or a native-device UI test.
 
@@ -159,3 +159,9 @@ Set a test account’s last-login timestamp beyond its selected period, restart 
 ## 2.6.7 password recovery acceptance
 
 Check that an account with enabled two-factor authentication can reset its password from sign-in with a valid authenticator code and then sign in with its new password. Test unknown accounts, disabled enrollment, incorrect or expired codes, repeated codes, and the attempt limit. Verify that old passwords, pre-reset pending sign-in tokens, and existing device sessions are rejected after a successful reset. The recovery flow returns users to sign-in and preserves their existing authenticator setup. Verify the prompt, validation, failure and success text in all eight languages with the localization suite.
+
+## 2.6.8 shared frontend acceptance
+
+- Open Profile and confirm the footer reads `PaperPhonePlus v2.6.8`. Complete mutual verification and confirm the green Lucide check appears on the contact profile. Open a signed group message and confirm its signature indicator.
+- Open the chat emoji panel. Confirm the toolbar and category tabs use Lucide icons. Select and send an emoji, confirm it appears in Recent, then open the sticker tab and send a sticker.
+- Check that the call speed control, QR scanner, language picker, and proxy controls display Lucide icons.

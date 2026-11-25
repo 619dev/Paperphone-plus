@@ -263,3 +263,7 @@ Place automatic deletion and immediate deletion together under Profile → Accou
 ## 2.6.7 password recovery
 
 Place Forgot password? on the sign-in form. Keep the current server selection and language controls available during recovery. Request the username, authenticator code and new password twice, explain the prior 2FA requirement, and show the same verification failure for unknown accounts, unavailable enrollment and rejected codes. After success, return to sign-in with a confirmation and clear the password and code fields.
+
+## 2.6.8 interface icons
+
+Use Lucide React icons for interface controls, category tabs, and status indicators. Show a green check mark for verified identities and valid group message signatures. Keep selectable emoji and recent emoji in the chat composer, alongside the existing sticker panel.

@@ -5,7 +5,9 @@ WeChat スタイルのエンドツーエンド暗号化メッセンジャー。�
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/バージョン-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/バージョン-2.6.8-orange)](client/package.json)
+
+**2.6.8**：共通フロントエンドでは、相互の本人確認、グループメッセージの状態、通話、QR コードの読み取り、設定に Lucide アイコンを使用します。チャットでは引き続き絵文字、最近使った絵文字、ステッカーを利用できます。
 
 **2.6.7**：「プロフィール → アカウントの削除」で、3か月、6か月、1年、2年、3年のいずれかの未ログイン期間を設定できます。既定値は1年です。ログインに成功するたびに期間がリセットされます。同じ画面でパスワードを入力して、アカウントを今すぐ削除することもできます。
 

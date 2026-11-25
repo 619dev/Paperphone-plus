@@ -5,7 +5,9 @@ Une application de messagerie instantanée chiffrée de bout en bout, style WeCh
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.8-orange)](client/package.json)
+
+**2.6.8** L’interface commune utilise les icônes Lucide pour la vérification mutuelle de l’identité, le statut des messages de groupe, les appels, la lecture des codes QR et les paramètres. La saisie des messages conserve les émojis, les émojis récents et les stickers.
 
 **2.6.7** : Dans Profil → Suppression du compte, choisissez une suppression automatique après 3 mois, 6 mois, 1 an, 2 ans ou 3 ans sans connexion. Le délai par défaut est d’un an et repart à chaque connexion réussie. Vous pouvez aussi confirmer la suppression immédiate avec votre mot de passe sur la même page.
 

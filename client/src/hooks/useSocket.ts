@@ -134,7 +134,7 @@ export function useSocket() {
           }
         } else if (data.group_id) {
           try { msgToAdd = { ...data, ...await decryptGroupMessage(data, !!data.offline) } }
-          catch (error) { msgToAdd = { ...data, signature_valid: false, decrypted: error instanceof MissingGroupKey ? '🔒' : `⚠️ ${securityErrorText(error)}` } }
+          catch (error) { msgToAdd = { ...data, signature_valid: false, decryption_pending: error instanceof MissingGroupKey, decrypted: error instanceof MissingGroupKey ? error.message : securityErrorText(error) } }
         }
 
         if (useStore.getState().user?.id !== myId) return

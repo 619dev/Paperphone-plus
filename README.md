@@ -5,7 +5,9 @@
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/版本-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/版本-2.6.8-orange)](client/package.json)
+
+**2.6.8**：共享前端统一使用 Lucide 界面图标，包括私聊双方验证后的绿色对勾、群消息状态、通话、扫码和设置。聊天仍可发送 Emoji 和贴纸，并保留最近使用的 Emoji。
 
 **2.6.7**：在「个人资料 → 账号删除」中，可以选择连续 3 个月、6 个月、1 年、2 年或 3 年未登录时自动删除账号，默认 1 年。每次成功登录都会重新计时。同一页面也可以输入密码确认立即删除账号。
 

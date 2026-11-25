@@ -517,7 +517,7 @@ export default function GroupInfo() {
         {/* ── Members ── */}
         <div style={{ margin: '0 16px' }}>
           <div className="section-title" style={{ padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>👥 {t('group.members')} ({group.members?.length || 0})</span>
+            <span><Users size={16} style={{ verticalAlign: 'middle' }} /> {t('group.members')} ({group.members?.length || 0})</span>
             <button onClick={() => setShowInvite(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 4,

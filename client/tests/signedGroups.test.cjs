@@ -86,7 +86,7 @@ async function run() {
   await assert.rejects(api.decryptGroupMessage({...first,nonce:'bad'}))
   await assert.rejects(api.decryptGroupMessage({...first,ciphertext:first.ciphertext.slice(0,-2)+'AA'}))
   assert.equal((await api.decryptGroupMessage({...first,header:null})).signature_valid,false)
-  assert.equal((await api.decryptGroupMessage({...first,header:null},true)).decrypted,'⚠️ 未签名历史群消息：before departure')
+  assert.equal((await api.decryptGroupMessage({...first,header:null},true)).decrypted,'未签名历史群消息：before departure')
   const source=__distributions.find(d=>d.from_id==='a'&&d.to_id==='b')
   await assert.rejects(api.importGroupDistribution('other',source))
   await assert.rejects(api.importGroupDistribution('g',{...source,key_version:2}))

@@ -8,7 +8,7 @@ Uploads live on the server's persistent volume. Avatars and social/timeline medi
 
 ## Signed messaging upgrade (current source)
 
-Package versions are 2.6.7. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
+The signed-protocol upgrade was included in 2.6.7. Back up MySQL and upload volumes, stop writes from old servers, then start the updated server to apply `server/src/db/schema.sql`. Coordinate upgrades of every client: older clients cannot parse signed envelopes or send new group messages. Startup checks critical migrations; inspect database permissions/logs if those checks fail.
 
 Migration adds identity-verification messages, membership epochs, signed-group protocol state and a message commit barrier. Existing groups are migrated once to mandatory encryption and a new epoch. History is retained; already-lost keys cannot be recovered. See `client/tests/README.md` for isolated MySQL integration checks, including repeatable migration.
 
@@ -114,3 +114,7 @@ Successful password sign-in and completed two-factor or recovery-code sign-in re
 ### Password recovery with two-factor authentication
 
 The startup patch also adds password reset state to existing users and two-factor enrollments. On updated clients, users with two-factor authentication already enabled can enter their username, a six-digit authenticator code, and a new password on the sign-in screen. Verification is limited to five attempts per account in a 30-minute window. Each authenticator time step can be used for a reset once. A successful reset revokes existing device sessions and returns the user to normal sign-in.
+
+## 2.6.8 shared frontend update
+
+Rebuild and deploy the 2.6.8 shared frontend to ship the Lucide interface icons. This release works with the 2.6.7 server and requires no additional database migration. After deployment, confirm that the Profile footer shows `PaperPhonePlus v2.6.8`.

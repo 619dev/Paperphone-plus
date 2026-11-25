@@ -1,3 +1,4 @@
+import { AlertTriangle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import lottie, { AnimationItem } from 'lottie-web'
 import pako from 'pako'
@@ -132,7 +133,7 @@ export default function TgsPlayer({
         }}
         title={alt}
       >
-        ⚠️
+        <AlertTriangle size={16} />
       </div>
     )
   }

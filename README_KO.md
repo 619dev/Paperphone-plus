@@ -5,7 +5,9 @@ WeChat 스타일의 종단간 암호화 메신저. 무상태 ECDH + XSalsa20-Pol
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/버전-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/버전-2.6.8-orange)](client/package.json)
+
+**2.6.8** 공용 프런트엔드에서 상호 신원 확인, 그룹 메시지 상태, 통화, QR 코드 스캔 및 설정에 Lucide 아이콘을 사용합니다. 채팅에서는 이모지, 최근 사용한 이모지, 스티커를 계속 사용할 수 있습니다.
 
 **2.6.7**: 프로필 → 계정 삭제 설정에서 3개월, 6개월, 1년, 2년 또는 3년 동안 로그인하지 않으면 계정이 자동으로 삭제되도록 설정할 수 있습니다. 기본값은 1년이며 로그인에 성공할 때마다 기간이 다시 시작됩니다. 같은 화면에서 비밀번호를 확인해 계정을 즉시 삭제할 수도 있습니다.
 

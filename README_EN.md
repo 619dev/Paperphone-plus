@@ -5,7 +5,9 @@ A WeChat-style end-to-end encrypted instant messaging app with stateless ECDH + 
 [![Rust](https://img.shields.io/badge/Rust-1.83+-orange)](#) [![React](https://img.shields.io/badge/React-19-blue)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](#) [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)](#) [![Redis](https://img.shields.io/badge/Redis-7.x-red)](#) [![WebRTC](https://img.shields.io/badge/WebRTC-LiveKit%20SFU-orange)](#) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 
-[![Version](https://img.shields.io/badge/Version-2.6.7-orange)](client/package.json)
+[![Version](https://img.shields.io/badge/Version-2.6.8-orange)](client/package.json)
+
+**2.6.8** The shared frontend uses Lucide icons for mutual identity verification, group message status, calls, QR scanning, and settings. The chat composer retains emoji, recent emoji, and stickers.
 
 **2.6.7**: In Profile → Account deletion, choose automatic deletion after 3 months, 6 months, 1 year, 2 years, or 3 years without signing in. The default is 1 year. Each successful sign-in restarts the countdown. You can also confirm immediate deletion with your password on the same page.
 

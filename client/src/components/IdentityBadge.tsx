@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react'
 import { useI18n } from '../hooks/useI18n'
 import { useEffect, useState } from 'react'
 import { identityVerified } from '../crypto/authenticatedMessaging'
@@ -26,7 +27,7 @@ function useVerified({ id, ik, sign, refreshing = false }: IdentityProps) {
 export default function IdentityBadge(props: IdentityProps) {
   const { t } = useI18n()
   const verified = useVerified(props)
-  return verified ? <span style={{ color: '#22c55e', marginLeft: 4 }} title={t('verify.badge_title')} aria-label={t('verify.badge_label')}>✅</span> : null
+  return verified ? <span style={{ color: '#22c55e', marginLeft: 4 }} title={t('verify.badge_title')} aria-label={t('verify.badge_label')}><Check size={14} style={{ verticalAlign: 'middle' }} /></span> : null
 }
 
 export function IdentityPrompt(props: IdentityProps & { onVerify: () => void }) {

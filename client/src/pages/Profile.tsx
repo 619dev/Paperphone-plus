@@ -9,13 +9,13 @@ import { disconnectWs } from '../api/socket'
 import { get, post, put, del, uploadFile } from '../api/http'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle, Zap, Pencil, Plus, Languages } from 'lucide-react'
 import { clearOfflineCache } from '../utils/offlineCache'
 import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/presentationCodec'
 import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy' | 'account-deletion'
-const APP_VERSION = '2.6.7'
+const APP_VERSION = '2.6.8'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -235,7 +235,7 @@ export default function Profile() {
                     setNtfyLoading(false)
                   }}
                 >
-                  {ntfyRegistered ? t('ntfy.registered') : ntfyLoading ? t('common.loading') : t('ntfy.register')}
+                  {ntfyRegistered ? <><Check size={14} /> {t('ntfy.registered')}</> : ntfyLoading ? t('common.loading') : t('ntfy.register')}
                 </button>
                 <button
                   className="btn btn-sm"
@@ -868,11 +868,6 @@ function Sessions({ onBack, t }: { onBack: () => void; t: (k: string) => string 
 function LanguagePicker({ onBack, t, lang, setLang }: { onBack: () => void; t: (k: string) => string; lang: LangCode; setLang: (l: string) => void }) {
   const [selected, setSelected] = useState<LangCode>(lang)
 
-  const flags: Record<LangCode, string> = {
-    zh: '🇨🇳', en: '🇺🇸', ja: '🇯🇵', ko: '🇰🇷',
-    fr: '🇫🇷', de: '🇩🇪', ru: '🇷🇺', es: '🇪🇸',
-  }
-
   // Secondary label: show the language name in that language if it differs from current
   const nativeNames: Record<LangCode, string> = {
     zh: '中文', en: 'English', ja: '日本語', ko: '한국어',
@@ -905,7 +900,7 @@ function LanguagePicker({ onBack, t, lang, setLang }: { onBack: () => void; t: (
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                <span style={{ fontSize: 28 }}>{flags[l]}</span>
+                <Languages size={22} style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }} />
                 <div>
                   <div style={{ fontWeight: isSelected ? 600 : 400, fontSize: 15 }}>{nativeNames[l]}</div>
                   {l !== lang && (
@@ -1206,7 +1201,7 @@ function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => st
               background: !activeProxyId ? 'rgba(34,197,94,0.2)' : 'var(--bg-secondary)',
               color: !activeProxyId ? '#22c55e' : 'var(--text-muted)',
               fontSize: 18,
-            }}>⚡</div>
+            }}><Zap size={18} /></div>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14 }}>{t('proxy.direct')}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('proxy.direct_desc')}</div>
@@ -1256,7 +1251,7 @@ function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => st
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.type.toUpperCase()} · {p.host}:{p.port}
-                    {p.username ? ' · 🔑' : ''}
+                    {p.username && <> · <KeyRound size={12} style={{ verticalAlign: 'middle' }} /></>}
                   </div>
                 </div>
               </div>
@@ -1302,13 +1297,13 @@ function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => st
                   onClick={(e) => { e.stopPropagation(); openEditForm(p) }}
                   style={{ padding: '6px 8px', borderRadius: 8, minWidth: 0 }}
                   title={t('common.edit')}
-                >✏️</button>
+                ><Pencil size={14} /></button>
                 <button
                   className="btn btn-sm"
                   onClick={(e) => { e.stopPropagation(); removeProxy(p.id) }}
                   style={{ padding: '6px 8px', borderRadius: 8, minWidth: 0 }}
                   title={t('common.delete')}
-                >🗑️</button>
+                ><Trash2 size={14} /></button>
               </div>
             </div>
           )
@@ -1326,7 +1321,7 @@ function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => st
               color: 'var(--text-muted)', fontSize: 14, fontWeight: 500,
             }}
           >
-            <span style={{ fontSize: 18 }}>+</span> {t('proxy.add')}
+            <Plus size={18} /> {t('proxy.add')}
           </button>
         )}
 

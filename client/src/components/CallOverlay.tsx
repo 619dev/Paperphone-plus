@@ -8,7 +8,7 @@ import { CachedImage } from './CachedMedia'
 import { useCallContext, formatDuration } from '../contexts/CallContext'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { Phone, PhoneOff, PhoneIncoming, Mic, MicOff, CameraOff, Video as VideoIcon, AudioLines } from 'lucide-react'
+import { Phone, PhoneOff, PhoneIncoming, Mic, MicOff, CameraOff, Video as VideoIcon, AudioLines, Turtle, Rabbit, Volume2 } from 'lucide-react'
 
 export default function CallOverlay() {
   const call = useCallContext()
@@ -146,7 +146,7 @@ export default function CallOverlay() {
             <button onClick={call.toggleVoiceMode}
               style={voiceBtnStyle(call.voiceMode)}>
               <span style={{ fontSize: 14, fontWeight: 700 }}>
-                {call.voiceMode === 'slow' ? '🐢' : call.voiceMode === 'fast' ? '🐇' : '🔊'}
+                {call.voiceMode === 'slow' ? <Turtle size={16} /> : call.voiceMode === 'fast' ? <Rabbit size={16} /> : <Volume2 size={16} />}
               </span>
               <span style={{ fontSize: 10, marginTop: 1 }}>
                 {call.voiceMode === 'slow' ? '0.8x' : call.voiceMode === 'fast' ? '1.2x' : t('call.voice_normal') || '1.0x'}

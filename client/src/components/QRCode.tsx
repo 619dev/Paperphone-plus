@@ -1,3 +1,4 @@
+import { ArrowLeft, Camera, X } from 'lucide-react'
 import { CachedVideo } from './CachedMedia'
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
@@ -54,11 +55,11 @@ export function QRCodeModal({
             {subtitle}
           </div>
         )}
-        <button onClick={onClose} style={{
+        <button type="button" aria-label="Close" onClick={onClose} style={{
           marginTop: 4, padding: '8px 32px', borderRadius: 12, border: 'none',
           background: '#f0f0f0', color: '#333', fontSize: 14,
           fontWeight: 500, cursor: 'pointer',
-        }}>✕</button>
+        }}><X size={16} /></button>
       </div>
     </div>
   )
@@ -161,7 +162,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         <button type="button" aria-label="Close scanner" onClick={handleClose} style={{
           border: 'none', background: 'none', color: '#fff',
           fontSize: 24, cursor: 'pointer', padding: 4, touchAction: 'manipulation',
-        }}>←</button>
+        }}><ArrowLeft size={24} /></button>
         <span style={{ flex: 1, textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: 16 }}>
           Scan QR Code
         </span>
@@ -199,7 +200,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
             color: '#fff', fontSize: 14, textAlign: 'center', padding: 32,
           }}>
             <div>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
+              <div style={{ fontSize: 48, marginBottom: 12 }}><Camera size={48} /></div>
               <div>{error}</div>
             </div>
           </div>
